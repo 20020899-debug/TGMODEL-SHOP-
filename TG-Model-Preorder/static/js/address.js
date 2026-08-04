@@ -1,8 +1,12 @@
+console.log("address.js đã chạy");
+
 const provinceSelect = document.getElementById("province");
 
-fetch("https://provinces.open-api.vn/api/v2/p/")
+fetch("https://provinces.open-api.vn/api/p/")
     .then(response => response.json())
     .then(data => {
+
+        console.log(data);
 
         data.forEach(province => {
 
