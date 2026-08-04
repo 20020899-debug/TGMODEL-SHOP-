@@ -3,10 +3,10 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 product = {
-    "name": "MS GENERAL FALCON",
+    "name": "AZURE FALCON",
     "price": 2390000,
     "deposit": 500000,
-    "arrival": "Tháng 11/2026",
+    "arrival": "Tháng 8/2026",
     "description": "Phiên bản Pre-order chính hãng."
 }
 
