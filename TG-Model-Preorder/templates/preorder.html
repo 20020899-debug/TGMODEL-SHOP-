@@ -1,96 +1,88 @@
+```html
 <!DOCTYPE html>
 <html lang="vi">
 
 <head>
-
     <meta charset="UTF-8">
-
     <title>Đặt Pre-order</title>
-
 </head>
 
 <body>
 
 <h2>Đặt Pre-order</h2>
 
-<form>
+<form action="/submit" method="POST">
 
-    <p>
+    <label>Họ và tên</label><br>
+    <input type="text" name="fullname" required>
+    <br><br>
 
-        Họ và tên
+    <label>Số điện thoại</label><br>
+    <input type="text" name="phone" required>
+    <br><br>
 
-    </p>
+    <label>Facebook hoặc Zalo</label><br>
+    <input type="text" name="contact">
+    <br><br>
 
-    <input type="text">
+    <label>Số lượng</label><br>
+    <input type="number" name="quantity" value="1" min="1">
+    <br><br>
+
+
+    <label>Tỉnh / Thành phố</label><br>
+    <select id="province" name="province" required>
+        <option value="">-- Chọn tỉnh --</option>
+    </select>
 
     <br><br>
 
-    <p>
 
-        Số điện thoại
-
-    </p>
-
-    <input type="text">
+    <label>Quận / Huyện</label><br>
+    <select id="district" name="district" disabled required>
+        <option value="">-- Chọn quận / huyện --</option>
+    </select>
 
     <br><br>
 
-    <p>
 
-        Facebook hoặc Zalo
-
-    </p>
-
-    <input type="text">
+    <label>Phường / Xã</label><br>
+    <select id="ward" name="ward" disabled required>
+        <option value="">-- Chọn phường / xã --</option>
+    </select>
 
     <br><br>
 
-    <p>
 
-        Số lượng
-
-    </p>
-
-    <input type="number" value="1">
+    <label>Địa chỉ chi tiết</label><br>
+    <input 
+        type="text"
+        name="address_detail"
+        placeholder="Ví dụ: Số 123 Nguyễn Trãi"
+        required>
 
     <br><br>
-    <label>Tỉnh / Thành phố</label>
-<select id="province">
-    <option value="">-- Chọn tỉnh --</option>
-</select>
 
-<br><br>
 
-<label>Quận / Huyện</label>
-<select id="district" disabled>
-    <option value="">-- Chọn quận / huyện --</option>
-</select>
+    <label>Ghi chú</label><br>
+    <textarea 
+        name="note"
+        placeholder="Ghi chú thêm (nếu có)">
+    </textarea>
 
-<br><br>
+    <br><br>
 
-<label>Phường / Xã</label>
-<select id="ward" disabled>
-    <option value="">-- Chọn phường / xã --</option>
-</select>
 
-<label>Địa chỉ chi tiết</label>
-<input
-    type="text"
-    id="address_detail"
-    name="address_detail"
-    class="form-control"
-    placeholder="Ví dụ: 123 Nguyễn Trãi">
-
-       <button>
-
+    <button type="submit">
         Gửi đơn
-
     </button>
 
 </form>
+
 
 <script src="{{ url_for('static', filename='js/address.js') }}"></script>
 
 </body>
 
 </html>
+```
