@@ -19,3 +19,6 @@ if __name__ == "__main__":
 @app.route("/")
 def home():
     return render_template("index.html", product=product)
+@app.route("/preorder")
+def preorder():
+    return render_template("preorder.html", product=product)
