@@ -1,5 +1,2 @@
 Flask
-pypdf
 gunicorn
-pandas
-openpyxl
