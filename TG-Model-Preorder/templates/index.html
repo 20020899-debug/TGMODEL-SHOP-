@@ -12,14 +12,34 @@
 <body>
 
 <h1>TG MODEL SHOP</h1>
-<h2>{{ product.name }}</h2>
+<div class="card shadow p-4 mt-4">
 
-<p>Giá: {{ product.price }} VNĐ</p>
+    <h5 class="text-secondary">
+        {{ product.brand }}
+    </h5>
 
-<p>Đặt cọc: {{ product.deposit }} VNĐ</p>
+    <h2>
+        {{ product.name }}
+    </h2>
 
-<p>{{ product.description }}</p>
-<p>Website PRE ORDER</p>
+    <hr>
+
+    <p>
+        <strong>💰 Giá chính thức:</strong>
+        {{ "{:,}".format(product.price) }} đ
+    </p>
+
+    <p>
+        <strong>💵 Tiền cọc:</strong>
+        {{ "{:,}".format(product.deposit) }} đ
+    </p>
+
+    <p>
+        <strong>📦 Dự kiến trả hàng:</strong>
+        {{ product.eta }}
+    </p>
+
+</div>
 
 </body>
 </html>
