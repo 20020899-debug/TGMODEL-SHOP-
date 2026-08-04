@@ -31,7 +31,7 @@ def submit():
     fullname = request.form.get("fullname")
     phone = request.form.get("phone")
     contact = request.form.get("contact")
-    quantity = request.form.get("quantity")
+    quantity = int(request.form.get("quantity"))
 
     province = request.form.get("province")
     district = request.form.get("district")
@@ -40,10 +40,62 @@ def submit():
 
     note = request.form.get("note")
 
+    # Kết nối database
+    conn = sqlite3.connect("orders.db")
+    cursor = conn.cursor()
+
+    # Tạo mã đơn TG000001, TG000002,...
+    cursor.execute("SELECT COUNT(*) FROM orders")
+    count = cursor.fetchone()[0] + 1
+    order_code = f"TG{count:06d}"
+
+    # Lưu đơn hàng
+    cursor.execute("""
+        INSERT INTO orders (
+            order_code,
+            fullname,
+            phone,
+            contact,
+            province,
+            district,
+            ward,
+            address_detail,
+            quantity,
+            note,
+            product_name,
+            product_brand,
+            price,
+            deposit,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        order_code,
+        fullname,
+        phone,
+        contact,
+        province,
+        district,
+        ward,
+        address_detail,
+        quantity,
+        note,
+        product["name"],
+        product["brand"],
+        product["price"],
+        product["deposit"],
+        "Chưa thanh toán"
+    ))
+
+    conn.commit()
+    conn.close()
+
     return f"""
     <h2>Đặt Pre-order thành công!</h2>
 
     <hr>
+
+    <b>Mã đơn:</b> {order_code}<br><br>
 
     <b>Họ tên:</b> {fullname}<br>
     <b>Số điện thoại:</b> {phone}<br>
@@ -61,8 +113,8 @@ def submit():
     <b>Giá:</b> {product["price"]:,} đ<br>
     <b>Tiền cọc:</b> {product["deposit"]:,} đ<br>
     <b>Dự kiến trả hàng:</b> {product["eta"]}<br>
+
+    <hr>
+
+    <h3>Trạng thái: Chưa thanh toán</h3>
     """
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
