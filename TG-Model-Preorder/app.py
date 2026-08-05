@@ -208,7 +208,7 @@ def admin():
 # XEM CHI TIET DƠN HÀNG
 # ==========================
 @app.route("/admin/order/<int:id>")
-def order_detail():
+def order_detail(id):
 
     if not session.get("admin"):
         return redirect(url_for("login"))
