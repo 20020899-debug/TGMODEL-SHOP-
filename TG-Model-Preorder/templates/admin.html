@@ -66,6 +66,29 @@
 
     <td>{{ order["status"] }}</td>
     <td>
+
+<a href="/admin/order/{{ order['id'] }}">
+    Chi tiết
+</a>
+
+
+<form 
+action="/admin/order/{{ order['id'] }}/delete"
+method="POST"
+style="display:inline;"
+>
+
+<button 
+type="submit"
+onclick="return confirm('Bạn có chắc muốn xóa đơn này?');"
+>
+Xóa
+</button>
+
+</form>
+
+</td>
+    <td>
         <a href="/admin/order/{{ order['id'] }}">👁 Chi tiết</a>
     </td>
 
