@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý đơn hàng</title>
+</head>
+
+<body>
+
+<h1>Danh sách đơn Pre-order</h1>
+
+<table border="1" cellpadding="8">
+
+<tr>
+    <th>Mã đơn</th>
+    <th>Khách hàng</th>
+    <th>SĐT</th>
+    <th>Sản phẩm</th>
+    <th>Tiền cọc</th>
+    <th>Trạng thái</th>
+</tr>
+
+{% for order in orders %}
+
+<tr>
+
+    <td>{{ order["order_code"] }}</td>
+
+    <td>{{ order["fullname"] }}</td>
+
+    <td>{{ order["phone"] }}</td>
+
+    <td>{{ order["product_name"] }}</td>
+
+    <td>{{ "{:,}".format(order["deposit"]) }} đ</td>
+
+    <td>{{ order["status"] }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>
