@@ -222,7 +222,8 @@ orders = cursor.fetchall()
 
     return render_template(
         "admin.html",
-        orders=orders
+        orders=orders,
+        keyword=keyword
     )
 # ==========================
 # XEM CHI TIET DƠN HÀNG
