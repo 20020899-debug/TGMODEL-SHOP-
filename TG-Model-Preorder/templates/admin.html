@@ -6,7 +6,27 @@
 </head>
 
 <body>
+<form method="GET" action="/admin">
 
+    <input
+        type="text"
+        name="keyword"
+        placeholder="Tìm mã đơn, tên khách hoặc SĐT"
+        value="{{ keyword }}">
+
+    <button type="submit">
+        🔍 Tìm kiếm
+    </button>
+
+    <a href="/admin">
+        <button type="button">
+            Xóa lọc
+        </button>
+    </a>
+
+</form>
+
+<br>
 <h1>Danh sách đơn Pre-order</h1>
 <p>
     <a href="/logout">
