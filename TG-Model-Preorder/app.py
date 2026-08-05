@@ -1,8 +1,11 @@
 from flask import Flask, render_template, request
 import sqlite3
+
 app = Flask(__name__)
 
-# Thông tin sản phẩm đang Pre-order
+# ==========================
+# Thông tin sản phẩm
+# ==========================
 product = {
     "brand": "IN ERA+",
     "name": "IN ERA+ TR-2243EX AZURE FALCON 1/72",
@@ -12,25 +15,32 @@ product = {
 }
 
 
+# ==========================
 # Trang chủ
+# ==========================
 @app.route("/")
 def home():
     return render_template("index.html", product=product)
 
 
+# ==========================
 # Trang Pre-order
+# ==========================
 @app.route("/preorder")
 def preorder():
     return render_template("preorder.html", product=product)
 
 
-# Nhận dữ liệu từ form
+# ==========================
+# Nhận đơn hàng
+# ==========================
 @app.route("/submit", methods=["POST"])
 def submit():
 
     fullname = request.form.get("fullname")
     phone = request.form.get("phone")
     contact = request.form.get("contact")
+
     quantity = int(request.form.get("quantity"))
 
     province = request.form.get("province")
@@ -44,12 +54,12 @@ def submit():
     conn = sqlite3.connect("orders.db")
     cursor = conn.cursor()
 
-    # Tạo mã đơn TG000001, TG000002,...
+    # Sinh mã đơn
     cursor.execute("SELECT COUNT(*) FROM orders")
     count = cursor.fetchone()[0] + 1
     order_code = f"TG{count:06d}"
 
-    # Lưu đơn hàng
+    # Lưu đơn
     cursor.execute("""
         INSERT INTO orders (
             order_code,
@@ -117,16 +127,31 @@ def submit():
     <hr>
 
     <h3>Trạng thái: Chưa thanh toán</h3>
+    """
+
+
+# ==========================
+# Trang quản lý đơn hàng
+# ==========================
 @app.route("/admin")
 def admin():
 
     conn = sqlite3.connect("orders.db")
     conn.row_factory = sqlite3.Row
+
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM orders ORDER BY id DESC")
+
     orders = cursor.fetchall()
 
     conn.close()
 
     return render_template("admin.html", orders=orders)
+
+
+# ==========================
+# Chạy Flask
+# ==========================
+if __name__ == "__main__":
+    app.run(debug=True)
