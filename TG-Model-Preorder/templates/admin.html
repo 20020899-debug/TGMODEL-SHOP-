@@ -25,6 +25,8 @@
     <th>Sản phẩm</th>
     <th>Tiền cọc</th>
     <th>Trạng thái</th>
+    <th>Thao tác</th>
+
 </tr>
 
 {% for order in orders %}
@@ -43,6 +45,9 @@
     <td>{{ "{:,}".format(order["deposit"]) }} đ</td>
 
     <td>{{ order["status"] }}</td>
+    <td>
+        <a href="/admin/order/{{ order['id'] }}">👁 Chi tiết</a>
+    </td>
 
 </tr>
 
