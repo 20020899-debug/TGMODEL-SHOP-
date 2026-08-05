@@ -17,3 +17,42 @@ app.register_blueprint(admin_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
+import sqlite3
+
+
+def init_database():
+
+    conn = sqlite3.connect("orders.db")
+
+    cursor = conn.cursor()
+
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS products(
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        brand TEXT,
+
+        name TEXT,
+
+        price INTEGER,
+
+        deposit INTEGER,
+
+        eta TEXT,
+
+        image TEXT,
+
+        status TEXT
+
+    )
+    """)
+
+
+    conn.commit()
+    conn.close()
+
+
+
+init_database()
