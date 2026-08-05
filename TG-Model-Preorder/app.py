@@ -156,3 +156,25 @@ def admin():
 # ==========================
 if __name__ == "__main__":
     app.run(debug=True)
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+
+            session["admin"] = True
+
+            return redirect(url_for("admin"))
+
+        else:
+
+            return render_template(
+                "login.html",
+                error="Sai tài khoản hoặc mật khẩu!"
+            )
+
+    return render_template("login.html")
