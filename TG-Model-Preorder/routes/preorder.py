@@ -2,8 +2,7 @@ from flask import Blueprint, request, render_template
 import sqlite3
 from datetime import datetime
 
-from config import product
-
+from config import products
 
 preorder_bp = Blueprint(
     "preorder",
@@ -13,6 +12,21 @@ preorder_bp = Blueprint(
 
 @preorder_bp.route("/submit", methods=["POST"])
 def submit():
+
+    # Lấy id sản phẩm
+    product_id = int(request.form.get("product_id"))
+
+    # Tìm sản phẩm trong config.py
+    product = None
+
+    for p in products:
+
+        if p["id"] == product_id:
+            product = p
+            break
+
+    if product is None:
+        return "Không tìm thấy sản phẩm"
 
     fullname = request.form.get("fullname")
     phone = request.form.get("phone")
@@ -27,10 +41,8 @@ def submit():
 
     note = request.form.get("note")
 
-
     conn = sqlite3.connect("orders.db")
     cursor = conn.cursor()
-
 
     cursor.execute(
         "SELECT COUNT(*) FROM orders"
@@ -38,14 +50,11 @@ def submit():
 
     count = cursor.fetchone()[0] + 1
 
-
-    order_code = f"TG{count:06d}"
-
+    order_code = f"TG{count:04d}"
 
     created_at = datetime.now().strftime(
         "%d/%m/%Y %H:%M:%S"
     )
-
 
     cursor.execute("""
         INSERT INTO orders
@@ -91,11 +100,8 @@ def submit():
         created_at
     ))
 
-
     conn.commit()
     conn.close()
-
-
 
     return render_template(
         "success.html",
