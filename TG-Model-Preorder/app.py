@@ -117,4 +117,16 @@ def submit():
     <hr>
 
     <h3>Trạng thái: Chưa thanh toán</h3>
-    """
+@app.route("/admin")
+def admin():
+
+    conn = sqlite3.connect("orders.db")
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM orders ORDER BY id DESC")
+    orders = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("admin.html", orders=orders)
