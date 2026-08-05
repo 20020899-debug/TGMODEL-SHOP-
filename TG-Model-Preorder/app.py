@@ -137,6 +137,9 @@ def submit():
 @app.route("/admin")
 def admin():
 
+    if not session.get("admin"):
+        return redirect(url_for("login"))
+
     conn = sqlite3.connect("orders.db")
     conn.row_factory = sqlite3.Row
 
@@ -149,8 +152,6 @@ def admin():
     conn.close()
 
     return render_template("admin.html", orders=orders)
-
-
 # ==========================
 # Chạy Flask
 # ==========================
