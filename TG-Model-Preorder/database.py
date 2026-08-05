@@ -1,10 +1,11 @@
 import sqlite3
 
 conn = sqlite3.connect("orders.db")
+
 cursor = conn.cursor()
 
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS orders (
+CREATE TABLE IF NOT EXISTS orders(
 
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -36,7 +37,9 @@ CREATE TABLE IF NOT EXISTS orders (
 
     deposit INTEGER,
 
-    status TEXT
+    status TEXT,
+
+    created_at TEXT
 
 )
 """)
