@@ -145,9 +145,10 @@ def admin():
 
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM orders ORDER BY id DESC")
+   cursor.execute("SELECT COUNT(*) FROM orders")
+count = cursor.fetchone()[0]
 
-    orders = cursor.fetchall()
+return f"Có {count} đơn hàng"
 
     conn.close()
 
