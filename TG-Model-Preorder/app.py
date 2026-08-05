@@ -187,36 +187,35 @@ def admin():
 
     conn = sqlite3.connect("orders.db")
     conn.row_factory = sqlite3.Row
-
     cursor = conn.cursor()
 
     keyword = request.args.get("keyword", "").strip()
 
-if keyword:
+    if keyword:
 
-    cursor.execute("""
-        SELECT *
-        FROM orders
-        WHERE
-            order_code LIKE ?
-            OR fullname LIKE ?
-            OR phone LIKE ?
-        ORDER BY id DESC
-    """, (
-        f"%{keyword}%",
-        f"%{keyword}%",
-        f"%{keyword}%"
-    ))
+        cursor.execute("""
+            SELECT *
+            FROM orders
+            WHERE
+                order_code LIKE ?
+                OR fullname LIKE ?
+                OR phone LIKE ?
+            ORDER BY id DESC
+        """, (
+            f"%{keyword}%",
+            f"%{keyword}%",
+            f"%{keyword}%"
+        ))
 
-else:
+    else:
 
-    cursor.execute("""
-        SELECT *
-        FROM orders
-        ORDER BY id DESC
-    """)
+        cursor.execute("""
+            SELECT *
+            FROM orders
+            ORDER BY id DESC
+        """)
 
-orders = cursor.fetchall()
+    orders = cursor.fetchall()
 
     conn.close()
 
