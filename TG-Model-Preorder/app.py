@@ -232,6 +232,33 @@ def order_detail(id):
         order=order
     )
 # ==========================
+# CẬP NHẬP TRẠNG THÁI ĐƠN
+# ==========================
+@app.route("/admin/order/<int:id>/update", methods=["POST"])
+def update_order(id):
+
+    if not session.get("admin"):
+        return redirect(url_for("login"))
+
+    status = request.form.get("status")
+
+    conn = sqlite3.connect("orders.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE orders
+        SET status=?
+        WHERE id=?
+        """,
+        (status, id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("order_detail", id=id))    
+# ==========================
 # CHẠY FLASK
 # ==========================
 
