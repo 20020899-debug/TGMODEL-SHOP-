@@ -198,3 +198,36 @@ def update_order(id):
             id=id
         )
     )
+    
+@admin_bp.route("/admin/order/<int:id>/delete", methods=["POST"])
+def delete_order(id):
+
+    if not session.get("admin"):
+        return redirect(
+            url_for("auth.login")
+        )
+
+
+    conn = sqlite3.connect(
+        "orders.db"
+    )
+
+    cursor = conn.cursor()
+
+
+    cursor.execute(
+        """
+        DELETE FROM orders
+        WHERE id=?
+        """,
+        (id,)
+    )
+
+
+    conn.commit()
+    conn.close()
+
+
+    return redirect(
+        url_for("admin.admin")
+    )
