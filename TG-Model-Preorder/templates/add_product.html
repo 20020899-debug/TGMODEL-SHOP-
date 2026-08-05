@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Thêm sản phẩm</title>
+
+</head>
+
+
+
+<body>
+
+
+<h1>Thêm sản phẩm mới</h1>
+
+
+<a href="/admin/products">
+⬅ Quay lại
+</a>
+
+
+<hr>
+
+
+
+<form method="POST">
+
+
+<p>
+
+Hãng:
+
+<br>
+
+<input 
+type="text"
+name="brand"
+required
+>
+
+</p>
+
+
+
+<p>
+
+Tên sản phẩm:
+
+<br>
+
+<input 
+type="text"
+name="name"
+size="50"
+required
+>
+
+</p>
+
+
+
+
+<p>
+
+Giá:
+
+<br>
+
+<input 
+type="number"
+name="price"
+required
+>
+
+</p>
+
+
+
+
+<p>
+
+Tiền cọc:
+
+<br>
+
+<input 
+type="number"
+name="deposit"
+required
+>
+
+</p>
+
+
+
+
+<p>
+
+Dự kiến về:
+
+<br>
+
+<input 
+type="text"
+name="eta"
+placeholder="Tháng 9/2026"
+>
+
+</p>
+
+
+
+
+<p>
+
+Ảnh sản phẩm:
+
+<br>
+
+<input 
+type="text"
+name="image"
+placeholder="link ảnh"
+>
+
+</p>
+
+
+
+
+<p>
+
+Trạng thái:
+
+<br>
+
+
+<select name="status">
+
+
+<option value="Đang mở">
+Đang mở
+</option>
+
+
+<option value="Đóng">
+Đóng
+</option>
+
+
+</select>
+
+
+</p>
+
+
+
+<button type="submit">
+
+Lưu sản phẩm
+
+</button>
+
+
+
+</form>
+
+
+
+</body>
+
+
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập quản trị</title>
+</head>
+
+<body>
+
+<h2>Đăng nhập Admin</h2>
+
+<form method="POST">
+
+    <p>Tên đăng nhập</p>
+    <input type="text" name="username" required>
+
+    <br><br>
+
+    <p>Mật khẩu</p>
+    <input type="password" name="password" required>
+
+    <br><br>
+
+    <button type="submit">
+        Đăng nhập
+    </button>
+
+</form>
+
+{% if error %}
+<p style="color:red">
+    {{ error }}
+</p>
+{% endif %}
+
+</body>
+</html>
