@@ -12,6 +12,15 @@ products = [
         "price": 1300000,
         "deposit": 300000,
         "eta": "Tháng 9/2026"
+    },
+
+    {
+        "id": 2,
+        "brand": "MS GENERAL",
+        "name": "SIN-02 SEVEN DEADLY",
+        "price": 1650000,
+        "deposit": 400000,
+        "eta": "Tháng 10/2026"
     }
 
 ]
