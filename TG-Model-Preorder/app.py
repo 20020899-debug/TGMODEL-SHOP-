@@ -1,6 +1,6 @@
-
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "TGMODELSHOP2026"
@@ -110,7 +110,7 @@ def submit():
     count = cursor.fetchone()[0] + 1
 
     order_code = f"TG{count:06d}"
-
+    created_at = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     cursor.execute("""
         INSERT INTO orders (
             order_code,
@@ -128,25 +128,27 @@ def submit():
             price,
             deposit,
             status
+            created_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        order_code,
-        fullname,
-        phone,
-        contact,
-        province,
-        district,
-        ward,
-        address_detail,
-        quantity,
-        note,
-        product["name"],
-        product["brand"],
-        product["price"],
-        product["deposit"],
-        "Chưa thanh toán"
-    ))
+    order_code,
+    fullname,
+    phone,
+    contact,
+    province,
+    district,
+    ward,
+    address_detail,
+    quantity,
+    note,
+    product["name"],
+    product["brand"],
+    product["price"],
+    product["deposit"],
+    "Chưa thanh toán",
+    created_at
+))
 
     conn.commit()
     conn.close()
