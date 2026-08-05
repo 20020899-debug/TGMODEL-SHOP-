@@ -50,9 +50,53 @@ def init_database():
     """)
 
 
+    # kiểm tra đã có sản phẩm chưa
+
+    cursor.execute(
+        "SELECT COUNT(*) FROM products"
+    )
+
+    count = cursor.fetchone()[0]
+
+
+    # nếu chưa có thì thêm sản phẩm mẫu
+
+    if count == 0:
+
+        cursor.execute("""
+        INSERT INTO products
+        (
+            brand,
+            name,
+            price,
+            deposit,
+            eta,
+            image,
+            status
+        )
+
+        VALUES
+        (
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?
+        )
+        """,
+        (
+            "IN ERA+",
+            "TR-2243EX AZURE FALCON 1/72",
+            1300000,
+            300000,
+            "Tháng 9/2026",
+            "falcon.jpg",
+            "active"
+        ))
+
+
     conn.commit()
+
     conn.close()
-
-
-
-init_database()
