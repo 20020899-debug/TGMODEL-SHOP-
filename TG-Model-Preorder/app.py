@@ -127,7 +127,7 @@ def submit():
             product_brand,
             price,
             deposit,
-            status
+            status,
             created_at
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
