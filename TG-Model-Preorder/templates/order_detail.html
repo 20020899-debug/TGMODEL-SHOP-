@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết đơn hàng</title>
+</head>
+<body>
+
+<h1>Chi tiết đơn hàng</h1>
+
+<p><b>Mã đơn:</b> {{ order["order_code"] }}</p>
+<p><b>Khách hàng:</b> {{ order["fullname"] }}</p>
+<p><b>SĐT:</b> {{ order["phone"] }}</p>
+<p><b>Facebook/Zalo:</b> {{ order["contact"] }}</p>
+
+<p><b>Địa chỉ:</b></p>
+
+<p>
+{{ order["address_detail"] }},
+{{ order["ward"] }},
+{{ order["district"] }},
+{{ order["province"] }}
+</p>
+
+<p><b>Sản phẩm:</b> {{ order["product_name"] }}</p>
+
+<p><b>Tiền cọc:</b> {{ "{:,}".format(order["deposit"]) }} đ</p>
+
+<p><b>Trạng thái:</b> {{ order["status"] }}</p>
+
+<p><b>Thời gian:</b> {{ order["created_at"] }}</p>
+
+<p><b>Ghi chú:</b> {{ order["note"] }}</p>
+
+<hr>
+
+<a href="/admin">⬅ Quay lại danh sách</a>
+
+</body>
+</html>
