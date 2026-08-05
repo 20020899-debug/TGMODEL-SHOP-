@@ -153,39 +153,27 @@ def submit():
     conn.commit()
     conn.close()
 
-    return f"""
-    <h2>Đặt Pre-order thành công!</h2>
+    return render_template(
+    "success.html",
 
-    <hr>
+    order_code=order_code,
 
-    <b>Mã đơn:</b> {order_code}<br><br>
+    fullname=fullname,
+    phone=phone,
+    contact=contact,
 
-    <b>Họ tên:</b> {fullname}<br>
-    <b>Số điện thoại:</b> {phone}<br>
-    <b>Facebook/Zalo:</b> {contact}<br>
-    <b>Địa chỉ:</b> {address_detail}, {ward}, {district}, {province}<br>
-    <b>Số lượng:</b> {quantity}<br>
-    <b>Ghi chú:</b> {note}<br>
+    province=province,
+    district=district,
+    ward=ward,
+    address_detail=address_detail,
 
-    <hr>
+    quantity=quantity,
+    note=note,
 
-    <h3>Sản phẩm</h3>
+    status="Chưa thanh toán",
 
-    <b>Hãng:</b> {product["brand"]}<br>
-    <b>Tên:</b> {product["name"]}<br>
-    <b>Giá:</b> {product["price"]:,} đ<br>
-    <b>Tiền cọc:</b> {product["deposit"]:,} đ<br>
-    <b>Dự kiến:</b> {product["eta"]}<br>
-
-    <hr>
-
-    <h3>Trạng thái: Chưa thanh toán</h3>
-
-    <br><br>
-
-    <a href="/">Quay về trang chủ</a>
-    """
-
+    product=product
+)
 
 # ==========================
 # TRANG QUẢN LÝ ĐƠN HÀNG
