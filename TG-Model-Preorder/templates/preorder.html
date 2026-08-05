@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt Pre-order</title>
+</head>
+
+
+<body>
+
+
+<h2>Đặt Pre-order</h2>
+
+
+<!-- THÔNG TIN SẢN PHẨM -->
+
+<div>
+
+    <h3>
+        {{ product["brand"] }}
+    </h3>
+
+
+    <h2>
+        {{ product["name"] }}
+    </h2>
+
+
+    <p>
+        Giá:
+        {{ "{:,}".format(product["price"]) }} đ
+    </p>
+
+
+    <p>
+        Tiền cọc:
+        {{ "{:,}".format(product["deposit"]) }} đ
+    </p>
+
+
+    <p>
+        Dự kiến:
+        {{ product["eta"] }}
+    </p>
+
+
+</div>
+
+
+<hr>
+
+
+
+<form action="/submit" method="POST">
+
+
+    <!-- GỬI ID SẢN PHẨM -->
+
+    <input 
+        type="hidden"
+        name="product_id"
+        value="{{ product['id'] }}">
+
+
+
+    <label>Họ và tên</label><br>
+
+    <input 
+        type="text"
+        name="fullname"
+        required>
+
+    <br><br>
+
+
+
+    <label>Số điện thoại</label><br>
+
+    <input 
+        type="text"
+        name="phone"
+        required>
+
+    <br><br>
+
+
+
+    <label>Facebook hoặc Zalo</label><br>
+
+    <input 
+        type="text"
+        name="contact">
+
+
+    <br><br>
+
+
+
+    <label>Số lượng</label><br>
+
+    <input 
+        type="number"
+        name="quantity"
+        value="1"
+        min="1">
+
+
+    <br><br>
+
+
+
+    <label>Tỉnh / Thành phố</label><br>
+
+    <select 
+        id="province"
+        name="province"
+        required>
+
+        <option value="">
+            -- Chọn tỉnh --
+        </option>
+
+    </select>
+
+
+    <br><br>
+
+
+
+    <label>Quận / Huyện</label><br>
+
+    <select 
+        id="district"
+        name="district"
+        disabled
+        required>
+
+        <option value="">
+            -- Chọn quận / huyện --
+        </option>
+
+    </select>
+
+
+    <br><br>
+
+
+
+    <label>Phường / Xã</label><br>
+
+    <select 
+        id="ward"
+        name="ward"
+        disabled
+        required>
+
+
+        <option value="">
+            -- Chọn phường / xã --
+        </option>
+
+
+    </select>
+
+
+
+    <br><br>
+
+
+
+    <label>Địa chỉ chi tiết</label><br>
+
+
+    <input 
+        type="text"
+        name="address_detail"
+        placeholder="Ví dụ: Số 123 Nguyễn Trãi"
+        required>
+
+
+
+    <br><br>
+
+
+
+    <label>Ghi chú</label><br>
+
+
+    <textarea 
+        name="note"
+        placeholder="Ghi chú thêm">
+    </textarea>
+
+
+
+    <br><br>
+
+
+
+    <button type="submit">
+
+        Gửi đơn
+
+    </button>
+
+
+</form>
+
+
+
+<script src="{{ url_for('static', filename='js/address.js') }}"></script>
+
+
+</body>
+
+</html>

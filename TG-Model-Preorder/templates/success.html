@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Đặt hàng thành công</title>
+
+</head>
+
+<body>
+
+<h1>🎉 Đặt Pre-order thành công!</h1>
+
+<hr>
+
+<h2>Mã đơn: {{ order_code }}</h2>
+
+<hr>
+
+<h3>Thông tin khách hàng</h3>
+
+<p><b>Họ tên:</b> {{ fullname }}</p>
+
+<p><b>SĐT:</b> {{ phone }}</p>
+
+<p><b>Facebook/Zalo:</b> {{ contact }}</p>
+
+<p>
+<b>Địa chỉ:</b>
+
+{{ address_detail }},
+{{ ward }},
+{{ district }},
+{{ province }}
+
+</p>
+
+<p><b>Số lượng:</b> {{ quantity }}</p>
+
+<p><b>Ghi chú:</b> {{ note }}</p>
+
+<hr>
+
+<h3>Sản phẩm</h3>
+
+<p><b>Hãng:</b> {{ product.brand }}</p>
+
+<p><b>Tên:</b> {{ product.name }}</p>
+
+<p><b>Giá:</b> {{ "{:,}".format(product.price) }} đ</p>
+
+<p><b>Tiền cọc:</b> {{ "{:,}".format(product.deposit) }} đ</p>
+
+<p><b>Dự kiến:</b> {{ product.eta }}</p>
+
+<hr>
+
+<h3>
+
+Trạng thái:
+{{ status }}
+
+</h3>
+
+<br>
+
+<a href="/">🏠 Quay về trang chủ</a>
+
+</body>
+
+</html>
