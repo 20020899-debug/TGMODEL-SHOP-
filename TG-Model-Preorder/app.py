@@ -190,13 +190,33 @@ def admin():
 
     cursor = conn.cursor()
 
+    keyword = request.args.get("keyword", "").strip()
+
+if keyword:
+
+    cursor.execute("""
+        SELECT *
+        FROM orders
+        WHERE
+            order_code LIKE ?
+            OR fullname LIKE ?
+            OR phone LIKE ?
+        ORDER BY id DESC
+    """, (
+        f"%{keyword}%",
+        f"%{keyword}%",
+        f"%{keyword}%"
+    ))
+
+else:
+
     cursor.execute("""
         SELECT *
         FROM orders
         ORDER BY id DESC
     """)
 
-    orders = cursor.fetchall()
+orders = cursor.fetchall()
 
     conn.close()
 
