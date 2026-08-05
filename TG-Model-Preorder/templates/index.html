@@ -1,17 +1,9 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>TG Model Shop</title>
-
-    <link rel="stylesheet"
-          href="{{ url_for('static',
-          filename='css/style.css') }}">
-</head>
-
 <body>
 
 <h1>TG MODEL SHOP</h1>
+
+{% for product in products %}
+
 <div class="card shadow p-4 mt-4">
 
     <h5 class="text-secondary">
@@ -39,9 +31,17 @@
         {{ product.eta }}
     </p>
 
+    <a
+        href="/preorder/{{ product.id }}"
+        class="btn btn-success btn-lg"
+    >
+        ĐẶT PRE-ORDER
+    </a>
+
 </div>
-<a href="/preorder" class="btn btn-success btn-lg">
-    ĐẶT PRE-ORDER
-</a>
+
+<br>
+
+{% endfor %}
+
 </body>
-</html>
