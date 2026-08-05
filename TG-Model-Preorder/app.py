@@ -13,7 +13,8 @@ product = {
     "deposit": 300000,
     "eta": "Tháng 9/2026"
 }
-
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "123456"
 
 # ==========================
 # Trang chủ
