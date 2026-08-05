@@ -204,8 +204,33 @@ def admin():
         "admin.html",
         orders=orders
     )
+# ==========================
+# XEM CHI TIET DƠN HÀNG
+# ==========================
+@app.route("/admin/order/<int:id>")
+def order_detail():
 
+    if not session.get("admin"):
+        return redirect(url_for("login"))
 
+    conn = sqlite3.connect("orders.db")
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT * FROM orders WHERE id=?",
+        (id,)
+    )
+
+    order = cursor.fetchone()
+
+    conn.close()
+
+    return render_template(
+        "order_detail.html",
+        order=order
+    )
 # ==========================
 # CHẠY FLASK
 # ==========================
