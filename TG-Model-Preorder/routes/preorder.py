@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 
 from config import products
-from payment import payos
+from payos_service import payos
 
 
 preorder_bp = Blueprint(
