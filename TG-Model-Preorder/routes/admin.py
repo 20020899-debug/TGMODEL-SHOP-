@@ -4,10 +4,14 @@ from flask import request
 from flask import redirect
 from flask import url_for
 from flask import session
-from database import get_db
-from io import BytesIO
 from flask import send_file
+
+from io import BytesIO
 from openpyxl import Workbook
+
+from database import get_db
+from psycopg2.extras import RealDictCursor
+
 
 admin_bp = Blueprint(
     "admin",
@@ -15,122 +19,103 @@ admin_bp = Blueprint(
 )
 
 
+# =========================
+# Danh sách đơn hàng
+# =========================
 
 @admin_bp.route("/admin")
 def admin():
 
     if not session.get("admin"):
-
         return redirect(
             url_for("auth.login")
         )
 
+    conn = get_db()
 
-   conn = get_db()
-   cursor = conn.cursor(
-    cursor_factory=RealDictCursor
-)
-
-
-    cursor = conn.cursor()
-
+    cursor = conn.cursor(
+        cursor_factory=RealDictCursor
+    )
 
     keyword = request.args.get(
         "keyword",
         ""
     ).strip()
 
-
-
     if keyword:
 
-
         cursor.execute(
-        """
-        SELECT *
-        FROM orders
+            """
+            SELECT *
+            FROM orders
 
-        WHERE
-        order_code LIKE ?
-        OR fullname LIKE ?
-        OR phone LIKE ?
+            WHERE
+                order_code ILIKE %s
+                OR fullname ILIKE %s
+                OR phone ILIKE %s
 
-        ORDER BY id DESC
+            ORDER BY id DESC
+            """,
 
-        """,
-        (
-            f"%{keyword}%",
-            f"%{keyword}%",
-            f"%{keyword}%"
-        ))
-
+            (
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%"
+            )
+        )
 
     else:
 
-
         cursor.execute(
-        """
-        SELECT *
-        FROM orders
-
-        ORDER BY id DESC
-        """
+            """
+            SELECT *
+            FROM orders
+            ORDER BY id DESC
+            """
         )
-
 
     orders = cursor.fetchall()
 
-
     conn.close()
-
-
 
     return render_template(
         "admin.html",
         orders=orders,
         keyword=keyword
     )
-
-
-
+# =========================
+# Chi tiết đơn hàng
+# =========================
 
 @admin_bp.route("/admin/order/<int:id>")
 def order_detail(id):
 
-
     if not session.get("admin"):
-
         return redirect(
             url_for("auth.login")
         )
 
-
     conn = get_db()
+
     cursor = conn.cursor(
-     cursor_factory=RealDictCursor
-)
-
-
-    cursor = conn.cursor()
-
-
+        cursor_factory=RealDictCursor
+    )
 
     cursor.execute(
         """
         SELECT *
         FROM orders
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,)
     )
 
-
     order = cursor.fetchone()
-
 
     conn.close()
 
-
+    if order is None:
+        return "Không tìm thấy đơn hàng", 404
 
     return render_template(
         "order_detail.html",
@@ -138,8 +123,9 @@ def order_detail(id):
     )
 
 
-
-
+# =========================
+# Cập nhật trạng thái
+# =========================
 
 @admin_bp.route(
     "/admin/order/<int:id>/update",
@@ -147,35 +133,22 @@ def order_detail(id):
 )
 def update_order(id):
 
-
     if not session.get("admin"):
-
         return redirect(
             url_for("auth.login")
         )
 
-
-
-    status = request.form.get(
-        "status"
-    )
-
-
+    status = request.form.get("status")
 
     conn = get_db()
 
     cursor = conn.cursor()
 
-
-
     cursor.execute(
         """
         UPDATE orders
-
-        SET status=?
-
-        WHERE id=?
-
+        SET status=%s
+        WHERE id=%s
         """,
         (
             status,
@@ -183,11 +156,8 @@ def update_order(id):
         )
     )
 
-
     conn.commit()
     conn.close()
-
-
 
     return redirect(
         url_for(
@@ -195,8 +165,14 @@ def update_order(id):
             id=id
         )
     )
-    
-@admin_bp.route("/admin/order/<int:id>/delete", methods=["POST"])
+# =========================
+# Xóa đơn hàng
+# =========================
+
+@admin_bp.route(
+    "/admin/order/<int:id>/delete",
+    methods=["POST"]
+)
 def delete_order(id):
 
     if not session.get("admin"):
@@ -204,29 +180,30 @@ def delete_order(id):
             url_for("auth.login")
         )
 
-
     conn = get_db()
 
     cursor = conn.cursor()
 
-
     cursor.execute(
         """
         DELETE FROM orders
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,)
     )
 
-
     conn.commit()
     conn.close()
-
 
     return redirect(
         url_for("admin.admin")
     )
-    
+
+
+# =========================
+# Xuất Excel
+# =========================
+
 @admin_bp.route("/admin/export")
 def export_excel():
 
@@ -236,17 +213,18 @@ def export_excel():
         )
 
     conn = get_db()
+
     cursor = conn.cursor(
-     cursor_factory=RealDictCursor
-)
+        cursor_factory=RealDictCursor
+    )
 
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT *
         FROM orders
         ORDER BY id DESC
-    """)
+        """
+    )
 
     orders = cursor.fetchall()
 
