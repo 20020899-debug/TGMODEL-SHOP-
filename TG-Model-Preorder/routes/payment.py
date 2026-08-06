@@ -123,7 +123,7 @@ def webhook():
                 """,
 
                 (
-                    "Đã cọc",
+                    "Đã thanh toán",
                     order_code
                 )
             )
