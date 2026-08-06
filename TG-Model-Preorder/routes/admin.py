@@ -162,9 +162,7 @@ def update_order(id):
 
 
 
-    conn = sqlite3.connect(
-        "orders.db"
-    )
+    conn = get_db()
 
     cursor = conn.cursor()
 
@@ -207,9 +205,7 @@ def delete_order(id):
         )
 
 
-    conn = sqlite3.connect(
-        "orders.db"
-    )
+    conn = get_db()
 
     cursor = conn.cursor()
 
@@ -239,8 +235,10 @@ def export_excel():
             url_for("auth.login")
         )
 
-    conn = sqlite3.connect("orders.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
+    cursor = conn.cursor(
+     cursor_factory=RealDictCursor
+)
 
     cursor = conn.cursor()
 
