@@ -68,7 +68,7 @@ def webhook():
 
                 """,
                 (
-                    "Đã thanh toán",
+                    "Đã Cọc",
                     order_code,
                     "Chưa thanh toán"
                 )
