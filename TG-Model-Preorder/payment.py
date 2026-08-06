@@ -1,18 +1,9 @@
-from flask import Blueprint, render_template
+import os
+from payos import PayOS
 
-payment_bp = Blueprint(
-    "payment",
-    __name__
+
+payos = PayOS(
+    client_id=os.getenv("PAYOS_CLIENT_ID"),
+    api_key=os.getenv("PAYOS_API_KEY"),
+    checksum_key=os.getenv("PAYOS_CHECKSUM_KEY")
 )
-
-
-@payment_bp.route("/payment/success")
-def payment_success():
-
-    return render_template("payment_success.html")
-
-
-@payment_bp.route("/payment/cancel")
-def payment_cancel():
-
-    return render_template("payment_cancel.html")
