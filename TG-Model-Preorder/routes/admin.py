@@ -5,7 +5,6 @@ from flask import redirect
 from flask import url_for
 from flask import session
 
-import sqlite3
 from io import BytesIO
 from flask import send_file
 from openpyxl import Workbook
@@ -27,9 +26,9 @@ def admin():
         )
 
 
-    conn = sqlite3.connect(
-        "orders.db"
-    )
+    from database import get_db
+
+    conn = get_db()
 
     conn.row_factory = sqlite3.Row
 
