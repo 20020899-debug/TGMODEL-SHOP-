@@ -1,6 +1,7 @@
 from flask import Blueprint, request, redirect
 from datetime import datetime
 import time
+
 from database import get_db
 from config import products
 from payos_service import payos
@@ -12,39 +13,25 @@ preorder_bp = Blueprint(
 )
 
 
-
 @preorder_bp.route(
     "/submit",
     methods=["POST"]
 )
 def submit():
 
-
     # =========================
     # Lấy sản phẩm
     # =========================
 
-    product_id = int(
-        request.form.get("product_id")
+    product_id = int(request.form.get("product_id"))
+
+    product = next(
+        (p for p in products if p["id"] == product_id),
+        None
     )
 
-
-    product = None
-
-
-    for p in products:
-
-        if p["id"] == product_id:
-
-            product = p
-            break
-
-
-
     if product is None:
-
-        return "Không tìm thấy sản phẩm"
-
+        return "Không tìm thấy sản phẩm", 404
 
 
     # =========================
@@ -52,87 +39,54 @@ def submit():
     # =========================
 
     fullname = request.form.get("fullname")
-
     phone = request.form.get("phone")
-
     contact = request.form.get("contact")
 
-
     province = request.form.get("province")
-
     district = request.form.get("district")
-
     ward = request.form.get("ward")
-
-    address_detail = request.form.get(
-        "address_detail"
-    )
-
+    address_detail = request.form.get("address_detail")
 
     quantity = int(
-        request.form.get(
-            "quantity",
-            1
-        )
+        request.form.get("quantity", 1)
     )
-
 
     note = request.form.get("note")
 
 
-
     # =========================
-    # Tạo mã đơn shop
+    # Kết nối database
     # =========================
-
 
     conn = get_db()
-
     cursor = conn.cursor()
 
 
+    # =========================
+    # Tạo mã đơn
+    # =========================
 
     cursor.execute(
         """
-        SELECT MAX(id)
+        SELECT COALESCE(MAX(id),0)
         FROM orders
         """
     )
 
-
-    last_id = cursor.fetchone()[0]
-
-
-    if last_id is None:
-
-        count = 1
-
-    else:
-
-        count = last_id + 1
-
-
-
-    # Mã đơn shop
+    count = cursor.fetchone()[0] + 1
 
     order_code = f"TGM{count:03d}"
 
 
-
     # =========================
-    # Mã PayOS riêng
+    # Mã PayOS
     # =========================
 
-    payos_order_code = int(
-        time.time()
-    )
-
-
+    payos_order_code = int(time.time())
 
     created_at = datetime.now().strftime(
         "%d/%m/%Y %H:%M:%S"
     )
-
 
 
     # =========================
@@ -161,99 +115,51 @@ def submit():
             created_at
         )
 
-
         VALUES
         (
-            ?,?,?,?,?,?,?,?,?,?,
-            ?,?,?,?,?,?
+            %s,%s,%s,%s,%s,%s,%s,%s,
+            %s,%s,%s,%s,%s,%s,%s,%s
         )
-
         """,
-
         (
-
             order_code,
-
             fullname,
-
             phone,
-
             contact,
-
             province,
-
             district,
-
             ward,
-
             address_detail,
-
             quantity,
-
             note,
-
             product["name"],
-
             product["brand"],
-
             product["price"],
-
             product["deposit"],
-
             "Chưa thanh toán",
-
             created_at
-
         )
-
     )
 
-
-
     conn.commit()
-
     conn.close()
 
 
-
     # =========================
-    # Tạo thanh toán PayOS
+    # Tạo link PayOS
     # =========================
-
 
     payment_data = {
-
-
-        "orderCode":
-            payos_order_code,
-
-
-        "amount":
-            product["deposit"] * quantity,
-
-
-        "description":
-            order_code,
-
-
-        "returnUrl":
-            "https://tgmodel-shop.onrender.com/payment/success",
-
-
-        "cancelUrl":
-            "https://tgmodel-shop.onrender.com/payment/cancel"
-
+        "orderCode": payos_order_code,
+        "amount": product["deposit"] * quantity,
+        "description": order_code,
+        "returnUrl": "https://tgmodel-shop.onrender.com/payment/success",
+        "cancelUrl": "https://tgmodel-shop.onrender.com/payment/cancel"
     }
-
-
 
     payment_link = payos.payment_requests.create(
         payment_data
     )
-
-
-
-    # chuyển sang QR PayOS
 
     return redirect(
         payment_link.checkout_url
