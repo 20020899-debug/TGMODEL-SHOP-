@@ -5,6 +5,9 @@ from config import SECRET_KEY
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+from payos import test
+print(test())
+
 from routes.home import home_bp
 from routes.auth import auth_bp
 from routes.preorder import preorder_bp
