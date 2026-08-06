@@ -4,7 +4,7 @@ from flask import request
 from flask import redirect
 from flask import url_for
 from flask import session
-
+from database import get_db
 from io import BytesIO
 from flask import send_file
 from openpyxl import Workbook
@@ -25,8 +25,6 @@ def admin():
             url_for("auth.login")
         )
 
-
-    from database import get_db
 
     conn = get_db()
 
