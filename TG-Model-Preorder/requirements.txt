@@ -2,4 +2,4 @@ Flask
 gunicorn
 openpyxl
 requests
-payos
+payos==1.0.6
