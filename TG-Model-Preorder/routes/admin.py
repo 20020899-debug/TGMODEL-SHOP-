@@ -106,8 +106,9 @@ def order_detail(id):
 
 
     conn = get_db()
-
-    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor(
+     cursor_factory=RealDictCursor
+)
 
 
     cursor = conn.cursor()
