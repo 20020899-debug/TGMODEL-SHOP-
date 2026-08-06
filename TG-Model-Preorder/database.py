@@ -1,6 +1,12 @@
-import sqlite3
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
 
 def get_db():
-    conn = sqlite3.connect("orders.db")
-    conn.row_factory = sqlite3.Row
+
+    conn = psycopg2.connect(
+        os.environ["DATABASE_URL"]
+    )
+
     return conn
