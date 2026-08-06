@@ -1,11 +1,11 @@
 from flask import Flask
 
 from config import SECRET_KEY
+from payos import test
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-from payos import test
 print(test())
 
 from routes.home import home_bp
