@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-
+from database import get_db
 
 payment_bp = Blueprint(
     "payment",
@@ -77,8 +77,7 @@ def webhook():
         )
 
 
-        from database import get_db
-
+    
         conn = get_db()
 
         cursor = conn.cursor()
