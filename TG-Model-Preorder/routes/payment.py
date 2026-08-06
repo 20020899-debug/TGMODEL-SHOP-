@@ -7,6 +7,10 @@ payment_bp = Blueprint(
 )
 
 
+# =========================
+# Thanh toán thành công
+# =========================
+
 @payment_bp.route("/payment/success")
 def payment_success():
 
@@ -14,6 +18,10 @@ def payment_success():
         "payment_success.html"
     )
 
+
+# =========================
+# Hủy thanh toán
+# =========================
 
 @payment_bp.route("/payment/cancel")
 def payment_cancel():
@@ -23,6 +31,10 @@ def payment_cancel():
     )
 
 
+# =========================
+# Webhook PayOS
+# =========================
+
 @payment_bp.route(
     "/payment/webhook",
     methods=["POST"]
@@ -31,90 +43,57 @@ def webhook():
 
     print("========== PAYOS WEBHOOK ==========")
 
-
     data = request.get_json()
 
     print(data)
 
-
     if not data:
-
         return "NO DATA", 400
 
+    # Chỉ xử lý khi thanh toán thành công
+    if data.get("code") != "00":
 
+        print("PAYMENT NOT SUCCESS")
 
-    # PayOS báo thành công
+        return "OK", 200
 
-    if data.get("code") == "00":
+    # Lấy mã đơn của shop đã gửi trong description
+    order_code = (
+        data
+        .get("data", {})
+        .get("description")
+    )
 
+    if not order_code:
 
-        payos_order_code = (
-            data
-            .get("data", {})
-            .get("orderCode")
-        )
+        print("KHONG CO DESCRIPTION")
 
+        return "OK", 200
 
-        if not payos_order_code:
+    print("ORDER:", order_code)
 
-            print("KHONG CO ORDER CODE")
+    conn = get_db()
 
-            return "OK", 200
+    cursor = conn.cursor()
 
-
-
-        # Đổi mã PayOS -> mã shop
-        # Ví dụ:
-        # PayOS: 15
-        # Shop: TGM015
-
-        order_code = f"TGM{int(payos_order_code):03d}"
-
-
-        print(
-            "UPDATE ORDER:",
+    cursor.execute(
+        """
+        UPDATE orders
+        SET status=%s
+        WHERE order_code=%s
+        """,
+        (
+            "Đã cọc",
             order_code
         )
+    )
 
+    print(
+        "UPDATED ROW:",
+        cursor.rowcount
+    )
 
-    
-        conn = get_db()
+    conn.commit()
+    conn.close()
 
-        cursor = conn.cursor()
-
-
-        cursor.execute(
-            """
-            UPDATE orders
-
-            SET status=?
-
-            WHERE order_code=?
-
-            """,
-            (
-                "Đã cọc",
-                order_code
-            )
-        )
-
-
-        print(
-            "UPDATED ROW:",
-            cursor.rowcount
-        )
-
-
-        conn.commit()
-        conn.close()
-
-
-
-    else:
-
-        print(
-            "PAYMENT NOT SUCCESS"
-        )
-
-
-    return "OK",200
+    return "OK", 200
