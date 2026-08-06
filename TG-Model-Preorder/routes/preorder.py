@@ -147,6 +147,23 @@ def submit():
 
     conn.commit()
     conn.close()
+    payment_data = PaymentData(
+    orderCode=count,
+    amount=product["deposit"] * quantity,
+    description=order_code,
+    returnUrl="https://tgmodel-shop.onrender.com/payment/success",
+    cancelUrl="https://tgmodel-shop.onrender.com/payment/cancel"
+)
+
+
+payment_link = payos.paymentRequests.create(
+    payment_data
+)
+
+
+return redirect(
+    payment_link.checkoutUrl
+)
 
 
 
