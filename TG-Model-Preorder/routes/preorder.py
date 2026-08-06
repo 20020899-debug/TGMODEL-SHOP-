@@ -4,7 +4,7 @@ from datetime import datetime
 
 from config import products
 from payos_service import payos
-from payos import PaymentData
+
 
 preorder_bp = Blueprint(
     "preorder",
@@ -26,14 +26,12 @@ def submit():
     product = None
 
     for p in products:
-
         if p["id"] == product_id:
             product = p
             break
 
 
     if product is None:
-
         return "Không tìm thấy sản phẩm"
 
 
@@ -61,7 +59,6 @@ def submit():
             1
         )
     )
-
 
     note = request.form.get("note")
 
@@ -91,7 +88,6 @@ def submit():
     created_at = datetime.now().strftime(
         "%d/%m/%Y %H:%M:%S"
     )
-
 
 
     cursor.execute(
@@ -147,30 +143,12 @@ def submit():
 
     conn.commit()
     conn.close()
-    payment_data = PaymentData(
-    orderCode=count,
-    amount=product["deposit"] * quantity,
-    description=order_code,
-    returnUrl="https://tgmodel-shop.onrender.com/payment/success",
-    cancelUrl="https://tgmodel-shop.onrender.com/payment/cancel"
-)
-
-
-payment_link = payos.paymentRequests.create(
-    payment_data
-)
-
-
-return redirect(
-    payment_link.checkoutUrl
-)
 
 
 
     # =========================
     # Tạo thanh toán PayOS
     # =========================
-
 
     payment_data = {
 
@@ -182,26 +160,20 @@ return redirect(
         "description":
             order_code,
 
-
         "returnUrl":
             "https://tgmodel-shop.onrender.com/payment/success",
 
-
         "cancelUrl":
             "https://tgmodel-shop.onrender.com/payment/cancel"
-
     }
 
 
 
-    payment_link = payos.createPaymentLink(
+    payment_link = payos.payment_requests.create(
         payment_data
     )
 
 
-
-    # Chuyển sang PayOS
-
     return redirect(
-        payment_link.checkoutUrl
+        payment_link.checkout_url
     )
