@@ -202,7 +202,7 @@ def submit():
 
             product["deposit"],
 
-            "Chờ thanh toán",
+            "Chưa thanh toán",
 
             created_at
 
