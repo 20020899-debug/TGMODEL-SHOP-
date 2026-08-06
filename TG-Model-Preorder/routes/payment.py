@@ -45,28 +45,27 @@ def payment_cancel():
 )
 def webhook():
 
-    print("==============================")
-    print("PAYOS WEBHOOK RECEIVED")
-    print("==============================")
+
+    print("====================")
+    print("PAYOS WEBHOOK")
+    print("====================")
+
 
 
     data = request.json
 
 
-    print("DATA:")
     print(data)
 
 
 
     if not data:
 
-        print("NO DATA")
-
         return "No data", 400
 
 
 
-    # PayOS thanh toán thành công
+    # Thanh toán thành công
 
     if data.get("code") == "00":
 
@@ -74,18 +73,31 @@ def webhook():
         try:
 
 
-            payos_order_code = data["data"]["orderCode"]
+            # Lấy mã đơn shop
+            # description = TGM001
+
+            order_code = (
+                data
+                .get("data", {})
+                .get("description")
+            )
 
 
-            # Đổi sang mã đơn của shop
-            # 1 -> TGM001
-            # 2 -> TGM002
 
-            order_code = f"TGM{payos_order_code:03d}"
+            if not order_code:
+
+
+                print(
+                    "KHONG CO ORDER CODE"
+                )
+
+
+                return "OK",200
+
 
 
             print(
-                "UPDATE ORDER:",
+                "UPDATE:",
                 order_code
             )
 
@@ -109,6 +121,7 @@ def webhook():
                 WHERE order_code=?
 
                 """,
+
                 (
                     "Đã cọc",
                     order_code
@@ -139,7 +152,7 @@ def webhook():
             )
 
 
-            return "Error", 500
+            return "ERROR",500
 
 
 
@@ -152,4 +165,4 @@ def webhook():
 
 
 
-    return "OK", 200
+    return "OK",200
