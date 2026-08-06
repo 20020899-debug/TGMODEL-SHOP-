@@ -8,36 +8,19 @@ payment_bp = Blueprint(
 )
 
 
-
-# =========================
-# Thanh toán thành công
-# =========================
-
 @payment_bp.route("/payment/success")
 def payment_success():
-
     return render_template(
         "payment_success.html"
     )
 
 
-
-# =========================
-# Hủy thanh toán
-# =========================
-
 @payment_bp.route("/payment/cancel")
 def payment_cancel():
-
     return render_template(
         "payment_cancel.html"
     )
 
-
-
-# =========================
-# PayOS Webhook
-# =========================
 
 @payment_bp.route(
     "/payment/webhook",
@@ -45,124 +28,62 @@ def payment_cancel():
 )
 def webhook():
 
-
-    print("====================")
-    print("PAYOS WEBHOOK")
-    print("====================")
-
-
-
     data = request.json
 
-
-    print(data)
-
+    print("PAYOS WEBHOOK:", data)
 
 
     if not data:
-
         return "No data", 400
 
 
-
-    # Thanh toán thành công
-
+    # PayOS báo thanh toán thành công
     if data.get("code") == "00":
 
-
-        try:
-
-
-            # Lấy mã đơn shop
-            # description = TGM001
-
-            order_code = (
-                data
-                .get("data", {})
-                .get("description")
-            )
+        order_code = (
+            data
+            .get("data", {})
+            .get("description")
+        )
 
 
-
-            if not order_code:
-
-
-                print(
-                    "KHONG CO ORDER CODE"
-                )
-
-
-                return "OK",200
-
-
-
-            print(
-                "UPDATE:",
-                order_code
-            )
-
-
+        if order_code:
 
             conn = sqlite3.connect(
                 "orders.db"
             )
 
-
             cursor = conn.cursor()
-
 
 
             cursor.execute(
                 """
                 UPDATE orders
 
-                SET status=?
+                SET status = ?
 
-                WHERE order_code=?
+                WHERE order_code = ?
+
+                AND status = ?
 
                 """,
-
                 (
                     "Đã thanh toán",
-                    order_code
+                    order_code,
+                    "Chưa thanh toán"
                 )
             )
 
 
-
             print(
-                "UPDATED ROW:",
-                cursor.rowcount
+                "UPDATED:",
+                cursor.rowcount,
+                order_code
             )
-
 
 
             conn.commit()
-
             conn.close()
 
 
-
-        except Exception as e:
-
-
-            print(
-                "WEBHOOK ERROR:",
-                e
-            )
-
-
-            return "ERROR",500
-
-
-
-    else:
-
-
-        print(
-            "PAYMENT NOT SUCCESS"
-        )
-
-
-
-    return "OK",200
+    return "OK", 200
