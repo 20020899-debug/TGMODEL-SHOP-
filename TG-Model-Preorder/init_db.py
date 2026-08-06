@@ -1,31 +1,49 @@
-import sqlite3
+from database import get_db
 
-conn = sqlite3.connect("orders.db")
+
+conn = get_db()
+
 cursor = conn.cursor()
+
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    id SERIAL PRIMARY KEY,
+
     order_code TEXT,
+
     fullname TEXT,
     phone TEXT,
     contact TEXT,
+
     province TEXT,
     district TEXT,
     ward TEXT,
     address_detail TEXT,
+
     quantity INTEGER,
+
     note TEXT,
+
     product_name TEXT,
     product_brand TEXT,
+
     price INTEGER,
     deposit INTEGER,
+
     status TEXT,
+
     created_at TEXT
 )
+
 """)
 
+
 conn.commit()
+
+cursor.close()
 conn.close()
 
-print("Database OK")
+
+print("PostgreSQL OK")
