@@ -9,10 +9,14 @@ payment_bp = Blueprint(
 @payment_bp.route("/payment/success")
 def payment_success():
 
-    return render_template("payment_success.html")
+    return render_template(
+        "payment_success.html"
+    )
 
 
 @payment_bp.route("/payment/cancel")
 def payment_cancel():
 
-    return render_template("payment_cancel.html")
+    return render_template(
+        "payment_cancel.html"
+    )
