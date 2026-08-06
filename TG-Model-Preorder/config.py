@@ -10,7 +10,7 @@ products = [
         "brand": "IN ERA+",
         "name": "IN ERA+ TR-2243EX AZURE FALCON 1/72",
         "price": 1300000,
-        "deposit": 300000,
+        "deposit": 10000,
         "eta": "Tháng 9/2026"
     },
 
@@ -19,7 +19,7 @@ products = [
         "brand": "MS GENERAL",
         "name": "SIN-02 SEVEN DEADLY",
         "price": 1650000,
-        "deposit": 400000,
+        "deposit": 10000,
         "eta": "Tháng 10/2026"
     }
 
