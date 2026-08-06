@@ -1,7 +1,7 @@
 from flask import Blueprint, request, redirect
 from datetime import datetime
 import time
-
+from database import get_db
 from config import products
 from payos_service import payos
 
@@ -85,7 +85,6 @@ def submit():
     # Tạo mã đơn shop
     # =========================
 
-    from database import get_db
 
     conn = get_db()
 
