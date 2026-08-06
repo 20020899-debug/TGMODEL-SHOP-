@@ -82,7 +82,7 @@ def submit():
     count = cursor.fetchone()[0] + 1
 
 
-    order_code = f"TG{count:03d}"
+    order_code = f"TGM{count:03d}"
 
 
     created_at = datetime.now().strftime(
