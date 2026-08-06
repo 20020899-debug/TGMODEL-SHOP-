@@ -1,5 +1,6 @@
 from flask import Blueprint, request, redirect
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import time
 
 from database import get_db
@@ -84,9 +85,9 @@ def submit():
 
     payos_order_code = int(time.time())
 
-    created_at = datetime.now().strftime(
-        "%d/%m/%Y %H:%M:%S"
-    )
+    created_at = datetime.now(
+      ZoneInfo("Asia/Ho_Chi_Minh")
+    ).strftime("%d/%m/%Y %H:%M:%S")
 
 
     # =========================
