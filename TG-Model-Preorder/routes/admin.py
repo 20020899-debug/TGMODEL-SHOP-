@@ -6,7 +6,9 @@ from flask import url_for
 from flask import session
 
 import sqlite3
-
+from io import BytesIO
+from flask import send_file
+from openpyxl import Workbook
 
 admin_bp = Blueprint(
     "admin",
@@ -230,4 +232,83 @@ def delete_order(id):
 
     return redirect(
         url_for("admin.admin")
+    )
+    
+@admin_bp.route("/admin/export")
+def export_excel():
+
+    if not session.get("admin"):
+        return redirect(
+            url_for("auth.login")
+        )
+
+    conn = sqlite3.connect("orders.db")
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM orders
+        ORDER BY id DESC
+    """)
+
+    orders = cursor.fetchall()
+
+    conn.close()
+
+    wb = Workbook()
+
+    ws = wb.active
+    ws.title = "Đơn hàng"
+
+    ws.append([
+        "Mã đơn",
+        "Ngày tạo",
+        "Khách hàng",
+        "SĐT",
+        "Facebook/Zalo",
+        "Sản phẩm",
+        "Số lượng",
+        "Giá",
+        "Tiền cọc",
+        "Trạng thái",
+        "Tỉnh",
+        "Quận",
+        "Phường",
+        "Địa chỉ",
+        "Ghi chú"
+    ])
+
+    for order in orders:
+
+        ws.append([
+            order["order_code"],
+            order["created_at"],
+            order["fullname"],
+            order["phone"],
+            order["contact"],
+            order["product_name"],
+            order["quantity"],
+            order["price"],
+            order["deposit"],
+            order["status"],
+            order["province"],
+            order["district"],
+            order["ward"],
+            order["address_detail"],
+            order["note"]
+        ])
+
+    output = BytesIO()
+
+    wb.save(output)
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="don_hang.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
