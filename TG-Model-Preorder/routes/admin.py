@@ -26,9 +26,10 @@ def admin():
         )
 
 
-    conn = get_db()
-
-    conn.row_factory = sqlite3.Row
+   conn = get_db()
+   cursor = conn.cursor(
+    cursor_factory=RealDictCursor
+)
 
 
     cursor = conn.cursor()
@@ -104,9 +105,7 @@ def order_detail(id):
         )
 
 
-    conn = sqlite3.connect(
-        "orders.db"
-    )
+    conn = get_db()
 
     conn.row_factory = sqlite3.Row
 
