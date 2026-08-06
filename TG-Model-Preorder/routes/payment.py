@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template, request
-import sqlite3
 
 
 payment_bp = Blueprint(
@@ -78,9 +77,9 @@ def webhook():
         )
 
 
-        conn = sqlite3.connect(
-            "orders.db"
-        )
+        from database import get_db
+
+        conn = get_db()
 
         cursor = conn.cursor()
 
