@@ -1,9 +1,6 @@
 from flask import Flask
 
 from config import SECRET_KEY
-from payos_service import test
-
-print(test())
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
