@@ -1,6 +1,7 @@
 from flask import Blueprint, request, redirect
 import sqlite3
 from datetime import datetime
+import time
 
 from config import products
 from payos_service import payos
@@ -12,8 +13,13 @@ preorder_bp = Blueprint(
 )
 
 
-@preorder_bp.route("/submit", methods=["POST"])
+
+@preorder_bp.route(
+    "/submit",
+    methods=["POST"]
+)
 def submit():
+
 
     # =========================
     # Lấy sản phẩm
@@ -23,15 +29,21 @@ def submit():
         request.form.get("product_id")
     )
 
+
     product = None
 
+
     for p in products:
+
         if p["id"] == product_id:
+
             product = p
             break
 
 
+
     if product is None:
+
         return "Không tìm thấy sản phẩm"
 
 
@@ -41,11 +53,16 @@ def submit():
     # =========================
 
     fullname = request.form.get("fullname")
+
     phone = request.form.get("phone")
+
     contact = request.form.get("contact")
 
+
     province = request.form.get("province")
+
     district = request.form.get("district")
+
     ward = request.form.get("ward")
 
     address_detail = request.form.get(
@@ -60,12 +77,13 @@ def submit():
         )
     )
 
+
     note = request.form.get("note")
 
 
 
     # =========================
-    # Lưu đơn hàng
+    # Tạo mã đơn shop
     # =========================
 
     conn = sqlite3.connect(
@@ -75,20 +93,53 @@ def submit():
     cursor = conn.cursor()
 
 
+
     cursor.execute(
-        "SELECT COUNT(*) FROM orders"
+        """
+        SELECT MAX(id)
+        FROM orders
+        """
     )
 
-    count = cursor.fetchone()[0] + 1
 
+    last_id = cursor.fetchone()[0]
+
+
+    if last_id is None:
+
+        count = 1
+
+    else:
+
+        count = last_id + 1
+
+
+
+    # Mã đơn shop
 
     order_code = f"TGM{count:03d}"
+
+
+
+    # =========================
+    # Mã PayOS riêng
+    # =========================
+
+    payos_order_code = int(
+        time.time()
+    )
+
 
 
     created_at = datetime.now().strftime(
         "%d/%m/%Y %H:%M:%S"
     )
 
+
+
+    # =========================
+    # Lưu đơn hàng
+    # =========================
 
     cursor.execute(
         """
@@ -112,36 +163,57 @@ def submit():
             created_at
         )
 
+
         VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-         ?, ?, ?, ?, ?, ?)
+        (
+            ?,?,?,?,?,?,?,?,?,?,
+            ?,?,?,?,?,?
+        )
 
         """,
+
         (
+
             order_code,
+
             fullname,
+
             phone,
+
             contact,
+
             province,
+
             district,
+
             ward,
+
             address_detail,
+
             quantity,
+
             note,
 
             product["name"],
+
             product["brand"],
+
             product["price"],
+
             product["deposit"],
 
             "Chờ thanh toán",
 
             created_at
+
         )
+
     )
 
 
+
     conn.commit()
+
     conn.close()
 
 
@@ -150,21 +222,29 @@ def submit():
     # Tạo thanh toán PayOS
     # =========================
 
+
     payment_data = {
 
-        "orderCode": count,
+
+        "orderCode":
+            payos_order_code,
+
 
         "amount":
             product["deposit"] * quantity,
 
+
         "description":
             order_code,
+
 
         "returnUrl":
             "https://tgmodel-shop.onrender.com/payment/success",
 
+
         "cancelUrl":
             "https://tgmodel-shop.onrender.com/payment/cancel"
+
     }
 
 
@@ -173,6 +253,9 @@ def submit():
         payment_data
     )
 
+
+
+    # chuyển sang QR PayOS
 
     return redirect(
         payment_link.checkout_url
