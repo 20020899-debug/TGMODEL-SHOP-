@@ -1,5 +1,4 @@
 from flask import Blueprint, request, redirect
-import sqlite3
 from datetime import datetime
 import time
 
@@ -86,9 +85,9 @@ def submit():
     # Tạo mã đơn shop
     # =========================
 
-    conn = sqlite3.connect(
-        "orders.db"
-    )
+    from database import get_db
+
+    conn = get_db()
 
     cursor = conn.cursor()
 
