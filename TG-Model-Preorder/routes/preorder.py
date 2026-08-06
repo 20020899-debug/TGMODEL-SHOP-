@@ -4,7 +4,7 @@ from datetime import datetime
 
 from config import products
 from payos_service import payos
-
+from payos import PaymentData
 
 preorder_bp = Blueprint(
     "preorder",
