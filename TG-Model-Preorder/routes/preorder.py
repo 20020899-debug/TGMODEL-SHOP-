@@ -26,10 +26,11 @@ preorder_bp = Blueprint(
 def submit():
 
     # =====================================================
-    # Lấy sản phẩm
+    # LẤY SẢN PHẨM
     # =====================================================
 
     try:
+
         product_id = int(
             request.form.get("product_id")
         )
@@ -54,7 +55,7 @@ def submit():
 
 
     # =====================================================
-    # Thông tin khách hàng
+    # THÔNG TIN KHÁCH HÀNG
     # =====================================================
 
     fullname = request.form.get(
@@ -125,11 +126,10 @@ def submit():
 
 
     # =====================================================
-    # Kết nối PostgreSQL
+    # KẾT NỐI DATABASE
     # =====================================================
 
     conn = get_db()
-
     cursor = conn.cursor()
 
 
@@ -155,12 +155,19 @@ def submit():
                     order_code,
                     payment_url,
                     expires_at,
-                    status
+                    status,
+                    order_token
+
                 FROM orders
+
                 WHERE order_token=%s
+
                 AND status=%s
+
                 AND expires_at > NOW()
+
                 ORDER BY id DESC
+
                 LIMIT 1
                 """,
                 (
@@ -175,7 +182,7 @@ def submit():
 
         # =================================================
         # NẾU COOKIE KHÔNG CÓ ĐƠN
-        # THÌ KIỂM TRA THÊM BẰNG SĐT
+        # CÓ THỂ TÌM BẰNG SĐT
         # =================================================
 
         if existing_order is None and phone:
@@ -188,11 +195,17 @@ def submit():
                     expires_at,
                     status,
                     order_token
+
                 FROM orders
+
                 WHERE phone=%s
+
                 AND status=%s
+
                 AND expires_at > NOW()
+
                 ORDER BY id DESC
+
                 LIMIT 1
                 """,
                 (
@@ -206,45 +219,48 @@ def submit():
 
 
         # =================================================
-        # ĐÃ CÓ ĐƠN CHƯA THANH TOÁN CÒN HẠN
+        # ĐÃ CÓ ĐƠN CHƯA THANH TOÁN
         # =================================================
 
         if existing_order:
 
             old_order_code = existing_order[0]
+
             old_payment_url = existing_order[1]
+
             old_expires_at = existing_order[2]
 
+            old_token = existing_order[4]
 
-            # ---------------------------------------------
-            # Nếu đã có link PayOS
-            # ---------------------------------------------
+
+            # =============================================
+            # ĐÃ CÓ PAYMENT URL
+            # =============================================
 
             if old_payment_url:
 
                 response = make_response(
-                    redirect(old_payment_url)
+                    redirect(
+                        old_payment_url
+                    )
                 )
 
 
                 # Ghi lại token vào cookie
-                # nếu khách tìm thấy đơn bằng SĐT
-
-                old_token = None
-
-                if len(existing_order) >= 5:
-
-                    old_token = existing_order[4]
-
 
                 if old_token:
 
                     response.set_cookie(
                         "order_token",
+
                         old_token,
+
                         max_age=60 * 60 * 24 * 30,
+
                         httponly=True,
+
                         samesite="Lax",
+
                         secure=True
                     )
 
@@ -252,20 +268,30 @@ def submit():
                 return response
 
 
-            # ---------------------------------------------
-            # Trường hợp có đơn nhưng chưa có payment URL
-            # ---------------------------------------------
+            # =============================================
+            # CÓ ĐƠN NHƯNG CHƯA CÓ PAYMENT URL
+            # =============================================
 
             return f"""
+            <!DOCTYPE html>
+
             <html>
+
             <head>
+
                 <meta charset="UTF-8">
-                <title>Đơn hàng đang chờ thanh toán</title>
+
+                <title>
+                    Đơn hàng đang chờ thanh toán
+                </title>
+
             </head>
 
             <body>
 
-                <h2>Bạn đang có một đơn hàng chưa thanh toán</h2>
+                <h2>
+                    Bạn đang có một đơn hàng chưa thanh toán
+                </h2>
 
                 <p>
                     Mã đơn:
@@ -273,11 +299,8 @@ def submit():
                 </p>
 
                 <p>
-                    Đơn hàng này vẫn còn thời gian thanh toán.
-                </p>
-
-                <p>
-                    Vui lòng quay lại trang thanh toán.
+                    Đơn hàng này vẫn còn thời gian
+                    thanh toán.
                 </p>
 
                 <a href="/">
@@ -285,6 +308,7 @@ def submit():
                 </a>
 
             </body>
+
             </html>
             """, 400
 
@@ -296,6 +320,7 @@ def submit():
         cursor.execute(
             """
             SELECT COALESCE(MAX(id), 0)
+
             FROM orders
             """
         )
@@ -311,10 +336,12 @@ def submit():
 
 
         # =================================================
-        # TẠO TOKEN NGẪU NHIÊN
+        # TẠO TOKEN
         # =================================================
 
-        new_order_token = secrets.token_urlsafe(32)
+        new_order_token = secrets.token_urlsafe(
+            32
+        )
 
 
         # =================================================
@@ -340,7 +367,9 @@ def submit():
         )
 
 
-        # 15 PHÚT
+        # =================================================
+        # HẠN THANH TOÁN: 15 PHÚT
+        # =================================================
 
         expires_at = (
             created_time
@@ -442,7 +471,7 @@ def submit():
 
 
         # =================================================
-        # TẠO THANH TOÁN PAYOS
+        # TẠO PAYMENT PAYOS
         # =================================================
 
         payment_data = {
@@ -461,9 +490,11 @@ def submit():
 
             "cancelUrl":
                 "https://tgmodel-shop.onrender.com/payment/cancel",
-            # PayOS tự hết hạn cùng thời điểm với đơn hàng
-            "expiredAt": int(expires_at.timestamp())
 
+            "expiredAt":
+                int(
+                    expires_at.timestamp()
+                )
         }
 
 
@@ -514,7 +545,9 @@ def submit():
         # =================================================
 
         response = make_response(
-            redirect(payment_url)
+            redirect(
+                payment_url
+            )
         )
 
 
@@ -524,6 +557,7 @@ def submit():
 
         response.set_cookie(
             "order_token",
+
             new_order_token,
 
             max_age=60 * 60 * 24 * 30,
