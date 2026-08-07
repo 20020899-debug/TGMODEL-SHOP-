@@ -1,11 +1,9 @@
 from database import get_db
 
-
 conn = get_db()
-
 cursor = conn.cursor()
 
-
+# Tạo bảng nếu chưa có
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS orders (
 
@@ -34,17 +32,19 @@ CREATE TABLE IF NOT EXISTS orders (
 
     status TEXT,
 
-    created_at TEXT,
-    expires_at TIMESTAMP
+    created_at TEXT
 )
-
 """)
 
+# Thêm cột expires_at nếu chưa có
+cursor.execute("""
+ALTER TABLE orders
+ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;
+""")
 
 conn.commit()
 
 cursor.close()
 conn.close()
-
 
 print("PostgreSQL OK")
