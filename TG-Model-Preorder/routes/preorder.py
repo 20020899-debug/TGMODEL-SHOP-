@@ -461,6 +461,8 @@ def submit():
 
             "cancelUrl":
                 "https://tgmodel-shop.onrender.com/payment/cancel"
+            # PayOS tự hết hạn cùng thời điểm với đơn hàng
+            "expiredAt": int(expires_at.timestamp())
 
         }
 
