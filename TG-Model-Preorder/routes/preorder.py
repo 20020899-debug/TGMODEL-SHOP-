@@ -119,7 +119,8 @@ expires_at = created_time + timedelta(minutes=30)
             price,
             deposit,
             status,
-            created_at
+            created_at,
+            expires_at
         )
 
         VALUES
