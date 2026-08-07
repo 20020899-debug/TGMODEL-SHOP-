@@ -569,9 +569,7 @@ function showPendingOrder(data) {
     // =====================================================
 
     const expiresAt =
-        new Date(
-            data.expires_at
-        ).getTime();
+        data.expires_at * 1000;
 
 
     // =====================================================
