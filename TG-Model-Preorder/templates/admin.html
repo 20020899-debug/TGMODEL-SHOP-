@@ -34,6 +34,49 @@
         value="{{ keyword }}"
     >
 
+    <select name="status">
+
+    <option value=""
+    {% if status == "" %}selected{% endif %}>
+        Tất cả trạng thái
+    </option>
+
+    <option value="Chưa thanh toán"
+    {% if status == "Chưa thanh toán" %}selected{% endif %}>
+        Chưa thanh toán
+    </option>
+
+    <option value="Đã cọc"
+    {% if status == "Đã cọc" %}selected{% endif %}>
+        Đã cọc
+    </option>
+
+    <option value="Đang chuẩn bị hàng"
+    {% if status == "Đang chuẩn bị hàng" %}selected{% endif %}>
+        Đang chuẩn bị hàng
+    </option>
+
+    <option value="Đã gửi hàng"
+    {% if status == "Đã gửi hàng" %}selected{% endif %}>
+        Đã gửi hàng
+    </option>
+
+    <option value="Hoàn thành"
+    {% if status == "Hoàn thành" %}selected{% endif %}>
+        Hoàn thành
+    </option>
+
+    <option value="Đã hủy"
+    {% if status == "Đã hủy" %}selected{% endif %}>
+        Đã hủy
+    </option>
+
+    <option value="Hết hạn thanh toán"
+    {% if status == "Hết hạn thanh toán" %}selected{% endif %}>
+        Hết hạn thanh toán
+    </option>
+
+</select>
     <button type="submit">
         🔍 Tìm kiếm
     </button>
