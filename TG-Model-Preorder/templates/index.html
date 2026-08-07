@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -569,7 +569,9 @@ function showPendingOrder(data) {
     // =====================================================
 
     const expiresAt =
-        data.expires_at * 1000;
+        new Date(
+            data.expires_at
+        ).getTime();
 
 
     // =====================================================
@@ -787,3 +789,4 @@ setInterval(
 </body>
 
 </html>
+```
