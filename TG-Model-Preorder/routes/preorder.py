@@ -95,7 +95,7 @@ def submit():
         "%d/%m/%Y %H:%M:%S"
     )
 
-    expires_at = created_time + timedelta(minutes=30)
+    expires_at = created_time + timedelta(minutes=15)
 
 
     # =========================
