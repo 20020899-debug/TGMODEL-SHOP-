@@ -27,18 +27,15 @@ admin_bp = Blueprint(
 def admin():
 
     if not session.get("admin"):
-
         return redirect(
             url_for("auth.login")
         )
-
 
     conn = get_db()
 
     cursor = conn.cursor(
         cursor_factory=RealDictCursor
     )
-
 
     # =========================
     # Tự chuyển đơn quá hạn
@@ -47,11 +44,8 @@ def admin():
     cursor.execute(
         """
         UPDATE orders
-
         SET status=%s
-
         WHERE status=%s
-
         AND expires_at < NOW()
         """,
         (
@@ -61,7 +55,6 @@ def admin():
     )
 
     conn.commit()
-
 
     # =========================
     # Tìm kiếm
@@ -73,66 +66,62 @@ def admin():
     ).strip()
 
     status = request.args.get(
-    "status",
-    ""
-).strip()
+        "status",
+        ""
+    ).strip()
 
     sql = """
-SELECT *
-FROM orders
-WHERE 1=1
-"""
+    SELECT *
+    FROM orders
+    WHERE 1=1
+    """
 
-params = []
+    params = []
 
+    if keyword:
 
-if keyword:
+        sql += """
+        AND
+        (
+            order_code ILIKE %s
+            OR fullname ILIKE %s
+            OR phone ILIKE %s
+        )
+        """
+
+        params.extend([
+            f"%{keyword}%",
+            f"%{keyword}%",
+            f"%{keyword}%"
+        ])
+
+    if status:
+
+        sql += """
+        AND status=%s
+        """
+
+        params.append(status)
 
     sql += """
-    AND
-    (
-        order_code ILIKE %s
-        OR fullname ILIKE %s
-        OR phone ILIKE %s
+    ORDER BY id DESC
+    """
+
+    cursor.execute(
+        sql,
+        tuple(params)
     )
-    """
-
-    params.extend([
-        f"%{keyword}%",
-        f"%{keyword}%",
-        f"%{keyword}%"
-    ])
-
-
-if status:
-
-    sql += """
-    AND status=%s
-    """
-
-    params.append(status)
-
-
-sql += """
-ORDER BY id DESC
-"""
-
-cursor.execute(
-    sql,
-    tuple(params)
-)
 
     orders = cursor.fetchall()
 
     conn.close()
 
-
     return render_template(
-    "admin.html",
-    orders=orders,
-    keyword=keyword,
-    status=status
-)
+        "admin.html",
+        orders=orders,
+        keyword=keyword,
+        status=status
+    )
 # =========================
 # Chi tiết đơn hàng
 # =========================
