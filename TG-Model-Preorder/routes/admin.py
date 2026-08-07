@@ -128,10 +128,11 @@ cursor.execute(
 
 
     return render_template(
-        "admin.html",
-        orders=orders,
-        keyword=keyword
-    )
+    "admin.html",
+    orders=orders,
+    keyword=keyword,
+    status=status
+)
 # =========================
 # Chi tiết đơn hàng
 # =========================
