@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS orders (
 
     status TEXT,
 
-    created_at TEXT
+    created_at TEXT,
+    expires_at TIMESTAMP
 )
 
 """)
