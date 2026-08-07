@@ -311,51 +311,39 @@ def webhook():
             return "OK", 200
 
 
-        # =================================================
-        # THANH TOÁN HỢP LỆ
-        # =================================================
+# =====================================================
+# THANH TOÁN THÀNH CÔNG
+# =====================================================
 
-        cursor.execute(
-            """
-            UPDATE orders
+cursor.execute(
+    """
+    UPDATE orders
 
-            SET status=%s
+    SET status=%s
 
-            WHERE id=%s
-            AND status=%s
-            """,
-            (
-                "Đã cọc",
-                order_id,
-                "Chưa thanh toán"
-            )
-        )
+    WHERE id=%s
+    AND status=%s
+    """,
+    (
+        "Đã cọc",
+        order_id,
+        "Chưa thanh toán"
+    )
+)
 
+print(
+    "PAYMENT UPDATED ROW:",
+    cursor.rowcount
+)
 
-        print(
-            "UPDATED ROW:",
-            cursor.rowcount
-        )
+conn.commit()
 
+print(
+    "PAYMENT SUCCESS:",
+    order_code
+)
 
-        conn.commit()
+cursor.close()
+conn.close()
 
-        conn.close()
-
-
-        print(
-            "PAYMENT SUCCESS:",
-            order_code
-        )
-
-
-        return "OK", 200
-
-
-    except Exception:
-
-        conn.rollback()
-
-        conn.close()
-
-        raise
+return "OK", 200
