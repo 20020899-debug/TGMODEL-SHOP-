@@ -730,32 +730,36 @@ def pending_order():
             }
 
 
-        # =================================================
-        # TRẢ DỮ LIỆU CHO INDEX.HTML
-        # =================================================
+        # ==============================
+# CHUẨN HÓA GIỜ VIỆT NAM
+# ==============================
 
-        return {
+if expires_at.tzinfo is None:
 
-            "has_order": True,
+    expires_at = expires_at.replace(
+        tzinfo=ZoneInfo("Asia/Ho_Chi_Minh")
+    )
 
-            "order_code":
-                order_code,
 
-            "product_name":
-                product_name,
+expires_at_vn = expires_at.astimezone(
+    ZoneInfo("Asia/Ho_Chi_Minh")
+)
 
-            "quantity":
-                quantity,
 
-            "deposit":
-                deposit,
+return {
 
-            "payment_url":
-                payment_url,
+    "has_order": True,
 
-            "expires_at":
-                expires_at.isoformat()
-        }
+    "order_code": order_code,
+
+    "payment_url": payment_url,
+
+    "expires_at":
+        expires_at_vn.strftime(
+            "%Y-%m-%dT%H:%M:%S+07:00"
+        )
+
+}
 
 
     finally:
