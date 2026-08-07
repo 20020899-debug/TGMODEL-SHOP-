@@ -72,6 +72,10 @@ def admin():
         ""
     ).strip()
 
+    status = request.args.get(
+    "status",
+    ""
+).strip()
 
     if keyword:
 
