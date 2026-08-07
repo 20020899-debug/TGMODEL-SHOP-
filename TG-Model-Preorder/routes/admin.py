@@ -270,9 +270,11 @@ def delete_order(id):
 def export_excel():
 
     if not session.get("admin"):
+
         return redirect(
             url_for("auth.login")
         )
+
 
     conn = get_db()
 
@@ -280,22 +282,29 @@ def export_excel():
         cursor_factory=RealDictCursor
     )
 
+
     cursor.execute(
         """
         SELECT *
+
         FROM orders
+
         ORDER BY id DESC
         """
     )
+
 
     orders = cursor.fetchall()
 
     conn.close()
 
+
     wb = Workbook()
 
     ws = wb.active
+
     ws.title = "Đơn hàng"
+
 
     ws.append([
         "Mã đơn",
@@ -314,6 +323,7 @@ def export_excel():
         "Địa chỉ",
         "Ghi chú"
     ])
+
 
     for order in orders:
 
@@ -335,11 +345,13 @@ def export_excel():
             order["note"]
         ])
 
+
     output = BytesIO()
 
     wb.save(output)
 
     output.seek(0)
+
 
     return send_file(
         output,
