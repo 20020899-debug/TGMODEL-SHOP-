@@ -39,8 +39,7 @@ payment_url TEXT,
 order_token TEXT
 ```
 
-)
-""")
+))
 
 conn.commit()
 
