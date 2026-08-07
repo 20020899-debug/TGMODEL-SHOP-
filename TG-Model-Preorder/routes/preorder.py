@@ -637,18 +637,170 @@ def submit():
 
 
 # =========================================================
-# API: KIỂM TRA ĐƠN CHƯA THANH TOÁN
+# KIỂM TRA ĐƠN CHƯA THANH TOÁN
 # =========================================================
 
-@preorder_bp.route(
-    "/api/pending-order"
-)
+@preorder_bp.route("/api/pending-order")
 def pending_order():
 
     order_token = request.cookies.get(
         "order_token"
     )
 
+    # Không có cookie
+    if not order_token:
+
+        return {
+            "has_order": False
+        }
+
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                order_code,
+                payment_url,
+                expires_at,
+                status
+
+            FROM orders
+
+            WHERE order_token=%s
+
+            AND status=%s
+
+            ORDER BY id DESC
+
+            LIMIT 1
+            """,
+            (
+                order_token,
+                "Chưa thanh toán"
+            )
+        )
+
+
+        order = cursor.fetchone()
+
+
+        # =================================================
+        # KHÔNG TÌM THẤY ĐƠN
+        # =================================================
+
+        if order is None:
+
+            return {
+                "has_order": False
+            }
+
+
+        order_code = order[0]
+        payment_url = order[1]
+        expires_at = order[2]
+
+
+        # =================================================
+        # KIỂM TRA THỜI GIAN
+        # =================================================
+
+        now = datetime.now(
+            ZoneInfo("Asia/Ho_Chi_Minh")
+        )
+
+
+        if expires_at is not None:
+
+            # PostgreSQL TIMESTAMP không timezone
+            if expires_at.tzinfo is None:
+
+                expires_at = expires_at.replace(
+                    tzinfo=ZoneInfo(
+                        "Asia/Ho_Chi_Minh"
+                    )
+                )
+
+
+        # =================================================
+        # ĐƠN ĐÃ HẾT HẠN
+        # =================================================
+
+        if (
+            expires_at is None
+            or now >= expires_at
+        ):
+
+            # Đồng bộ trạng thái database
+
+            cursor.execute(
+                """
+                UPDATE orders
+
+                SET status=%s
+
+                WHERE order_token=%s
+
+                AND status=%s
+                """,
+                (
+                    "Hết hạn thanh toán",
+                    order_token,
+                    "Chưa thanh toán"
+                )
+            )
+
+            conn.commit()
+
+
+            return {
+                "has_order": False
+            }
+
+
+        # =================================================
+        # KHÔNG CÓ PAYMENT URL
+        # =================================================
+
+        if not payment_url:
+
+            return {
+                "has_order": False
+            }
+
+
+        # =================================================
+        # CÒN HẠN
+        # =================================================
+
+        expires_timestamp = int(
+            expires_at.timestamp()
+        )
+
+
+        return {
+
+            "has_order": True,
+
+            "order_code":
+                order_code,
+
+            "payment_url":
+                payment_url,
+
+            "expires_at":
+                expires_timestamp
+        }
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
 
     # =====================================================
     # KHÔNG CÓ COOKIE
