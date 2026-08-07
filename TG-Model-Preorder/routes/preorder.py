@@ -1,3 +1,4 @@
+
 from flask import Blueprint, request, redirect, make_response
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -13,6 +14,89 @@ preorder_bp = Blueprint(
     "preorder",
     __name__
 )
+
+
+# =========================================================
+# TRANG PRE-ORDER
+# =========================================================
+
+@preorder_bp.route("/preorder/<int:product_id>")
+def preorder(product_id):
+
+    # =====================================================
+    # TÌM SẢN PHẨM
+    # =====================================================
+
+    product = next(
+        (
+            p for p in products
+            if p["id"] == product_id
+        ),
+        None
+    )
+
+    if product is None:
+        return "Không tìm thấy sản phẩm", 404
+
+
+    # =====================================================
+    # KIỂM TRA ĐƠN CŨ BẰNG COOKIE
+    # =====================================================
+
+    order_token = request.cookies.get(
+        "order_token"
+    )
+
+    existing_order = None
+
+
+    if order_token:
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        try:
+
+            cursor.execute(
+                """
+                SELECT
+                    order_code,
+                    product_name,
+                    quantity,
+                    deposit,
+                    payment_url,
+                    expires_at,
+                    status
+                FROM orders
+                WHERE order_token=%s
+                AND status=%s
+                AND expires_at > NOW()
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (
+                    order_token,
+                    "Chưa thanh toán"
+                )
+            )
+
+            existing_order = cursor.fetchone()
+
+        finally:
+
+            cursor.close()
+            conn.close()
+
+
+    # =====================================================
+    # HIỂN THỊ TRANG PRE-ORDER
+    # =====================================================
+
+    return render_template(
+        "preorder.html",
+        product=product,
+        existing_order=existing_order
+    )
 
 
 # =========================================================
@@ -143,7 +227,6 @@ def submit():
             "order_token"
         )
 
-
         existing_order = None
 
 
@@ -157,17 +240,11 @@ def submit():
                     expires_at,
                     status,
                     order_token
-
                 FROM orders
-
                 WHERE order_token=%s
-
                 AND status=%s
-
                 AND expires_at > NOW()
-
                 ORDER BY id DESC
-
                 LIMIT 1
                 """,
                 (
@@ -176,13 +253,12 @@ def submit():
                 )
             )
 
-
             existing_order = cursor.fetchone()
 
 
         # =================================================
         # NẾU COOKIE KHÔNG CÓ ĐƠN
-        # CÓ THỂ TÌM BẰNG SĐT
+        # THÌ KIỂM TRA BẰNG SĐT
         # =================================================
 
         if existing_order is None and phone:
@@ -195,17 +271,11 @@ def submit():
                     expires_at,
                     status,
                     order_token
-
                 FROM orders
-
                 WHERE phone=%s
-
                 AND status=%s
-
                 AND expires_at > NOW()
-
                 ORDER BY id DESC
-
                 LIMIT 1
                 """,
                 (
@@ -213,7 +283,6 @@ def submit():
                     "Chưa thanh toán"
                 )
             )
-
 
             existing_order = cursor.fetchone()
 
@@ -225,11 +294,7 @@ def submit():
         if existing_order:
 
             old_order_code = existing_order[0]
-
             old_payment_url = existing_order[1]
-
-            old_expires_at = existing_order[2]
-
             old_token = existing_order[4]
 
 
@@ -246,21 +311,14 @@ def submit():
                 )
 
 
-                # Ghi lại token vào cookie
-
                 if old_token:
 
                     response.set_cookie(
                         "order_token",
-
                         old_token,
-
                         max_age=60 * 60 * 24 * 30,
-
                         httponly=True,
-
                         samesite="Lax",
-
                         secure=True
                     )
 
@@ -299,8 +357,7 @@ def submit():
                 </p>
 
                 <p>
-                    Đơn hàng này vẫn còn thời gian
-                    thanh toán.
+                    Đơn hàng này vẫn còn thời gian thanh toán.
                 </p>
 
                 <a href="/">
@@ -320,17 +377,13 @@ def submit():
         cursor.execute(
             """
             SELECT COALESCE(MAX(id), 0)
-
             FROM orders
             """
         )
 
-
         last_id = cursor.fetchone()[0]
 
-
         order_id = last_id + 1
-
 
         order_code = f"TGM{order_id:03d}"
 
@@ -581,18 +634,26 @@ def submit():
         conn.close()
 
         raise
-        # =========================================================
-# KIỂM TRA ĐƠN CHƯA THANH TOÁN
+
+
+# =========================================================
+# API: KIỂM TRA ĐƠN CHƯA THANH TOÁN
 # =========================================================
 
-@preorder_bp.route("/api/pending-order")
+@preorder_bp.route(
+    "/api/pending-order"
+)
 def pending_order():
 
     order_token = request.cookies.get(
         "order_token"
     )
 
-    # Không có cookie
+
+    # =====================================================
+    # KHÔNG CÓ COOKIE
+    # =====================================================
+
     if not order_token:
 
         return {
@@ -610,6 +671,9 @@ def pending_order():
             """
             SELECT
                 order_code,
+                product_name,
+                quantity,
+                deposit,
                 payment_url,
                 expires_at,
                 status
@@ -636,9 +700,9 @@ def pending_order():
         order = cursor.fetchone()
 
 
-        # =============================================
-        # Không còn đơn hợp lệ
-        # =============================================
+        # =================================================
+        # KHÔNG CÒN ĐƠN HỢP LỆ
+        # =================================================
 
         if order is None:
 
@@ -648,13 +712,16 @@ def pending_order():
 
 
         order_code = order[0]
-        payment_url = order[1]
-        expires_at = order[2]
+        product_name = order[1]
+        quantity = order[2]
+        deposit = order[3]
+        payment_url = order[4]
+        expires_at = order[5]
 
 
-        # =============================================
-        # Chưa có link thanh toán
-        # =============================================
+        # =================================================
+        # CHƯA CÓ PAYMENT URL
+        # =================================================
 
         if not payment_url:
 
@@ -663,15 +730,25 @@ def pending_order():
             }
 
 
-        # =============================================
-        # Trả thông tin cho index.html
-        # =============================================
+        # =================================================
+        # TRẢ DỮ LIỆU CHO INDEX.HTML
+        # =================================================
 
         return {
+
             "has_order": True,
 
             "order_code":
                 order_code,
+
+            "product_name":
+                product_name,
+
+            "quantity":
+                quantity,
+
+            "deposit":
+                deposit,
 
             "payment_url":
                 payment_url,
