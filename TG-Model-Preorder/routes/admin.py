@@ -77,40 +77,50 @@ def admin():
     ""
 ).strip()
 
-    if keyword:
+    sql = """
+SELECT *
+FROM orders
+WHERE 1=1
+"""
 
-        cursor.execute(
-            """
-            SELECT *
+params = []
 
-            FROM orders
 
-            WHERE
-                order_code ILIKE %s
-                OR fullname ILIKE %s
-                OR phone ILIKE %s
+if keyword:
 
-            ORDER BY id DESC
-            """,
-            (
-                f"%{keyword}%",
-                f"%{keyword}%",
-                f"%{keyword}%"
-            )
-        )
+    sql += """
+    AND
+    (
+        order_code ILIKE %s
+        OR fullname ILIKE %s
+        OR phone ILIKE %s
+    )
+    """
 
-    else:
+    params.extend([
+        f"%{keyword}%",
+        f"%{keyword}%",
+        f"%{keyword}%"
+    ])
 
-        cursor.execute(
-            """
-            SELECT *
 
-            FROM orders
+if status:
 
-            ORDER BY id DESC
-            """
-        )
+    sql += """
+    AND status=%s
+    """
 
+    params.append(status)
+
+
+sql += """
+ORDER BY id DESC
+"""
+
+cursor.execute(
+    sql,
+    tuple(params)
+)
 
     orders = cursor.fetchall()
 
