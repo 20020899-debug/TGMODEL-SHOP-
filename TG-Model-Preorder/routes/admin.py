@@ -24,6 +24,16 @@ admin_bp = Blueprint(
 # =========================
 
 @admin_bp.route("/admin")
+cursor.execute("""
+UPDATE orders
+
+SET status='Hết hạn thanh toán'
+
+WHERE status='Chưa thanh toán'
+AND expires_at < NOW()
+""")
+
+conn.commit()
 def admin():
 
     if not session.get("admin"):
