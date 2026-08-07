@@ -1,90 +1,220 @@
-<!DOCTYPE html>
-<html lang="vi">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Đặt Pre-order</title>
-</head>
+<!-- =====================================================
+     KIỂM TRA ĐƠN CHƯA THANH TOÁN
+     ===================================================== -->
 
-<body>
+<div
+    id="pending-order-box"
+    style="
+        display:none;
+        background:#fff3cd;
+        border:1px solid #ffc107;
+        border-radius:10px;
+        padding:20px;
+        margin-bottom:25px;
+    "
+>
 
-<h2>Đặt Pre-order</h2>
+    <h3 style="margin-top:0; color:#856404;">
+        🔔 Bạn đang có đơn hàng chưa thanh toán
+    </h3>
 
-<hr>
+    <p>
+        Mã đơn:
+        <strong id="pending-order-code"></strong>
+    </p>
 
-<h3>{{ product.brand }}</h3>
+    <p>
+        Thời gian còn lại:
+        <strong
+            id="pending-order-countdown"
+            style="color:#dc3545;"
+        >
+            Đang kiểm tra...
+        </strong>
+    </p>
 
-<h2>{{ product.name }}</h2>
+    <button
+        type="button"
+        id="continue-payment-button"
+        style="
+            background:#198754;
+            color:white;
+            border:none;
+            padding:10px 18px;
+            border-radius:6px;
+            cursor:pointer;
+            font-weight:bold;
+        "
+    >
+        💳 Tiếp tục thanh toán
+    </button>
 
-<p>
-    <strong>Giá:</strong>
-    {{ "{:,}".format(product.price) }} đ
-</p>
+    <a
+        href="/"
+        style="
+            display:inline-block;
+            margin-left:10px;
+            padding:10px 18px;
+        "
+    >
+        Quay lại trang chủ
+    </a>
 
-<p>
-    <strong>Tiền cọc:</strong>
-    {{ "{:,}".format(product.deposit) }} đ
-</p>
+</div>
 
-<p>
-    <strong>Dự kiến trả hàng:</strong>
-    {{ product.eta }}
-</p>
 
-<hr>
+<!-- =====================================================
+     FORM ĐẶT PRE-ORDER
+     ===================================================== -->
 
-<form action="/submit" method="POST">
+<form
+    action="/submit"
+    method="POST"
+    id="preorder-form"
+>
+
 
     <!-- ID sản phẩm -->
+
     <input
         type="hidden"
         name="product_id"
         value="{{ product.id }}"
     >
 
-    <label>Họ và tên</label><br>
-    <input type="text" name="fullname" required>
+
+    <label>
+        Họ và tên
+    </label>
+
+    <br>
+
+    <input
+        type="text"
+        name="fullname"
+        required
+    >
+
     <br><br>
 
-    <label>Số điện thoại</label><br>
-    <input type="text" name="phone" required>
+
+    <label>
+        Số điện thoại
+    </label>
+
+    <br>
+
+    <input
+        type="text"
+        name="phone"
+        required
+    >
+
     <br><br>
 
-    <label>Facebook hoặc Zalo</label><br>
-    <input type="text" name="contact">
+
+    <label>
+        Facebook hoặc Zalo
+    </label>
+
+    <br>
+
+    <input
+        type="text"
+        name="contact"
+    >
+
     <br><br>
 
-    <label>Số lượng</label><br>
+
+    <label>
+        Số lượng
+    </label>
+
+    <br>
+
     <input
         type="number"
         name="quantity"
         value="1"
         min="1"
     >
+
     <br><br>
 
-    <label>Tỉnh / Thành phố</label><br>
-    <select id="province" name="province" required>
-        <option value="">-- Chọn tỉnh --</option>
+
+    <label>
+        Tỉnh / Thành phố
+    </label>
+
+    <br>
+
+    <select
+        id="province"
+        name="province"
+        required
+    >
+
+        <option value="">
+            -- Chọn tỉnh --
+        </option>
+
     </select>
 
     <br><br>
 
-    <label>Quận / Huyện</label><br>
-    <select id="district" name="district" disabled required>
-        <option value="">-- Chọn quận / huyện --</option>
+
+    <label>
+        Quận / Huyện
+    </label>
+
+    <br>
+
+    <select
+        id="district"
+        name="district"
+        disabled
+        required
+    >
+
+        <option value="">
+            -- Chọn quận / huyện --
+        </option>
+
     </select>
 
     <br><br>
 
-    <label>Phường / Xã</label><br>
-    <select id="ward" name="ward" disabled required>
-        <option value="">-- Chọn phường / xã --</option>
+
+    <label>
+        Phường / Xã
+    </label>
+
+    <br>
+
+    <select
+        id="ward"
+        name="ward"
+        disabled
+        required
+    >
+
+        <option value="">
+            -- Chọn phường / xã --
+        </option>
+
     </select>
 
     <br><br>
 
-    <label>Địa chỉ chi tiết</label><br>
+
+    <label>
+        Địa chỉ chi tiết
+    </label>
+
+    <br>
+
     <input
         type="text"
         name="address_detail"
@@ -94,7 +224,13 @@
 
     <br><br>
 
-    <label>Ghi chú</label><br>
+
+    <label>
+        Ghi chú
+    </label>
+
+    <br>
+
     <textarea
         name="note"
         placeholder="Ghi chú thêm (nếu có)"
@@ -102,13 +238,276 @@
 
     <br><br>
 
-    <button type="submit">
+
+    <button
+        type="submit"
+        id="submit-order-button"
+    >
         Gửi đơn
     </button>
 
+
 </form>
 
-<script src="{{ url_for('static', filename='js/address.js') }}"></script>
 
-</body>
-</html>
+<!-- =====================================================
+     JAVASCRIPT
+     ===================================================== -->
+
+<script>
+
+let pendingOrderTimer = null;
+
+
+// =========================================================
+// KIỂM TRA ĐƠN CŨ
+// =========================================================
+
+async function checkPendingOrder() {
+
+    try {
+
+        const response = await fetch(
+            "/api/pending-order",
+            {
+                method: "GET",
+                credentials: "same-origin"
+            }
+        );
+
+
+        if (!response.ok) {
+
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const box =
+            document.getElementById(
+                "pending-order-box"
+            );
+
+
+        const form =
+            document.getElementById(
+                "preorder-form"
+            );
+
+
+        const submitButton =
+            document.getElementById(
+                "submit-order-button"
+            );
+
+
+        const orderCode =
+            document.getElementById(
+                "pending-order-code"
+            );
+
+
+        const countdown =
+            document.getElementById(
+                "pending-order-countdown"
+            );
+
+
+        const paymentButton =
+            document.getElementById(
+                "continue-payment-button"
+            );
+
+
+        // =================================================
+        // KHÔNG CÓ ĐƠN CŨ
+        // =================================================
+
+        if (!data.has_order) {
+
+            box.style.display = "none";
+
+            form.style.display = "block";
+
+            return;
+        }
+
+
+        // =================================================
+        // CÓ ĐƠN CŨ
+        // =================================================
+
+        box.style.display = "block";
+
+
+        orderCode.textContent =
+            data.order_code;
+
+
+        // Không cho tạo đơn mới
+
+        submitButton.disabled = true;
+
+
+        submitButton.style.background =
+            "#999";
+
+
+        submitButton.style.cursor =
+            "not-allowed";
+
+
+        // =================================================
+        // NÚT TIẾP TỤC THANH TOÁN
+        // =================================================
+
+        paymentButton.onclick =
+            function() {
+
+                window.location.href =
+                    data.payment_url;
+
+            };
+
+
+        // =================================================
+        // TÍNH THỜI GIAN
+        // =================================================
+
+        const expiresAt =
+            new Date(
+                data.expires_at
+            ).getTime();
+
+
+        if (pendingOrderTimer) {
+
+            clearInterval(
+                pendingOrderTimer
+            );
+        }
+
+
+        function updateCountdown() {
+
+            const remaining =
+                expiresAt - Date.now();
+
+
+            // =============================================
+            // HẾT HẠN
+            // =============================================
+
+            if (remaining <= 0) {
+
+                clearInterval(
+                    pendingOrderTimer
+                );
+
+
+                countdown.textContent =
+                    "ĐÃ HẾT HẠN";
+
+
+                paymentButton.style.display =
+                    "none";
+
+
+                box.style.background =
+                    "#f8d7da";
+
+
+                box.style.borderColor =
+                    "#dc3545";
+
+
+                // Cho phép tạo đơn mới
+
+                submitButton.disabled =
+                    false;
+
+
+                submitButton.style.background =
+                    "";
+
+
+                submitButton.style.cursor =
+                    "pointer";
+
+
+                return;
+            }
+
+
+            // =============================================
+            // PHÚT
+            // =============================================
+
+            const minutes =
+                Math.floor(
+                    remaining / 60000
+                );
+
+
+            // =============================================
+            // GIÂY
+            // =============================================
+
+            const seconds =
+                Math.floor(
+                    (remaining % 60000) / 1000
+                );
+
+
+            countdown.textContent =
+                minutes +
+                " phút " +
+                String(seconds).padStart(
+                    2,
+                    "0"
+                ) +
+                " giây";
+        }
+
+
+        updateCountdown();
+
+
+        pendingOrderTimer =
+            setInterval(
+                updateCountdown,
+                1000
+            );
+
+
+    }
+    catch (error) {
+
+        console.error(
+            "Lỗi kiểm tra đơn hàng:",
+            error
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// CHẠY KHI TRANG LOAD
+// =========================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        checkPendingOrder();
+
+    }
+);
+
+</script>
+
