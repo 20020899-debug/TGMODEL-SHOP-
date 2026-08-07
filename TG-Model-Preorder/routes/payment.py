@@ -1,4 +1,7 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, make_response
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from database import get_db
 
 
@@ -8,11 +11,13 @@ payment_bp = Blueprint(
 )
 
 
-# =========================
-# Thanh toán thành công
-# =========================
+# =========================================================
+# THANH TOÁN THÀNH CÔNG
+# =========================================================
 
-@payment_bp.route("/payment/success")
+@payment_bp.route(
+    "/payment/success"
+)
 def payment_success():
 
     return render_template(
@@ -20,54 +25,23 @@ def payment_success():
     )
 
 
-# =========================
-# Hủy thanh toán
-# =========================
+# =========================================================
+# HỦY THANH TOÁN
+# =========================================================
 
-@payment_bp.route("/payment/cancel")
+@payment_bp.route(
+    "/payment/cancel"
+)
 def payment_cancel():
-
-    order_code = request.args.get("order")
-
-    if order_code:
-
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            UPDATE orders
-
-            SET status=%s
-
-            WHERE order_code=%s
-
-            AND status=%s
-            """,
-            (
-                "Đã hủy",
-                order_code,
-                "Chưa thanh toán"
-            )
-        )
-
-        print(
-            "CANCEL:",
-            order_code,
-            cursor.rowcount
-        )
-
-        conn.commit()
-        conn.close()
 
     return render_template(
         "payment_cancel.html"
     )
 
 
-# =========================
-# Webhook PayOS
-# =========================
+# =========================================================
+# WEBHOOK PAYOS
+# =========================================================
 
 @payment_bp.route(
     "/payment/webhook",
@@ -75,27 +49,49 @@ def payment_cancel():
 )
 def webhook():
 
-    print("========== PAYOS WEBHOOK ==========")
+    print(
+        "========== PAYOS WEBHOOK =========="
+    )
+
+
+    # =====================================================
+    # Lấy dữ liệu PayOS
+    # =====================================================
 
     data = request.get_json()
 
-    print(data)
+
+    print(
+        "PAYOS DATA:",
+        data
+    )
+
 
     if not data:
+
+        print(
+            "KHONG CO DATA"
+        )
 
         return "NO DATA", 400
 
 
-    # Chỉ xử lý khi thanh toán thành công
+    # =====================================================
+    # Kiểm tra thanh toán thành công
+    # =====================================================
 
     if data.get("code") != "00":
 
-        print("PAYMENT NOT SUCCESS")
+        print(
+            "PAYMENT NOT SUCCESS"
+        )
 
         return "OK", 200
 
 
-    # Lấy mã đơn của shop
+    # =====================================================
+    # Lấy description
+    # =====================================================
 
     order_code = (
         data
@@ -103,48 +99,229 @@ def webhook():
         .get("description")
     )
 
+
     if not order_code:
 
-        print("KHONG CO DESCRIPTION")
+        print(
+            "KHONG CO DESCRIPTION"
+        )
 
         return "OK", 200
 
 
-    print("ORDER:", order_code)
+    print(
+        "ORDER:",
+        order_code
+    )
 
+
+    # =====================================================
+    # Kết nối database
+    # =====================================================
 
     conn = get_db()
+
     cursor = conn.cursor()
 
 
-    cursor.execute(
-        """
-        UPDATE orders
+    try:
 
-        SET status=%s
+        # =================================================
+        # Lấy đơn hàng
+        # =================================================
 
-        WHERE order_code=%s
-
-        AND status=%s
-
-        AND expires_at > NOW()
-        """,
-        (
-            "Đã cọc",
-            order_code,
-            "Chưa thanh toán"
+        cursor.execute(
+            """
+            SELECT
+                id,
+                status,
+                expires_at
+            FROM orders
+            WHERE order_code=%s
+            LIMIT 1
+            """,
+            (
+                order_code,
+            )
         )
-    )
 
 
-    print(
-        "UPDATED ROW:",
-        cursor.rowcount
-    )
+        order = cursor.fetchone()
 
 
-    conn.commit()
-    conn.close()
+        if order is None:
+
+            print(
+                "KHONG TIM THAY DON:",
+                order_code
+            )
+
+            conn.close()
+
+            return "OK", 200
 
 
-    return "OK", 200
+        order_id = order[0]
+
+        current_status = order[1]
+
+        expires_at = order[2]
+
+
+        print(
+            "ORDER ID:",
+            order_id
+        )
+
+        print(
+            "STATUS:",
+            current_status
+        )
+
+        print(
+            "EXPIRES AT:",
+            expires_at
+        )
+
+
+        # =================================================
+        # Nếu đơn đã cọc rồi
+        # =================================================
+
+        if current_status == "Đã cọc":
+
+            print(
+                "DON DA THANH TOAN TRUOC DO"
+            )
+
+            conn.close()
+
+            return "OK", 200
+
+
+        # =================================================
+        # Nếu đơn đã bị hủy
+        # =================================================
+
+        if current_status == "Đã hủy":
+
+            print(
+                "DON DA HUY"
+            )
+
+            conn.close()
+
+            return "OK", 200
+
+
+        # =================================================
+        # Kiểm tra thời hạn
+        # =================================================
+
+        now = datetime.now(
+            ZoneInfo("Asia/Ho_Chi_Minh")
+        )
+
+
+        # PostgreSQL TIMESTAMP không timezone
+        # nên nếu expires_at không có timezone
+        # thì gắn múi giờ Việt Nam vào
+
+        if expires_at is not None:
+
+            if expires_at.tzinfo is None:
+
+                expires_at = expires_at.replace(
+                    tzinfo=ZoneInfo(
+                        "Asia/Ho_Chi_Minh"
+                    )
+                )
+
+
+        # =================================================
+        # ĐÃ HẾT HẠN
+        # =================================================
+
+        if (
+            expires_at is not None
+            and now >= expires_at
+        ):
+
+            print(
+                "DON DA HET HAN THANH TOAN"
+            )
+
+
+            cursor.execute(
+                """
+                UPDATE orders
+
+                SET status=%s
+
+                WHERE id=%s
+                AND status=%s
+                """,
+                (
+                    "Hết hạn thanh toán",
+                    order_id,
+                    "Chưa thanh toán"
+                )
+            )
+
+
+            conn.commit()
+
+            conn.close()
+
+
+            return "OK", 200
+
+
+        # =================================================
+        # THANH TOÁN HỢP LỆ
+        # =================================================
+
+        cursor.execute(
+            """
+            UPDATE orders
+
+            SET status=%s
+
+            WHERE id=%s
+            AND status=%s
+            """,
+            (
+                "Đã cọc",
+                order_id,
+                "Chưa thanh toán"
+            )
+        )
+
+
+        print(
+            "UPDATED ROW:",
+            cursor.rowcount
+        )
+
+
+        conn.commit()
+
+        conn.close()
+
+
+        print(
+            "PAYMENT SUCCESS:",
+            order_code
+        )
+
+
+        return "OK", 200
+
+
+    except Exception:
+
+        conn.rollback()
+
+        conn.close()
+
+        raise
