@@ -1,49 +1,53 @@
 from database import get_db
 
+
 conn = get_db()
 
 cursor = conn.cursor()
 
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS orders (
 
-id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
 
-order_code TEXT,
+    order_code TEXT,
 
-fullname TEXT,
-phone TEXT,
-contact TEXT,
+    fullname TEXT,
+    phone TEXT,
+    contact TEXT,
 
-province TEXT,
-district TEXT,
-ward TEXT,
-address_detail TEXT,
+    province TEXT,
+    district TEXT,
+    ward TEXT,
+    address_detail TEXT,
 
-quantity INTEGER,
+    quantity INTEGER,
 
-note TEXT,
+    note TEXT,
 
-product_name TEXT,
-product_brand TEXT,
+    product_name TEXT,
+    product_brand TEXT,
 
-price INTEGER,
-deposit INTEGER,
+    price INTEGER,
+    deposit INTEGER,
 
-status TEXT,
+    status TEXT,
 
-created_at TEXT,
-expires_at TIMESTAMP,
+    created_at TEXT,
+    expires_at TIMESTAMP,
 
-payment_url TEXT,
-order_token TEXT
-```
+    payment_url TEXT,
+    order_token TEXT
 
-))
+)
+""")
+
 
 conn.commit()
 
 cursor.close()
 conn.close()
+
 
 print("PostgreSQL OK")
