@@ -85,9 +85,15 @@ def submit():
 
     payos_order_code = int(time.time())
 
-    created_at = datetime.now(
-      ZoneInfo("Asia/Ho_Chi_Minh")
-    ).strftime("%d/%m/%Y %H:%M:%S")
+    created_time = datetime.now(
+    ZoneInfo("Asia/Ho_Chi_Minh")
+)
+
+created_at = created_time.strftime(
+    "%d/%m/%Y %H:%M:%S"
+)
+
+expires_at = created_time + timedelta(minutes=30)
 
 
     # =========================
