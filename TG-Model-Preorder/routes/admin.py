@@ -126,9 +126,11 @@ def admin():
 def order_detail(id):
 
     if not session.get("admin"):
+
         return redirect(
             url_for("auth.login")
         )
+
 
     conn = get_db()
 
@@ -136,21 +138,28 @@ def order_detail(id):
         cursor_factory=RealDictCursor
     )
 
+
     cursor.execute(
         """
         SELECT *
+
         FROM orders
+
         WHERE id=%s
         """,
         (id,)
     )
 
+
     order = cursor.fetchone()
 
     conn.close()
 
+
     if order is None:
+
         return "Không tìm thấy đơn hàng", 404
+
 
     return render_template(
         "order_detail.html",
@@ -169,20 +178,26 @@ def order_detail(id):
 def update_order(id):
 
     if not session.get("admin"):
+
         return redirect(
             url_for("auth.login")
         )
 
+
     status = request.form.get("status")
+
 
     conn = get_db()
 
     cursor = conn.cursor()
 
+
     cursor.execute(
         """
         UPDATE orders
+
         SET status=%s
+
         WHERE id=%s
         """,
         (
@@ -191,8 +206,10 @@ def update_order(id):
         )
     )
 
+
     conn.commit()
     conn.close()
+
 
     return redirect(
         url_for(
@@ -200,6 +217,8 @@ def update_order(id):
             id=id
         )
     )
+
+
 # =========================
 # Xóa đơn hàng
 # =========================
@@ -211,24 +230,32 @@ def update_order(id):
 def delete_order(id):
 
     if not session.get("admin"):
+
         return redirect(
             url_for("auth.login")
         )
+
 
     conn = get_db()
 
     cursor = conn.cursor()
 
+
     cursor.execute(
         """
-        DELETE FROM orders
+        DELETE
+
+        FROM orders
+
         WHERE id=%s
         """,
         (id,)
     )
 
+
     conn.commit()
     conn.close()
+
 
     return redirect(
         url_for("admin.admin")
