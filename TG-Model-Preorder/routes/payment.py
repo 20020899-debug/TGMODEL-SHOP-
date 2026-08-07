@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request
 from database import get_db
 
+
 payment_bp = Blueprint(
     "payment",
     __name__
@@ -26,6 +27,39 @@ def payment_success():
 @payment_bp.route("/payment/cancel")
 def payment_cancel():
 
+    order_code = request.args.get("order")
+
+    if order_code:
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            UPDATE orders
+
+            SET status=%s
+
+            WHERE order_code=%s
+
+            AND status=%s
+            """,
+            (
+                "Đã hủy",
+                order_code,
+                "Chưa thanh toán"
+            )
+        )
+
+        print(
+            "CANCEL:",
+            order_code,
+            cursor.rowcount
+        )
+
+        conn.commit()
+        conn.close()
+
     return render_template(
         "payment_cancel.html"
     )
@@ -48,16 +82,21 @@ def webhook():
     print(data)
 
     if not data:
+
         return "NO DATA", 400
 
+
     # Chỉ xử lý khi thanh toán thành công
+
     if data.get("code") != "00":
 
         print("PAYMENT NOT SUCCESS")
 
         return "OK", 200
 
-    # Lấy mã đơn của shop đã gửi trong description
+
+    # Lấy mã đơn của shop
+
     order_code = (
         data
         .get("data", {})
@@ -70,30 +109,42 @@ def webhook():
 
         return "OK", 200
 
+
     print("ORDER:", order_code)
 
-    conn = get_db()
 
+    conn = get_db()
     cursor = conn.cursor()
+
 
     cursor.execute(
         """
         UPDATE orders
+
         SET status=%s
+
         WHERE order_code=%s
+
+        AND status=%s
+
+        AND expires_at > NOW()
         """,
         (
             "Đã cọc",
-            order_code
+            order_code,
+            "Chưa thanh toán"
         )
     )
+
 
     print(
         "UPDATED ROW:",
         cursor.rowcount
     )
 
+
     conn.commit()
     conn.close()
+
 
     return "OK", 200
