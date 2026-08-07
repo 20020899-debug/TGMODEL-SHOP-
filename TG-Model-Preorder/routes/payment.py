@@ -29,14 +29,48 @@ def payment_success():
 # HỦY THANH TOÁN
 # =========================================================
 
-@payment_bp.route(
-    "/payment/cancel"
-)
+@payment_bp.route("/payment/cancel")
 def payment_cancel():
 
-    return render_template(
-        "payment_cancel.html"
+    order_token = request.cookies.get(
+        "order_token"
     )
+
+    if order_token:
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            UPDATE orders
+            SET status=%s
+            WHERE order_token=%s
+            AND status=%s
+            """,
+            (
+                "Đã hủy",
+                order_token,
+                "Chưa thanh toán"
+            )
+        )
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+    response = make_response(
+        render_template(
+            "payment_cancel.html"
+        )
+    )
+
+    response.delete_cookie(
+        "order_token"
+    )
+
+    return response
 
 
 # =========================================================
