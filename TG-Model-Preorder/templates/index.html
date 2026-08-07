@@ -564,14 +564,31 @@ function showPendingOrder(data) {
         };
 
 
-    // =====================================================
-    // THỜI GIAN HẾT HẠN
-    // =====================================================
+    // =================================================
+// XỬ LÝ THỜI GIAN HẾT HẠN
+// PostgreSQL đang lưu giờ Việt Nam
+// =================================================
 
-    const expiresAt =
-        new Date(
-            data.expires_at
-        ).getTime();
+let expiresAtString = data.expires_at;
+
+// Nếu thời gian chưa có timezone,
+// nói rõ với trình duyệt đây là giờ Việt Nam
+if (
+    expiresAtString &&
+    !expiresAtString.endsWith("Z") &&
+    !expiresAtString.includes("+")
+) {
+    expiresAtString =
+        expiresAtString.replace(
+            " ",
+            "T"
+        ) + "+07:00";
+}
+
+const expiresAt =
+    new Date(
+        expiresAtString
+    ).getTime();
 
 
     // =====================================================
