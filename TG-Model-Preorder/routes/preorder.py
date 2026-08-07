@@ -581,3 +581,107 @@ def submit():
         conn.close()
 
         raise
+        # =========================================================
+# KIỂM TRA ĐƠN CHƯA THANH TOÁN
+# =========================================================
+
+@preorder_bp.route("/api/pending-order")
+def pending_order():
+
+    order_token = request.cookies.get(
+        "order_token"
+    )
+
+    # Không có cookie
+    if not order_token:
+
+        return {
+            "has_order": False
+        }
+
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                order_code,
+                payment_url,
+                expires_at,
+                status
+
+            FROM orders
+
+            WHERE order_token=%s
+
+            AND status=%s
+
+            AND expires_at > NOW()
+
+            ORDER BY id DESC
+
+            LIMIT 1
+            """,
+            (
+                order_token,
+                "Chưa thanh toán"
+            )
+        )
+
+
+        order = cursor.fetchone()
+
+
+        # =============================================
+        # Không còn đơn hợp lệ
+        # =============================================
+
+        if order is None:
+
+            return {
+                "has_order": False
+            }
+
+
+        order_code = order[0]
+        payment_url = order[1]
+        expires_at = order[2]
+
+
+        # =============================================
+        # Chưa có link thanh toán
+        # =============================================
+
+        if not payment_url:
+
+            return {
+                "has_order": False
+            }
+
+
+        # =============================================
+        # Trả thông tin cho index.html
+        # =============================================
+
+        return {
+            "has_order": True,
+
+            "order_code":
+                order_code,
+
+            "payment_url":
+                payment_url,
+
+            "expires_at":
+                expires_at.isoformat()
+        }
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
