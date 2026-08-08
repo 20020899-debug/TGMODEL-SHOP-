@@ -1,4 +1,4 @@
-```python
+
 from flask import Blueprint, request, redirect, make_response, render_template
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -861,4 +861,3 @@ def pending_order():
 
         cursor.close()
         conn.close()
-```
