@@ -648,26 +648,15 @@ def pending_order():
         "order_token"
     )
 
-    # =====================================================
-    # KHÔNG CÓ COOKIE
-    # =====================================================
-
     if not order_token:
-
         return {
             "has_order": False
         }
 
-
     conn = get_db()
     cursor = conn.cursor()
 
-
     try:
-
-        # =================================================
-        # TÌM ĐƠN CHƯA THANH TOÁN
-        # =================================================
 
         cursor.execute(
             """
@@ -683,7 +672,6 @@ def pending_order():
             FROM orders
 
             WHERE order_token=%s
-
             AND status=%s
 
             ORDER BY id DESC
@@ -696,20 +684,12 @@ def pending_order():
             )
         )
 
-
         order = cursor.fetchone()
 
-
-        # =================================================
-        # KHÔNG CÓ ĐƠN
-        # =================================================
-
         if order is None:
-
             return {
                 "has_order": False
             }
-
 
         order_code = order[0]
         product_name = order[1]
@@ -718,56 +698,58 @@ def pending_order():
         payment_url = order[4]
         expires_at = order[5]
 
-
-        # =================================================
-        # CHƯA CÓ PAYMENT URL
-        # =================================================
-
         if not payment_url:
-
             return {
                 "has_order": False
             }
 
-
         # =================================================
-        # CHUẨN HÓA EXPIRES_AT
+        # CHUẨN HÓA GIỜ VIỆT NAM
         # =================================================
 
         vietnam_tz = ZoneInfo(
             "Asia/Ho_Chi_Minh"
         )
 
-
-        # Nếu DB trả về datetime không có timezone
         if expires_at.tzinfo is None:
-
             expires_at = expires_at.replace(
                 tzinfo=vietnam_tz
             )
 
+        # =================================================
+        # DEBUG
+        # =================================================
+
+        print(
+            "========== DEBUG PENDING =========="
+        )
+
+        print(
+            "expires_at DB:",
+            expires_at
+        )
+
+        print(
+            "expires_at type:",
+            type(expires_at)
+        )
+
+        print(
+            "expires_timestamp:",
+            int(expires_at.timestamp())
+        )
+
+        print(
+            "==================================="
+        )
 
         # =================================================
-        # CHUYỂN SANG UNIX TIMESTAMP
+        # UNIX TIMESTAMP
         # =================================================
 
-print("========== DEBUG PENDING ==========")
-print("expires_at DB:", expires_at)
-print("expires_at type:", type(expires_at))
-print(
-    "expires_timestamp:",
-    int(expires_at.timestamp())
-)
-print("===================================")
-
-expires_timestamp = int(
-    expires_at.timestamp()
-)
-
-
-        # =================================================
-        # TRẢ DỮ LIỆU
-        # =================================================
+        expires_timestamp = int(
+            expires_at.timestamp()
+        )
 
         return {
 
@@ -791,7 +773,6 @@ expires_timestamp = int(
             "expires_at":
                 expires_timestamp
         }
-
 
     finally:
 
