@@ -424,13 +424,17 @@ def submit():
         # DÙNG UTC LÀM CHUẨN
         # =================================================
 
-        utc_tz = ZoneInfo("UTC")
-
         created_time = datetime.now(
-            utc_tz
+            ZoneInfo("UTC")
         )
 
+
         created_at = created_time
+
+
+        # =================================================
+        # HẠN THANH TOÁN: 15 PHÚT
+        # =================================================
 
         expires_at = (
             created_time
@@ -439,7 +443,7 @@ def submit():
 
 
         # =================================================
-        # DEBUG THỜI GIAN
+        # DEBUG THỜI GIAN TẠO ĐƠN
         # =================================================
 
         print(
@@ -708,10 +712,10 @@ def pending_order():
         # =================================================
         # TÌM ĐƠN CHƯA THANH TOÁN
         #
-        # KHÔNG kiểm tra expires_at ở SQL.
+        # Không lọc expires_at ở SQL.
         #
-        # Frontend sẽ tự xác định:
-        # còn hạn / hết hạn.
+        # Mục đích:
+        # Frontend vẫn có thể biết đơn đã hết hạn.
         # =================================================
 
         cursor.execute(
@@ -728,7 +732,6 @@ def pending_order():
             FROM orders
 
             WHERE order_token=%s
-
             AND status=%s
 
             ORDER BY id DESC
@@ -778,21 +781,18 @@ def pending_order():
         # =================================================
         # CHUẨN HÓA EXPIRES_AT
         #
-        # Database hiện dùng UTC.
+        # DB đang lưu thời gian UTC.
         # =================================================
-
-        utc_tz = ZoneInfo("UTC")
-
 
         if expires_at.tzinfo is None:
 
             expires_at = expires_at.replace(
-                tzinfo=utc_tz
+                tzinfo=ZoneInfo("UTC")
             )
 
 
         expires_at = expires_at.astimezone(
-            utc_tz
+            ZoneInfo("UTC")
         )
 
 
@@ -806,7 +806,7 @@ def pending_order():
 
 
         # =================================================
-        # DEBUG API
+        # DEBUG API PENDING
         # =================================================
 
         print(
