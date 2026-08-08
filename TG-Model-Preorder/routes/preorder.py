@@ -649,7 +649,6 @@ def pending_order():
         "order_token"
     )
 
-
     # =====================================================
     # KHÔNG CÓ COOKIE
     # =====================================================
@@ -666,6 +665,13 @@ def pending_order():
 
 
     try:
+
+        # =================================================
+        # LẤY ĐƠN CHƯA THANH TOÁN
+        #
+        # expires_at là TIMESTAMP không timezone
+        # nên so sánh với giờ Việt Nam hiện tại
+        # =================================================
 
         cursor.execute(
             """
@@ -684,7 +690,8 @@ def pending_order():
 
             AND status=%s
 
-            AND expires_at > NOW()
+            AND expires_at >
+                (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')
 
             ORDER BY id DESC
 
@@ -701,7 +708,7 @@ def pending_order():
 
 
         # =================================================
-        # KHÔNG CÒN ĐƠN HỢP LỆ
+        # KHÔNG CÓ ĐƠN
         # =================================================
 
         if order is None:
@@ -712,15 +719,22 @@ def pending_order():
 
 
         order_code = order[0]
+
         product_name = order[1]
+
         quantity = order[2]
+
         deposit = order[3]
+
         payment_url = order[4]
+
         expires_at = order[5]
+
+        status = order[6]
 
 
         # =================================================
-        # CHƯA CÓ PAYMENT URL
+        # KIỂM TRA PAYMENT URL
         # =================================================
 
         if not payment_url:
@@ -730,39 +744,119 @@ def pending_order():
             }
 
 
-        # ==============================
-# CHUẨN HÓA GIỜ VIỆT NAM
-# ==============================
+        # =================================================
+        # GIỜ HIỆN TẠI VIỆT NAM
+        # =================================================
 
-if expires_at.tzinfo is None:
-
-    expires_at = expires_at.replace(
-        tzinfo=ZoneInfo("Asia/Ho_Chi_Minh")
-    )
-
-
-expires_at_vn = expires_at.astimezone(
-    ZoneInfo("Asia/Ho_Chi_Minh")
-)
-
-
-return {
-
-    "has_order": True,
-
-    "order_code": order_code,
-
-    "payment_url": payment_url,
-
-    "expires_at":
-        expires_at_vn.strftime(
-            "%Y-%m-%dT%H:%M:%S+07:00"
+        now_vn = datetime.now(
+            ZoneInfo(
+                "Asia/Ho_Chi_Minh"
+            )
         )
 
-}
+
+        # =================================================
+        # CHUẨN HÓA expires_at
+        #
+        # PostgreSQL TIMESTAMP không timezone
+        # nên gắn múi giờ Việt Nam vào
+        # =================================================
+
+        if expires_at.tzinfo is None:
+
+            expires_at_vn = expires_at.replace(
+                tzinfo=ZoneInfo(
+                    "Asia/Ho_Chi_Minh"
+                )
+            )
+
+        else:
+
+            expires_at_vn = expires_at.astimezone(
+                ZoneInfo(
+                    "Asia/Ho_Chi_Minh"
+                )
+            )
+
+
+        # =================================================
+        # TÍNH SỐ GIÂY CÒN LẠI
+        # =================================================
+
+        remaining_seconds = int(
+            (
+                expires_at_vn - now_vn
+            ).total_seconds()
+        )
+
+
+        # =================================================
+        # ĐƠN ĐÃ HẾT HẠN
+        # =================================================
+
+        if remaining_seconds <= 0:
+
+            cursor.execute(
+                """
+                UPDATE orders
+
+                SET status=%s
+
+                WHERE order_token=%s
+
+                AND status=%s
+                """,
+                (
+                    "Hết hạn thanh toán",
+                    order_token,
+                    "Chưa thanh toán"
+                )
+            )
+
+
+            conn.commit()
+
+
+            return {
+                "has_order": False
+            }
+
+
+        # =================================================
+        # TRẢ DỮ LIỆU CHO INDEX.HTML
+        # =================================================
+
+        return {
+
+            "has_order": True,
+
+            "order_code":
+                order_code,
+
+            "product_name":
+                product_name,
+
+            "quantity":
+                quantity,
+
+            "deposit":
+                deposit,
+
+            "payment_url":
+                payment_url,
+
+            "expires_at":
+                expires_at_vn.strftime(
+                    "%Y-%m-%dT%H:%M:%S+07:00"
+                ),
+
+            "remaining_seconds":
+                remaining_seconds
+        }
 
 
     finally:
 
         cursor.close()
+
         conn.close()
