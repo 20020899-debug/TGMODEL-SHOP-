@@ -716,32 +716,6 @@ def pending_order():
                 tzinfo=vietnam_tz
             )
 
-        # =================================================
-        # DEBUG
-        # =================================================
-
-        print(
-            "========== DEBUG PENDING =========="
-        )
-
-        print(
-            "expires_at DB:",
-            expires_at
-        )
-
-        print(
-            "expires_at type:",
-            type(expires_at)
-        )
-
-        print(
-            "expires_timestamp:",
-            int(expires_at.timestamp())
-        )
-
-        print(
-            "==================================="
-        )
 
         # =================================================
         # UNIX TIMESTAMP
