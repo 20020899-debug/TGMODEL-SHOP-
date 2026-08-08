@@ -566,10 +566,63 @@ function showPendingOrder(data) {
 
     // =================================================
 // THỜI GIAN HẾT HẠN
-// Backend trả về UNIX TIMESTAMP
+// Backend trả UNIX TIMESTAMP
 // =================================================
+
+const expiresTimestamp =
+    Number(data.expires_at);
+
 const expiresAt =
-    Number(data.expires_at) * 1000;
+    expiresTimestamp * 1000;
+
+
+// =================================================
+// KIỂM TRA TIMESTAMP
+// =================================================
+
+console.log(
+    "PENDING ORDER:",
+    data.order_code
+);
+
+console.log(
+    "expires_at:",
+    data.expires_at
+);
+
+console.log(
+    "expiresAt:",
+    expiresAt
+);
+
+console.log(
+    "Date.now:",
+    Date.now()
+);
+
+console.log(
+    "remaining:",
+    expiresAt - Date.now()
+);
+
+
+// =================================================
+// TIMESTAMP KHÔNG HỢP LỆ
+// =================================================
+
+if (
+    !Number.isFinite(expiresTimestamp) ||
+    expiresTimestamp <= 0
+) {
+
+    pendingCountdown.textContent =
+        "Không xác định";
+
+    continueButton.style.display =
+        "none";
+
+    return;
+}
 
     // =====================================================
     // XÓA TIMER CŨ
