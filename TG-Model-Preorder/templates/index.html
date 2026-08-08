@@ -565,30 +565,12 @@ function showPendingOrder(data) {
 
 
     // =================================================
-// XỬ LÝ THỜI GIAN HẾT HẠN
-// PostgreSQL đang lưu giờ Việt Nam
+// THỜI GIAN HẾT HẠN
+// Backend trả về UNIX TIMESTAMP
 // =================================================
 
-let expiresAtString = data.expires_at;
-
-// Nếu thời gian chưa có timezone,
-// nói rõ với trình duyệt đây là giờ Việt Nam
-if (
-    expiresAtString &&
-    !expiresAtString.endsWith("Z") &&
-    !expiresAtString.includes("+")
-) {
-    expiresAtString =
-        expiresAtString.replace(
-            " ",
-            "T"
-        ) + "+07:00";
-}
-
 const expiresAt =
-    new Date(
-        expiresAtString
-    ).getTime();
+    Number(data.expires_at) * 1000;
 
 
     // =====================================================
