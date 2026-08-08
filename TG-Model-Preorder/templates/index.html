@@ -630,8 +630,22 @@ function showPendingOrder(data) {
     // CÒN HẠN
     // =====================================================
 
+    const minutes =
+    Math.floor(
+        remaining / 60000
+    );
+
+    const seconds =
+    Math.floor(
+        (remaining % 60000) / 1000
+    );
+
     pendingStatus.textContent =
-        "Còn hạn";
+    "Còn " +
+    minutes +
+    " phút " +
+    String(seconds).padStart(2, "0") +
+    " giây";
 
 
     pendingStatus.classList.remove(
