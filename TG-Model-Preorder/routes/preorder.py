@@ -787,12 +787,12 @@ def pending_order():
         if expires_at.tzinfo is None:
 
             expires_at = expires_at.replace(
-                tzinfo=ZoneInfo("UTC")
+                tzinfo=ZoneInfo("Asia/Ho_Chi_Minh")
             )
 
 
         expires_at = expires_at.astimezone(
-            ZoneInfo("UTC")
+            ZoneInfo("Asia/Ho_Chi_Minh")
         )
 
 
