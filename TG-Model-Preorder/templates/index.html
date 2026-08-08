@@ -569,132 +569,166 @@ function showPendingOrder(data) {
 // PostgreSQL đang lưu giờ Việt Nam
 // =================================================
 
+// =================================================
+// XỬ LÝ THỜI GIAN HẾT HẠN
+// =================================================
+
 let expiresAtString = data.expires_at;
 
-// Nếu thời gian chưa có timezone,
-// nói rõ với trình duyệt đây là giờ Việt Nam
-if (
-    expiresAtString &&
-    !expiresAtString.endsWith("Z") &&
-    !expiresAtString.includes("+")
-) {
-    expiresAtString =
-        expiresAtString.replace(
-            " ",
-            "T"
-        ) + "+07:00";
+console.log("EXPIRES AT SERVER:", expiresAtString);
+
+
+// =================================================
+// CHUYỂN THỜI GIAN SERVER THÀNH TIMESTAMP
+// =================================================
+
+let expiresAt;
+
+if (expiresAtString) {
+
+    // Server đã trả:
+    // 2026-08-07T15:30:00+07:00
+
+    expiresAt =
+        new Date(
+            expiresAtString
+        ).getTime();
+
 }
 
-const expiresAt =
-    new Date(
-        expiresAtString
-    ).getTime();
+
+// =================================================
+// KIỂM TRA THỜI GIAN CÓ HỢP LỆ KHÔNG
+// =================================================
+
+console.log(
+    "EXPIRES AT TIMESTAMP:",
+    expiresAt
+);
 
 
-    // =====================================================
-    // XÓA TIMER CŨ
-    // =====================================================
+console.log(
+    "CURRENT TIMESTAMP:",
+    Date.now()
+);
 
-    if (pendingOrderTimer) {
+
+// =================================================
+// XÓA TIMER CŨ
+// =================================================
+
+if (pendingOrderTimer) {
+
+    clearInterval(
+        pendingOrderTimer
+    );
+
+    pendingOrderTimer = null;
+}
+
+
+// =================================================
+// CẬP NHẬT COUNTDOWN
+// =================================================
+
+function updateCountdown() {
+
+    const now =
+        Date.now();
+
+
+    const remaining =
+        expiresAt - now;
+
+
+    console.log(
+        "THỜI GIAN CÒN LẠI:",
+        remaining
+    );
+
+
+    // =================================================
+    // HẾT HẠN
+    // =================================================
+
+    if (
+        !expiresAt ||
+        isNaN(expiresAt) ||
+        remaining <= 0
+    ) {
 
         clearInterval(
             pendingOrderTimer
         );
-    }
 
-
-    // =====================================================
-    // CẬP NHẬT ĐẾM NGƯỢC
-    // =====================================================
-
-    function updateCountdown() {
-
-        const now =
-            Date.now();
-
-
-        const remaining =
-            expiresAt - now;
-
-
-        // =============================================
-        // HẾT HẠN
-        // =============================================
-
-        if (remaining <= 0) {
-
-            clearInterval(
-                pendingOrderTimer
-            );
-
-            pendingOrderTimer =
-                null;
-
-
-            pendingCountdown.textContent =
-                "ĐÃ HẾT HẠN";
-
-
-            continueButton.style.display =
-                "none";
-
-
-            expiredMessage.style.display =
-                "block";
-
-
-            return;
-        }
-
-
-        // =============================================
-        // PHÚT
-        // =============================================
-
-        const minutes =
-            Math.floor(
-                remaining / 60000
-            );
-
-
-        // =============================================
-        // GIÂY
-        // =============================================
-
-        const seconds =
-            Math.floor(
-                (remaining % 60000) / 1000
-            );
+        pendingOrderTimer = null;
 
 
         pendingCountdown.textContent =
+            "ĐÃ HẾT HẠN";
 
-            minutes +
-            " phút " +
 
-            String(seconds)
-                .padStart(2, "0") +
+        continueButton.style.display =
+            "none";
 
-            " giây";
 
+        expiredMessage.style.display =
+            "block";
+
+
+        return;
     }
 
 
-    // Chạy ngay
+    // =================================================
+    // TÍNH PHÚT
+    // =================================================
 
-    updateCountdown();
-
-
-    // Cập nhật mỗi giây
-
-    pendingOrderTimer =
-        setInterval(
-            updateCountdown,
-            1000
+    const minutes =
+        Math.floor(
+            remaining / 60000
         );
+
+
+    // =================================================
+    // TÍNH GIÂY
+    // =================================================
+
+    const seconds =
+        Math.floor(
+            (remaining % 60000) / 1000
+        );
+
+
+    pendingCountdown.textContent =
+
+        minutes +
+        " phút " +
+
+        String(seconds)
+            .padStart(2, "0") +
+
+        " giây";
 
 }
 
+
+// =================================================
+// CHẠY NGAY
+// =================================================
+
+updateCountdown();
+
+
+// =================================================
+// CẬP NHẬT MỖI GIÂY
+// =================================================
+
+pendingOrderTimer =
+    setInterval(
+        updateCountdown,
+        1000
+    );
 
 // =========================================================
 // KIỂM TRA ĐƠN CHƯA THANH TOÁN
