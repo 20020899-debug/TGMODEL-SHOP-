@@ -734,7 +734,7 @@ def pending_order():
         # =================================================
 
         vietnam_tz = ZoneInfo(
-            "Asia/Ho_Chi_Minh"
+            "UTC"
         )
 
 
