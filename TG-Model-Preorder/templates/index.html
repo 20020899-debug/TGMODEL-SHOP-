@@ -568,10 +568,24 @@ function showPendingOrder(data) {
 // THỜI GIAN HẾT HẠN
 // Backend trả về UNIX TIMESTAMP
 // =================================================
+let expiresAtString = data.expires_at;
+
+if (
+    expiresAtString &&
+    !expiresAtString.endsWith("Z") &&
+    !expiresAtString.includes("+")
+) {
+    expiresAtString =
+        expiresAtString.replace(
+            " ",
+            "T"
+        ) + "+07:00";
+}
 
 const expiresAt =
-    Number(data.expires_at) * 1000;
-
+    new Date(
+        expiresAtString
+    ).getTime();
 
     // =====================================================
     // XÓA TIMER CŨ
