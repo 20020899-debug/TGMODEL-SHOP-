@@ -1,453 +1,445 @@
-
 <!DOCTYPE html>
+
 <html lang="vi">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <title>TG MODEL SHOP</title>
+<title>TG MODEL SHOP</title>
 
 
-    <style>
+<style>
 
-        body {
+    body {
 
-            font-family: Arial, sans-serif;
+        font-family: Arial, sans-serif;
 
-            background: #f5f5f5;
+        background: #f5f5f5;
 
-            margin: 0;
+        margin: 0;
 
-            padding: 0;
-        }
+        padding: 0;
+    }
 
 
-        .container {
+    .container {
 
-            max-width: 900px;
+        max-width: 900px;
 
-            margin: 0 auto;
+        margin: 0 auto;
 
-            padding: 30px 20px;
-        }
+        padding: 30px 20px;
+    }
 
 
-        .shop-title {
+    .shop-title {
 
-            text-align: center;
+        text-align: center;
 
-            margin-bottom: 30px;
-        }
+        margin-bottom: 30px;
+    }
 
 
-        .product {
+    .product {
 
-            background: white;
+        background: white;
 
-            padding: 25px;
+        padding: 25px;
 
-            margin-bottom: 25px;
+        margin-bottom: 25px;
 
-            border-radius: 12px;
+        border-radius: 12px;
 
-            box-shadow:
-                0 2px 8px
-                rgba(0,0,0,0.08);
-        }
+        box-shadow:
+            0 2px 8px
+            rgba(0,0,0,0.08);
+    }
 
 
-        .product h5 {
+    .product h5 {
 
-            margin-bottom: 8px;
+        margin-bottom: 8px;
 
-            color: #6c757d;
-        }
+        color: #6c757d;
+    }
 
 
-        .product h2 {
+    .product h2 {
 
-            margin-top: 0;
-        }
+        margin-top: 0;
+    }
 
 
-        .product hr {
+    .product hr {
 
-            border: none;
+        border: none;
 
-            border-top:
-                1px solid #ddd;
+        border-top:
+            1px solid #ddd;
 
-            margin: 15px 0;
-        }
+        margin: 15px 0;
+    }
 
 
-        /* =================================================
-           NÚT CHUNG
-           ================================================= */
+    /* =================================================
+       NÚT CHUNG
+       ================================================= */
 
-        .btn {
+    .btn {
 
-            display: inline-block;
+        display: inline-block;
 
-            text-decoration: none;
+        text-decoration: none;
 
-            padding: 12px 20px;
+        padding: 12px 20px;
 
-            border-radius: 7px;
+        border-radius: 7px;
 
-            font-weight: bold;
+        font-weight: bold;
 
-            color: white;
-        }
+        color: white;
+    }
 
 
-        /* =================================================
-           NÚT PRE-ORDER MÀU CAM
-           ================================================= */
+    /* =================================================
+       NÚT PRE-ORDER
+       ================================================= */
 
-        .btn-preorder {
+    .btn-preorder {
 
-            background: #ff9800;
+        background: #ff9800;
 
-            color: white;
+        color: white;
 
-            border: none;
+        border: none;
 
-            transition:
-                background 0.2s ease;
-        }
+        transition:
+            background 0.2s ease;
+    }
 
 
-        .btn-preorder:hover {
+    .btn-preorder:hover {
 
-            background: #f57c00;
-        }
+        background: #f57c00;
+    }
 
 
-        /* =================================================
-           ĐƠN CHƯA THANH TOÁN
-           ================================================= */
+    /* =================================================
+       ĐƠN CHƯA THANH TOÁN
+       ================================================= */
 
-        #pending-order-box {
+    #pending-order-box {
 
-            display: none;
+        display: none;
 
-            background: #fff3cd;
+        background: #fff3cd;
 
-            border:
-                1px solid #ffc107;
+        border:
+            1px solid #ffc107;
 
-            border-radius: 12px;
+        border-radius: 12px;
 
-            padding: 20px;
+        padding: 20px;
 
-            margin-bottom: 30px;
+        margin-bottom: 30px;
 
-            box-shadow:
-                0 2px 8px
-                rgba(0,0,0,0.08);
-        }
+        box-shadow:
+            0 2px 8px
+            rgba(0,0,0,0.08);
+    }
 
 
-        #pending-order-box h3 {
+    #pending-order-box h3 {
 
-            margin-top: 0;
+        margin-top: 0;
 
-            color: #856404;
-        }
+        color: #856404;
+    }
 
 
-        #pending-order-code {
+    #pending-order-code {
 
-            color: #dc3545;
-        }
+        color: #dc3545;
+    }
 
 
-        #pending-order-countdown {
+    /* =================================================
+       TRẠNG THÁI ĐƠN
+       ================================================= */
 
-            color: #dc3545;
+    #pending-order-status {
 
-            font-size: 18px;
-        }
+        font-weight: bold;
 
+        color: #198754;
+    }
 
-        /* =================================================
-           NÚT TIẾP TỤC THANH TOÁN
-           ================================================= */
 
-        #continue-payment-button {
+    #pending-order-status.expired {
 
-            background: #198754;
+        color: #dc3545;
+    }
 
-            color: white;
 
-            border: none;
+    /* =================================================
+       NÚT TIẾP TỤC THANH TOÁN
+       ================================================= */
 
-            padding: 12px 20px;
+    #continue-payment-button {
 
-            border-radius: 7px;
+        background: #198754;
 
-            font-size: 16px;
+        color: white;
 
-            font-weight: bold;
+        border: none;
 
-            cursor: pointer;
-        }
+        padding: 12px 20px;
 
+        border-radius: 7px;
 
-        #continue-payment-button:hover {
+        font-size: 16px;
 
-            background: #157347;
-        }
+        font-weight: bold;
 
+        cursor: pointer;
+    }
 
-        #continue-payment-button:disabled {
 
-            background: #999;
+    #continue-payment-button:hover {
 
-            cursor: not-allowed;
-        }
+        background: #157347;
+    }
 
 
-        /* =================================================
-           THÔNG BÁO HẾT HẠN
-           ================================================= */
+    /* =================================================
+       THÔNG BÁO HẾT HẠN
+       ================================================= */
 
-        #expired-message {
+    #expired-message {
 
-            display: none;
+        display: none;
 
-            color: #dc3545;
+        color: #dc3545;
 
-            font-weight: bold;
-        }
+        font-weight: bold;
+    }
 
 
-        /* =================================================
-           LOADING
-           ================================================= */
+    /* =================================================
+       LOADING
+       ================================================= */
 
-        #pending-loading {
+    #pending-loading {
 
-            color: #666;
+        color: #666;
 
-            font-size: 14px;
-        }
+        font-size: 14px;
+    }
 
-    </style>
+</style>
+```
 
 </head>
 
-
 <body>
-
 
 <div class="container">
 
-
-    <!-- =================================================
-         TIÊU ĐỀ SHOP
-         ================================================= -->
-
-    <div class="shop-title">
-
-        <h1>
-            TG MODEL SHOP
-        </h1>
-
-        <p>
-            Model Kit & Figure
-        </p>
-
-    </div>
-
-
-
-    <!-- =================================================
-         ĐƠN HÀNG CHƯA THANH TOÁN
-         ================================================= -->
-
-    <div
-        id="pending-order-box"
-    >
-
-        <h3>
-            🔔 Bạn đang có đơn hàng chưa thanh toán
-        </h3>
-
-
-        <p>
-
-            Mã đơn:
-
-            <b id="pending-order-code">
-                --
-            </b>
-
-        </p>
-
-
-        <p>
-
-            Sản phẩm:
-
-            <b id="pending-order-product">
-                --
-            </b>
-
-        </p>
-
-
-        <p>
-
-            Số lượng:
-
-            <b id="pending-order-quantity">
-                --
-            </b>
-
-        </p>
-
-
-        <p>
-
-            Thời gian còn lại:
-
-            <b id="pending-order-countdown">
-                Đang kiểm tra...
-            </b>
-
-        </p>
-
-
-        <p id="expired-message">
-
-            Đơn hàng đã hết hạn thanh toán.
-
-        </p>
-
-
-        <button
-            id="continue-payment-button"
-            type="button"
-        >
-
-            💳 TIẾP TỤC THANH TOÁN
-
-        </button>
-
-    </div>
-
-
-
-    <!-- =================================================
-         LOADING KIỂM TRA ĐƠN
-         ================================================= -->
-
-    <div
-        id="pending-loading"
-    >
-
-    </div>
-
-
-
-    <!-- =================================================
-         DANH SÁCH SẢN PHẨM
-         ================================================= -->
-
-    {% for product in products %}
-
-    <div class="product">
-
-
-        <h5>
-
-            {{ product.brand }}
-
-        </h5>
-
-
-        <h2>
-
-            {{ product.name }}
-
-        </h2>
-
-
-        <hr>
-
-
-        <p>
-
-            <strong>
-                💰 Giá chính thức:
-            </strong>
-
-            {{ "{:,}".format(product.price) }} đ
-
-        </p>
-
-
-        <p>
-
-            <strong>
-                💵 Tiền cọc:
-            </strong>
-
-            {{ "{:,}".format(product.deposit) }} đ
-
-        </p>
-
-
-        <p>
-
-            <strong>
-                📦 Dự kiến trả hàng:
-            </strong>
-
-            {{ product.eta }}
-
-        </p>
-
-
-        <!-- =============================================
-             NÚT ĐẶT PRE-ORDER
-             ============================================= -->
-
-        <a
-            href="/preorder/{{ product.id }}"
-            class="btn btn-preorder"
-        >
-
-            ĐẶT PRE-ORDER
-
-        </a>
-
-
-    </div>
-
-    {% endfor %}
-
+```
+<!-- =================================================
+     TIÊU ĐỀ SHOP
+     ================================================= -->
+
+<div class="shop-title">
+
+    <h1>
+        TG MODEL SHOP
+    </h1>
+
+    <p>
+        Model Kit & Figure
+    </p>
 
 </div>
 
 
+
+<!-- =================================================
+     ĐƠN HÀNG CHƯA THANH TOÁN
+     ================================================= -->
+
+<div
+    id="pending-order-box"
+>
+
+    <h3>
+        🔔 Bạn đang có đơn hàng chưa thanh toán
+    </h3>
+
+
+    <p>
+
+        Mã đơn:
+
+        <b id="pending-order-code">
+            --
+        </b>
+
+    </p>
+
+
+    <p>
+
+        Sản phẩm:
+
+        <b id="pending-order-product">
+            --
+        </b>
+
+    </p>
+
+
+    <p>
+
+        Số lượng:
+
+        <b id="pending-order-quantity">
+            --
+        </b>
+
+    </p>
+
+
+    <p>
+
+        Trạng thái:
+
+        <b id="pending-order-status">
+            Đang kiểm tra...
+        </b>
+
+    </p>
+
+
+    <p id="expired-message">
+
+        Đơn hàng đã hết hạn thanh toán.
+
+    </p>
+
+
+    <button
+        id="continue-payment-button"
+        type="button"
+    >
+
+        💳 TIẾP TỤC THANH TOÁN
+
+    </button>
+
+</div>
+
+
+
+<!-- =================================================
+     LOADING
+     ================================================= -->
+
+<div
+    id="pending-loading"
+>
+
+</div>
+
+
+
+<!-- =================================================
+     DANH SÁCH SẢN PHẨM
+     ================================================= -->
+
+{% for product in products %}
+
+<div class="product">
+
+
+    <h5>
+
+        {{ product.brand }}
+
+    </h5>
+
+
+    <h2>
+
+        {{ product.name }}
+
+    </h2>
+
+
+    <hr>
+
+
+    <p>
+
+        <strong>
+            💰 Giá chính thức:
+        </strong>
+
+        {{ "{:,}".format(product.price) }} đ
+
+    </p>
+
+
+    <p>
+
+        <strong>
+            💵 Tiền cọc:
+        </strong>
+
+        {{ "{:,}".format(product.deposit) }} đ
+
+    </p>
+
+
+    <p>
+
+        <strong>
+            📦 Dự kiến trả hàng:
+        </strong>
+
+        {{ product.eta }}
+
+    </p>
+
+
+    <a
+        href="/preorder/{{ product.id }}"
+        class="btn btn-preorder"
+    >
+
+        ĐẶT PRE-ORDER
+
+    </a>
+
+
+</div>
+
+{% endfor %}
+```
+
+</div>
 
 <!-- =====================================================
      JAVASCRIPT
      ===================================================== -->
 
 <script>
-
-
-let pendingOrderTimer = null;
 
 
 // =========================================================
@@ -478,9 +470,9 @@ const pendingQuantity =
     );
 
 
-const pendingCountdown =
+const pendingStatus =
     document.getElementById(
-        "pending-order-countdown"
+        "pending-order-status"
     );
 
 
@@ -497,7 +489,7 @@ const expiredMessage =
 
 
 // =========================================================
-// ẨN THÔNG BÁO
+// ẨN ĐƠN
 // =========================================================
 
 function hidePendingOrder() {
@@ -505,21 +497,11 @@ function hidePendingOrder() {
     pendingBox.style.display =
         "none";
 
-
-    if (pendingOrderTimer) {
-
-        clearInterval(
-            pendingOrderTimer
-        );
-
-        pendingOrderTimer = null;
-    }
-
 }
 
 
 // =========================================================
-// HIỆN ĐƠN CHƯA THANH TOÁN
+// HIỆN ĐƠN
 // =========================================================
 
 function showPendingOrder(data) {
@@ -540,16 +522,129 @@ function showPendingOrder(data) {
         data.quantity || "--";
 
 
+    // =====================================================
+    // KIỂM TRA THỜI GIAN HẾT HẠN
+    //
+    // Backend trả:
+    // expires_at = UNIX TIMESTAMP tính bằng GIÂY
+    //
+    // Date.now() trả:
+    // MILLI GIÂY
+    //
+    // Vì vậy phải * 1000
+    // =====================================================
+
+    const expiresAt =
+        Number(data.expires_at) * 1000;
+
+
+    const now =
+        Date.now();
+
+
+    const remaining =
+        expiresAt - now;
+
+
+    console.log(
+        "data.expires_at:",
+        data.expires_at
+    );
+
+
+    console.log(
+        "expiresAt:",
+        expiresAt
+    );
+
+
+    console.log(
+        "Date.now():",
+        now
+    );
+
+
+    console.log(
+        "remaining:",
+        remaining
+    );
+
+
+    // =====================================================
+    // KHÔNG ĐỌC ĐƯỢC THỜI GIAN
+    // =====================================================
+
+    if (
+        !Number.isFinite(expiresAt)
+    ) {
+
+        pendingStatus.textContent =
+            "Không xác định";
+
+
+        pendingStatus.classList.add(
+            "expired"
+        );
+
+
+        continueButton.style.display =
+            "none";
+
+
+        expiredMessage.style.display =
+            "none";
+
+
+        return;
+    }
+
+
+    // =====================================================
+    // HẾT HẠN
+    // =====================================================
+
+    if (remaining <= 0) {
+
+        pendingStatus.textContent =
+            "Hết hạn thanh toán";
+
+
+        pendingStatus.classList.add(
+            "expired"
+        );
+
+
+        continueButton.style.display =
+            "none";
+
+
+        expiredMessage.style.display =
+            "block";
+
+
+        return;
+    }
+
+
+    // =====================================================
+    // CÒN HẠN
+    // =====================================================
+
+    pendingStatus.textContent =
+        "Còn hạn";
+
+
+    pendingStatus.classList.remove(
+        "expired"
+    );
+
+
     expiredMessage.style.display =
         "none";
 
 
     continueButton.style.display =
         "inline-block";
-
-
-    continueButton.disabled =
-        false;
 
 
     continueButton.onclick =
@@ -559,135 +654,10 @@ function showPendingOrder(data) {
 
                 window.location.href =
                     data.payment_url;
+
             }
 
         };
-
-
-    // =================================================
-// THỜI GIAN HẾT HẠN
-// Backend trả về UNIX TIMESTAMP
-// =================================================
-let expiresAtString = data.expires_at;
-
-if (
-    expiresAtString &&
-    !expiresAtString.endsWith("Z") &&
-    !expiresAtString.includes("+")
-) {
-    expiresAtString =
-        expiresAtString.replace(
-            " ",
-            "T"
-        );
-}
-
-const expiresAt =
-    new Date(
-        expiresAtString
-    ).getTime();
-
-    // =====================================================
-    // XÓA TIMER CŨ
-    // =====================================================
-
-    if (pendingOrderTimer) {
-
-        clearInterval(
-            pendingOrderTimer
-        );
-    }
-
-
-    // =====================================================
-    // CẬP NHẬT ĐẾM NGƯỢC
-    // =====================================================
-
-    function updateCountdown() {
-
-        const now =
-            Date.now();
-
-
-        const remaining =
-            expiresAt - now;
-
-
-        // =============================================
-        // HẾT HẠN
-        // =============================================
-
-        if (remaining <= 0) {
-
-            clearInterval(
-                pendingOrderTimer
-            );
-
-            pendingOrderTimer =
-                null;
-
-
-            pendingCountdown.textContent =
-                "ĐÃ HẾT HẠN";
-
-
-            continueButton.style.display =
-                "none";
-
-
-            expiredMessage.style.display =
-                "block";
-
-
-            return;
-        }
-
-
-        // =============================================
-        // PHÚT
-        // =============================================
-
-        const minutes =
-            Math.floor(
-                remaining / 60000
-            );
-
-
-        // =============================================
-        // GIÂY
-        // =============================================
-
-        const seconds =
-            Math.floor(
-                (remaining % 60000) / 1000
-            );
-
-
-        pendingCountdown.textContent =
-
-            minutes +
-            " phút " +
-
-            String(seconds)
-                .padStart(2, "0") +
-
-            " giây";
-
-    }
-
-
-    // Chạy ngay
-
-    updateCountdown();
-
-
-    // Cập nhật mỗi giây
-
-    pendingOrderTimer =
-        setInterval(
-            updateCountdown,
-            1000
-        );
 
 }
 
@@ -727,9 +697,15 @@ async function checkPendingOrder() {
             await response.json();
 
 
-        // =============================================
+        console.log(
+            "Pending order:",
+            data
+        );
+
+
+        // =================================================
         // KHÔNG CÓ ĐƠN
-        // =============================================
+        // =================================================
 
         if (!data.has_order) {
 
@@ -739,9 +715,9 @@ async function checkPendingOrder() {
         }
 
 
-        // =============================================
+        // =================================================
         // CÓ ĐƠN
-        // =============================================
+        // =================================================
 
         if (
             data.payment_url &&
@@ -798,8 +774,6 @@ setInterval(
 
 </script>
 
-
 </body>
 
 </html>
-
