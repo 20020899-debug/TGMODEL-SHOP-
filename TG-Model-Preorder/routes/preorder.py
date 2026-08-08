@@ -415,9 +415,8 @@ def submit():
         )
 
 
-        created_at = created_time.strftime(
-            "%d/%m/%Y %H:%M:%S"
-        )
+        created_at = created_time
+    
 
 
         # =================================================
