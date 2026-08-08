@@ -658,7 +658,7 @@ def submit():
         expires_time = (
             created_time
             + timedelta(
-                minutes=1
+                minutes=15
             )
         )
 
