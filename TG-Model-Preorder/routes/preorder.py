@@ -407,18 +407,14 @@ def submit():
 
 
         # =================================================
-        # THỜI GIAN ĐƠN HÀNG
-        # Dùng UTC làm chuẩn tuyệt đối
+        # THỜI GIAN TẠO ĐƠN
         # =================================================
 
         created_time = datetime.now(
-           timezone.utc
+            timezone.utc
         )
 
-        expires_at = (
-           created_time +
-           timedelta(minutes=15)
-        )
+        created_at = created_time
 
 
         # =================================================
