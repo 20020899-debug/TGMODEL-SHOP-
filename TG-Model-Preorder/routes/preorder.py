@@ -637,18 +637,15 @@ def submit():
 
 
 # =========================================================
-# API: KIỂM TRA ĐƠN CHƯA THANH TOÁN
+# KIỂM TRA ĐƠN CHƯA THANH TOÁN
 # =========================================================
 
-@preorder_bp.route(
-    "/api/pending-order"
-)
+@preorder_bp.route("/api/pending-order")
 def pending_order():
 
     order_token = request.cookies.get(
         "order_token"
     )
-
 
     # =====================================================
     # KHÔNG CÓ COOKIE
@@ -667,6 +664,10 @@ def pending_order():
 
     try:
 
+        # =================================================
+        # TÌM ĐƠN CHƯA THANH TOÁN
+        # =================================================
+
         cursor.execute(
             """
             SELECT
@@ -684,8 +685,6 @@ def pending_order():
 
             AND status=%s
 
-            AND expires_at > NOW()
-
             ORDER BY id DESC
 
             LIMIT 1
@@ -701,7 +700,7 @@ def pending_order():
 
 
         # =================================================
-        # KHÔNG CÒN ĐƠN HỢP LỆ
+        # KHÔNG TÌM THẤY ĐƠN
         # =================================================
 
         if order is None:
@@ -720,7 +719,7 @@ def pending_order():
 
 
         # =================================================
-        # CHƯA CÓ PAYMENT URL
+        # KHÔNG CÓ PAYMENT URL
         # =================================================
 
         if not payment_url:
@@ -731,7 +730,34 @@ def pending_order():
 
 
         # =================================================
-        # TRẢ DỮ LIỆU CHO INDEX.HTML
+        # XỬ LÝ THỜI GIAN
+        # =================================================
+
+        vietnam_tz = ZoneInfo(
+            "Asia/Ho_Chi_Minh"
+        )
+
+
+        # Nếu PostgreSQL trả về datetime
+        # không có timezone
+        if expires_at.tzinfo is None:
+
+            expires_at = expires_at.replace(
+                tzinfo=vietnam_tz
+            )
+
+
+        # =================================================
+        # CHUYỂN SANG UTC
+        # =================================================
+
+        expires_at_utc = expires_at.astimezone(
+            ZoneInfo("UTC")
+        )
+
+
+        # =================================================
+        # TRẢ DỮ LIỆU CHO JAVASCRIPT
         # =================================================
 
         return {
@@ -753,8 +779,15 @@ def pending_order():
             "payment_url":
                 payment_url,
 
+            # Ví dụ:
+            # 2026-08-07T08:45:00Z
+            #
+            # Đây là UTC.
+            # JavaScript Date() sẽ tự xử lý chính xác.
             "expires_at":
-                expires_at.isoformat()
+                expires_at_utc.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                )
         }
 
 
