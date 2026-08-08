@@ -411,7 +411,7 @@ def submit():
         # =================================================
 
         created_time = datetime.now(
-            timezone.utc
+             ZoneInfo("UTC")
         )
 
         created_at = created_time
