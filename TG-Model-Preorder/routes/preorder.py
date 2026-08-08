@@ -742,7 +742,7 @@ def pending_order():
         if expires_at.tzinfo is None:
 
             expires_at = expires_at.replace(
-                tzinfo=vietnam_tz
+                tzinfo=utc_tz
             )
 
 
