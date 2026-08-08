@@ -640,9 +640,7 @@ def submit():
 # API: KIỂM TRA ĐƠN CHƯA THANH TOÁN
 # =========================================================
 
-@preorder_bp.route(
-    "/api/pending-order"
-)
+@preorder_bp.route("/api/pending-order")
 def pending_order():
 
     order_token = request.cookies.get(
@@ -666,13 +664,6 @@ def pending_order():
 
     try:
 
-        # =================================================
-        # LẤY ĐƠN CHƯA THANH TOÁN
-        #
-        # expires_at là TIMESTAMP không timezone
-        # nên so sánh với giờ Việt Nam hiện tại
-        # =================================================
-
         cursor.execute(
             """
             SELECT
@@ -691,7 +682,7 @@ def pending_order():
             AND status=%s
 
             AND expires_at >
-                (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')
+                (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 
             ORDER BY id DESC
 
@@ -708,7 +699,7 @@ def pending_order():
 
 
         # =================================================
-        # KHÔNG CÓ ĐƠN
+        # KHÔNG CÒN ĐƠN HỢP LỆ
         # =================================================
 
         if order is None:
@@ -719,22 +710,15 @@ def pending_order():
 
 
         order_code = order[0]
-
         product_name = order[1]
-
         quantity = order[2]
-
         deposit = order[3]
-
         payment_url = order[4]
-
         expires_at = order[5]
-
-        status = order[6]
 
 
         # =================================================
-        # KIỂM TRA PAYMENT URL
+        # CHƯA CÓ PAYMENT URL
         # =================================================
 
         if not payment_url:
@@ -745,85 +729,39 @@ def pending_order():
 
 
         # =================================================
-        # GIỜ HIỆN TẠI VIỆT NAM
+        # CHUẨN HÓA GIỜ VIỆT NAM
         # =================================================
 
-        now_vn = datetime.now(
-            ZoneInfo(
-                "Asia/Ho_Chi_Minh"
-            )
+        vn_timezone = ZoneInfo(
+            "Asia/Ho_Chi_Minh"
         )
 
-
-        # =================================================
-        # CHUẨN HÓA expires_at
-        #
-        # PostgreSQL TIMESTAMP không timezone
-        # nên gắn múi giờ Việt Nam vào
-        # =================================================
 
         if expires_at.tzinfo is None:
 
-            expires_at_vn = expires_at.replace(
-                tzinfo=ZoneInfo(
-                    "Asia/Ho_Chi_Minh"
-                )
-            )
-
-        else:
-
-            expires_at_vn = expires_at.astimezone(
-                ZoneInfo(
-                    "Asia/Ho_Chi_Minh"
-                )
+            expires_at = expires_at.replace(
+                tzinfo=vn_timezone
             )
 
 
-        # =================================================
-        # TÍNH SỐ GIÂY CÒN LẠI
-        # =================================================
+        expires_at_vn = expires_at.astimezone(
+            vn_timezone
+        )
 
-        remaining_seconds = int(
-            (
-                expires_at_vn - now_vn
-            ).total_seconds()
+
+        print(
+            "PENDING ORDER:",
+            order_code
+        )
+
+        print(
+            "EXPIRES AT:",
+            expires_at_vn
         )
 
 
         # =================================================
-        # ĐƠN ĐÃ HẾT HẠN
-        # =================================================
-
-        if remaining_seconds <= 0:
-
-            cursor.execute(
-                """
-                UPDATE orders
-
-                SET status=%s
-
-                WHERE order_token=%s
-
-                AND status=%s
-                """,
-                (
-                    "Hết hạn thanh toán",
-                    order_token,
-                    "Chưa thanh toán"
-                )
-            )
-
-
-            conn.commit()
-
-
-            return {
-                "has_order": False
-            }
-
-
-        # =================================================
-        # TRẢ DỮ LIỆU CHO INDEX.HTML
+        # TRẢ DỮ LIỆU CHO INDEX
         # =================================================
 
         return {
@@ -848,15 +786,11 @@ def pending_order():
             "expires_at":
                 expires_at_vn.strftime(
                     "%Y-%m-%dT%H:%M:%S+07:00"
-                ),
-
-            "remaining_seconds":
-                remaining_seconds
+                )
         }
 
 
     finally:
 
         cursor.close()
-
         conn.close()
