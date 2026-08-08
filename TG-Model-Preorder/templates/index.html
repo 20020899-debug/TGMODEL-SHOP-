@@ -642,57 +642,33 @@ if (
 
     function updateCountdown() {
 
-        const now =
-            Date.now();
+    const now =
+        Date.now();
+
+    const remaining =
+        expiresAt - now;
 
 
-        const remaining =
-            expiresAt - now;
+    // =============================================
+    // DEBUG
+    // =============================================
+
+    console.log(
+        "Countdown remaining:",
+        remaining
+    );
 
 
-        // =============================================
-        // HẾT HẠN
-        // =============================================
+    // =============================================
+    // CÒN THỜI GIAN
+    // =============================================
 
-        if (remaining <= 0) {
-
-            clearInterval(
-                pendingOrderTimer
-            );
-
-            pendingOrderTimer =
-                null;
-
-
-            pendingCountdown.textContent =
-                "ĐÃ HẾT HẠN";
-
-
-            continueButton.style.display =
-                "none";
-
-
-            expiredMessage.style.display =
-                "block";
-
-
-            return;
-        }
-
-
-        // =============================================
-        // PHÚT
-        // =============================================
+    if (remaining > 0) {
 
         const minutes =
             Math.floor(
                 remaining / 60000
             );
-
-
-        // =============================================
-        // GIÂY
-        // =============================================
 
         const seconds =
             Math.floor(
@@ -701,34 +677,52 @@ if (
 
 
         pendingCountdown.textContent =
-
             minutes +
             " phút " +
-
             String(seconds)
                 .padStart(2, "0") +
-
             " giây";
 
+
+        continueButton.style.display =
+            "inline-block";
+
+        continueButton.disabled =
+            false;
+
+        expiredMessage.style.display =
+            "none";
+
+        return;
     }
 
 
-    // Chạy ngay
+    // =============================================
+    // HẾT HẠN
+    // =============================================
 
-    updateCountdown();
+    if (pendingOrderTimer) {
 
-
-    // Cập nhật mỗi giây
-
-    pendingOrderTimer =
-        setInterval(
-            updateCountdown,
-            1000
+        clearInterval(
+            pendingOrderTimer
         );
 
+        pendingOrderTimer =
+            null;
+    }
+
+
+    pendingCountdown.textContent =
+        "ĐÃ HẾT HẠN";
+
+
+    continueButton.style.display =
+        "none";
+
+
+    expiredMessage.style.display =
+        "block";
 }
-
-
 // =========================================================
 // KIỂM TRA ĐƠN CHƯA THANH TOÁN
 // =========================================================
