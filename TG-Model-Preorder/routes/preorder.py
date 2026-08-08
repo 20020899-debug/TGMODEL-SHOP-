@@ -636,8 +636,9 @@ def submit():
         raise
 
 
+
 # =========================================================
-# KIỂM TRA ĐƠN CHƯA THANH TOÁN
+# API: KIỂM TRA ĐƠN CHƯA THANH TOÁN
 # =========================================================
 
 @preorder_bp.route("/api/pending-order")
@@ -700,7 +701,7 @@ def pending_order():
 
 
         # =================================================
-        # KHÔNG TÌM THẤY ĐƠN
+        # KHÔNG CÓ ĐƠN
         # =================================================
 
         if order is None:
@@ -719,7 +720,7 @@ def pending_order():
 
 
         # =================================================
-        # KHÔNG CÓ PAYMENT URL
+        # CHƯA CÓ PAYMENT URL
         # =================================================
 
         if not payment_url:
@@ -730,7 +731,7 @@ def pending_order():
 
 
         # =================================================
-        # XỬ LÝ THỜI GIAN
+        # CHUẨN HÓA EXPIRES_AT
         # =================================================
 
         vietnam_tz = ZoneInfo(
@@ -738,8 +739,7 @@ def pending_order():
         )
 
 
-        # Nếu PostgreSQL trả về datetime
-        # không có timezone
+        # Nếu DB trả về datetime không có timezone
         if expires_at.tzinfo is None:
 
             expires_at = expires_at.replace(
@@ -748,16 +748,16 @@ def pending_order():
 
 
         # =================================================
-        # CHUYỂN SANG UTC
+        # CHUYỂN SANG UNIX TIMESTAMP
         # =================================================
 
-        expires_at_utc = expires_at.astimezone(
-            ZoneInfo("UTC")
+        expires_timestamp = int(
+            expires_at.timestamp()
         )
 
 
         # =================================================
-        # TRẢ DỮ LIỆU CHO JAVASCRIPT
+        # TRẢ DỮ LIỆU
         # =================================================
 
         return {
@@ -779,15 +779,8 @@ def pending_order():
             "payment_url":
                 payment_url,
 
-            # Ví dụ:
-            # 2026-08-07T08:45:00Z
-            #
-            # Đây là UTC.
-            # JavaScript Date() sẽ tự xử lý chính xác.
             "expires_at":
-                expires_at_utc.strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                )
+                expires_timestamp
         }
 
 
