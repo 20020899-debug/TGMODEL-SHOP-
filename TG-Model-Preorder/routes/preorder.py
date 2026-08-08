@@ -751,6 +751,11 @@ def pending_order():
         # CHUYỂN SANG UNIX TIMESTAMP
         # =================================================
 
+        print("========== DEBUG PENDING ==========")
+        print("expires_at DB:", expires_at)
+        print("expires_at type:", type(expires_at))
+        print("expires_timestamp:", int(expires_at.timestamp()))
+        print("===================================")
         expires_timestamp = int(
             expires_at.timestamp()
         )
