@@ -18,7 +18,7 @@ from payos_service import payos
 
 
 # =========================================================
-# CẤU HÌNH MÚI GIỜ
+# MÚI GIỜ VIỆT NAM
 # =========================================================
 
 VIETNAM_TZ = ZoneInfo(
@@ -33,7 +33,7 @@ preorder_bp = Blueprint(
 
 
 # =========================================================
-# HÀM KIỂM TRA EXPIRES_AT
+# CHUẨN HÓA THỜI GIAN DATABASE
 # =========================================================
 
 def normalize_expires_at(expires_at):
@@ -41,9 +41,8 @@ def normalize_expires_at(expires_at):
     if expires_at is None:
         return None
 
-
-    # PostgreSQL TIMESTAMP không timezone
-    # nhưng giá trị trong DB được quy ước là giờ Việt Nam
+    # Database đang lưu TIMESTAMP không timezone.
+    # Quy ước giá trị trong DB là giờ Việt Nam.
 
     if expires_at.tzinfo is None:
 
@@ -56,7 +55,6 @@ def normalize_expires_at(expires_at):
         expires_at = expires_at.astimezone(
             VIETNAM_TZ
         )
-
 
     return expires_at
 
@@ -83,7 +81,6 @@ def preorder(product_id):
         None
     )
 
-
     if product is None:
 
         return (
@@ -100,7 +97,6 @@ def preorder(product_id):
         "order_token"
     )
 
-
     existing_order = None
 
 
@@ -108,7 +104,6 @@ def preorder(product_id):
 
         conn = get_db()
         cursor = conn.cursor()
-
 
         try:
 
@@ -138,28 +133,57 @@ def preorder(product_id):
                 )
             )
 
-
             order = cursor.fetchone()
 
 
             if order:
 
-                expires_at = normalize_expires_at(
-                    order[5]
+                expires_at = (
+                    normalize_expires_at(
+                        order[5]
+                    )
                 )
-
 
                 now_vn = datetime.now(
                     VIETNAM_TZ
                 )
 
 
+                # =========================================
+                # CÒN HẠN
+                # =========================================
+
                 if (
-                    expires_at is not None
+                    expires_at
                     and expires_at > now_vn
                 ):
 
                     existing_order = order
+
+
+                # =========================================
+                # HẾT HẠN
+                # =========================================
+
+                else:
+
+                    cursor.execute(
+                        """
+                        UPDATE orders
+
+                        SET status=%s
+
+                        WHERE order_code=%s
+                        AND status=%s
+                        """,
+                        (
+                            "Hết hạn thanh toán",
+                            order[0],
+                            "Chưa thanh toán"
+                        )
+                    )
+
+                    conn.commit()
 
 
         finally:
@@ -169,7 +193,7 @@ def preorder(product_id):
 
 
     # =====================================================
-    # HIỂN THỊ TRANG PRE-ORDER
+    # HIỂN THỊ TRANG
     # =====================================================
 
     return render_template(
@@ -228,7 +252,7 @@ def submit():
 
 
     # =====================================================
-    # THÔNG TIN KHÁCH HÀNG
+    # THÔNG TIN KHÁCH
     # =====================================================
 
     fullname = request.form.get(
@@ -303,7 +327,7 @@ def submit():
 
 
     # =====================================================
-    # KẾT NỐI DATABASE
+    # DATABASE
     # =====================================================
 
     conn = get_db()
@@ -313,19 +337,18 @@ def submit():
     try:
 
         # =================================================
-        # KIỂM TRA COOKIE ORDER TOKEN
+        # COOKIE
         # =================================================
 
         order_token = request.cookies.get(
             "order_token"
         )
 
-
         existing_order = None
 
 
         # =================================================
-        # TÌM ĐƠN BẰNG COOKIE
+        # TÌM ĐƠN THEO COOKIE
         # =================================================
 
         if order_token:
@@ -354,7 +377,6 @@ def submit():
                 )
             )
 
-
             candidate = cursor.fetchone()
 
 
@@ -366,7 +388,6 @@ def submit():
                     )
                 )
 
-
                 now_vn = datetime.now(
                     VIETNAM_TZ
                 )
@@ -374,22 +395,36 @@ def submit():
 
                 if (
                     candidate_expires_at
-                    is not None
-
                     and
-
-                    candidate_expires_at
-                    > now_vn
+                    candidate_expires_at > now_vn
                 ):
 
-                    existing_order = (
-                        candidate
+                    existing_order = candidate
+
+
+                else:
+
+                    cursor.execute(
+                        """
+                        UPDATE orders
+
+                        SET status=%s
+
+                        WHERE order_code=%s
+                        AND status=%s
+                        """,
+                        (
+                            "Hết hạn thanh toán",
+                            candidate[0],
+                            "Chưa thanh toán"
+                        )
                     )
+
+                    conn.commit()
 
 
         # =================================================
-        # NẾU COOKIE KHÔNG CÓ ĐƠN
-        # THÌ KIỂM TRA BẰNG SĐT
+        # TÌM ĐƠN THEO SĐT
         # =================================================
 
         if (
@@ -421,7 +456,6 @@ def submit():
                 )
             )
 
-
             candidate = cursor.fetchone()
 
 
@@ -433,7 +467,6 @@ def submit():
                     )
                 )
 
-
                 now_vn = datetime.now(
                     VIETNAM_TZ
                 )
@@ -441,21 +474,36 @@ def submit():
 
                 if (
                     candidate_expires_at
-                    is not None
-
                     and
-
-                    candidate_expires_at
-                    > now_vn
+                    candidate_expires_at > now_vn
                 ):
 
-                    existing_order = (
-                        candidate
+                    existing_order = candidate
+
+
+                else:
+
+                    cursor.execute(
+                        """
+                        UPDATE orders
+
+                        SET status=%s
+
+                        WHERE order_code=%s
+                        AND status=%s
+                        """,
+                        (
+                            "Hết hạn thanh toán",
+                            candidate[0],
+                            "Chưa thanh toán"
+                        )
                     )
+
+                    conn.commit()
 
 
         # =================================================
-        # ĐÃ CÓ ĐƠN CHƯA THANH TOÁN CÒN HẠN
+        # ĐÃ CÓ ĐƠN CÒN HẠN
         # =================================================
 
         if existing_order:
@@ -464,20 +512,14 @@ def submit():
                 existing_order[0]
             )
 
-
             old_payment_url = (
                 existing_order[1]
             )
-
 
             old_token = (
                 existing_order[4]
             )
 
-
-            # =============================================
-            # ĐÃ CÓ PAYMENT URL
-            # =============================================
 
             if old_payment_url:
 
@@ -511,10 +553,6 @@ def submit():
                 return response
 
 
-            # =============================================
-            # CÓ ĐƠN NHƯNG CHƯA CÓ LINK PAYOS
-            # =============================================
-
             return f"""
             <!DOCTYPE html>
 
@@ -533,18 +571,12 @@ def submit():
             <body>
 
                 <h2>
-                    Bạn đang có một đơn hàng
-                    chưa thanh toán
+                    Bạn đang có đơn chưa thanh toán
                 </h2>
 
                 <p>
                     Mã đơn:
                     <b>{old_order_code}</b>
-                </p>
-
-                <p>
-                    Đơn hàng vẫn còn hạn
-                    thanh toán.
                 </p>
 
                 <a href="/">
@@ -558,7 +590,7 @@ def submit():
 
 
         # =================================================
-        # TẠO MÃ ĐƠN SHOP
+        # TẠO MÃ ĐƠN
         # =================================================
 
         cursor.execute(
@@ -574,15 +606,9 @@ def submit():
         )
 
 
-        last_id = (
-            cursor.fetchone()[0]
-        )
+        last_id = cursor.fetchone()[0]
 
-
-        order_id = (
-            last_id + 1
-        )
-
+        order_id = last_id + 1
 
         order_code = (
             f"TGM{order_id:03d}"
@@ -590,7 +616,7 @@ def submit():
 
 
         # =================================================
-        # TẠO TOKEN COOKIE
+        # TOKEN
         # =================================================
 
         new_order_token = (
@@ -601,7 +627,7 @@ def submit():
 
 
         # =================================================
-        # MÃ ĐƠN PAYOS
+        # MÃ PAYOS
         # =================================================
 
         payos_order_code = int(
@@ -618,13 +644,6 @@ def submit():
         )
 
 
-        # =================================================
-        # created_at
-        #
-        # Nếu DB hiện tại đang để TEXT
-        # thì giữ dạng chuỗi để không phá schema cũ
-        # =================================================
-
         created_at = (
             created_time.strftime(
                 "%d/%m/%Y %H:%M:%S"
@@ -633,7 +652,7 @@ def submit():
 
 
         # =================================================
-        # HẠN THANH TOÁN: 15 PHÚT
+        # HẾT HẠN SAU 15 PHÚT
         # =================================================
 
         expires_time = (
@@ -644,15 +663,9 @@ def submit():
         )
 
 
-        # =================================================
-        # GIÁ TRỊ LƯU DATABASE
-        #
-        # Cột expires_at đang là TIMESTAMP
-        # không timezone.
-        #
-        # Vì vậy lưu đúng giờ Việt Nam
-        # nhưng bỏ tzinfo.
-        # =================================================
+        # Database lưu TIMESTAMP
+        # không timezone,
+        # nhưng quy ước là giờ Việt Nam.
 
         expires_at_db = (
             expires_time.replace(
@@ -662,31 +675,27 @@ def submit():
 
 
         # =================================================
-        # DEBUG THỜI GIAN
+        # DEBUG
         # =================================================
 
         print(
             "========== TIME DEBUG =========="
         )
 
-
         print(
-            "created_time VN:",
+            "created_time:",
             created_time
         )
 
-
         print(
-            "expires_time VN:",
+            "expires_time:",
             expires_time
         )
 
-
         print(
-            "expires_at DB:",
+            "expires_at_db:",
             expires_at_db
         )
-
 
         print(
             "expires_timestamp:",
@@ -695,14 +704,13 @@ def submit():
             )
         )
 
-
         print(
             "================================"
         )
 
 
         # =================================================
-        # TẠO ĐƠN TRONG DATABASE
+        # INSERT ORDER
         # =================================================
 
         cursor.execute(
@@ -795,7 +803,7 @@ def submit():
 
 
         # =================================================
-        # TẠO PAYMENT PAYOS
+        # TẠO PAYOS
         # =================================================
 
         payment_data = {
@@ -823,13 +831,6 @@ def submit():
                     "tgmodel-shop.onrender.com"
                     "/payment/cancel"
                 ),
-
-            # =============================================
-            # PayOS nhận Unix timestamp.
-            #
-            # Phải dùng expires_time
-            # CÓ timezone Việt Nam.
-            # =============================================
 
             "expiredAt":
                 int(
@@ -873,7 +874,7 @@ def submit():
 
 
         # =================================================
-        # CHUYỂN SANG PAYOS
+        # REDIRECT PAYOS
         # =================================================
 
         response = make_response(
@@ -884,7 +885,7 @@ def submit():
 
 
         # =================================================
-        # LƯU TOKEN COOKIE
+        # COOKIE
         # =================================================
 
         response.set_cookie(
@@ -923,7 +924,7 @@ def submit():
 
 
 # =========================================================
-# API: KIỂM TRA ĐƠN CHƯA THANH TOÁN
+# API KIỂM TRA ĐƠN CHƯA THANH TOÁN
 # =========================================================
 
 @preorder_bp.route(
@@ -935,10 +936,6 @@ def pending_order():
         "order_token"
     )
 
-
-    # =====================================================
-    # KHÔNG CÓ COOKIE
-    # =====================================================
 
     if not order_token:
 
@@ -987,10 +984,6 @@ def pending_order():
         order = cursor.fetchone()
 
 
-        # =================================================
-        # KHÔNG CÓ ĐƠN
-        # =================================================
-
         if order is None:
 
             return {
@@ -1008,14 +1001,14 @@ def pending_order():
 
         payment_url = order[4]
 
-        expires_at = order[5]
+        expires_at = (
+            normalize_expires_at(
+                order[5]
+            )
+        )
 
 
-        # =================================================
-        # CHƯA CÓ PAYMENT URL
-        # =================================================
-
-        if not payment_url:
+        if expires_at is None:
 
             return {
                 "has_order": False
@@ -1023,18 +1016,50 @@ def pending_order():
 
 
         # =================================================
-        # DATABASE LƯU GIỜ VIỆT NAM
-        # KHÔNG TIMEZONE
+        # KIỂM TRA HẾT HẠN
         # =================================================
 
-        expires_at = (
-            normalize_expires_at(
-                expires_at
-            )
+        now_vn = datetime.now(
+            VIETNAM_TZ
         )
 
 
-        if expires_at is None:
+        if expires_at <= now_vn:
+
+            # =============================================
+            # TỰ ĐỔI TRẠNG THÁI DATABASE
+            # =============================================
+
+            cursor.execute(
+                """
+                UPDATE orders
+
+                SET status=%s
+
+                WHERE order_code=%s
+                AND status=%s
+                """,
+                (
+                    "Hết hạn thanh toán",
+                    order_code,
+                    "Chưa thanh toán"
+                )
+            )
+
+
+            conn.commit()
+
+
+            return {
+                "has_order": False
+            }
+
+
+        # =================================================
+        # KHÔNG CÓ PAYMENT URL
+        # =================================================
+
+        if not payment_url:
 
             return {
                 "has_order": False
@@ -1049,36 +1074,6 @@ def pending_order():
             expires_at.timestamp()
         )
 
-
-        # =================================================
-        # DEBUG
-        # =================================================
-
-        print(
-            "========== DEBUG PENDING =========="
-        )
-
-
-        print(
-            "expires_at VN:",
-            expires_at
-        )
-
-
-        print(
-            "expires_timestamp:",
-            expires_timestamp
-        )
-
-
-        print(
-            "==================================="
-        )
-
-
-        # =================================================
-        # TRẢ DỮ LIỆU
-        # =================================================
 
         return {
 
