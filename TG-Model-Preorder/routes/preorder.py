@@ -411,7 +411,7 @@ def submit():
         # =================================================
 
         created_time = datetime.now(
-            ZoneInfo("Asia/Ho_Chi_Minh")
+            ZoneInfo("UTC")
         )
 
 
