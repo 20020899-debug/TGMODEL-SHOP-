@@ -1,229 +1,203 @@
-
 <!DOCTYPE html>
+
 <html lang="vi">
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <title>Đặt Pre-order</title>
+<title>Đặt Pre-order</title>
 
-    <style>
 
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-        }
+<style>
 
-        input,
-        select,
-        textarea {
-            width: 100%;
-            max-width: 500px;
-            padding: 10px;
-            margin-top: 5px;
-            box-sizing: border-box;
-        }
+    body {
 
-        textarea {
-            min-height: 100px;
-        }
+        font-family: Arial, sans-serif;
 
-        button {
-            padding: 10px 20px;
-            cursor: pointer;
-        }
+        max-width: 800px;
 
-        .product-box {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-            background: #f8f9fa;
-        }
+        margin: 40px auto;
 
-        .product-brand {
-            color: #6c757d;
-            margin-bottom: 5px;
-        }
+        padding: 20px;
+    }
 
-        .product-name {
-            margin-top: 5px;
-        }
 
-        .pending-box {
-            display: none;
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
+    input,
+    select,
+    textarea {
 
-        .pending-box.expired {
-            background: #f8d7da;
-            border-color: #dc3545;
-        }
+        width: 100%;
 
-        .countdown {
-            color: #dc3545;
-            font-weight: bold;
-            font-size: 18px;
-        }
+        max-width: 500px;
 
-        .payment-button {
-            background: #198754;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            padding: 10px 18px;
-        }
+        padding: 10px;
 
-        .submit-button {
-            background: #198754;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-        }
+        margin-top: 5px;
 
-    </style>
+        box-sizing: border-box;
+    }
+
+
+    textarea {
+
+        min-height: 100px;
+    }
+
+
+    button {
+
+        padding: 10px 20px;
+
+        cursor: pointer;
+    }
+
+
+    /* =================================================
+       THÔNG TIN SẢN PHẨM
+       ================================================= */
+
+    .product-box {
+
+        border: 1px solid #ddd;
+
+        border-radius: 10px;
+
+        padding: 20px;
+
+        margin-bottom: 30px;
+
+        background: #f8f9fa;
+    }
+
+
+    .product-brand {
+
+        color: #6c757d;
+
+        margin-bottom: 5px;
+    }
+
+
+    .product-name {
+
+        margin-top: 5px;
+    }
+
+
+    /* =================================================
+       NÚT GỬI ĐƠN
+       ================================================= */
+
+    .submit-button {
+
+        background: #198754;
+
+        color: white;
+
+        border: none;
+
+        border-radius: 6px;
+
+        font-weight: bold;
+
+        padding: 10px 20px;
+    }
+
+
+    .submit-button:hover {
+
+        background: #157347;
+    }
+
+
+    /* =================================================
+       QUAY LẠI
+       ================================================= */
+
+    .back-link {
+
+        display: inline-block;
+
+        margin-top: 20px;
+
+        color: #0d6efd;
+
+        text-decoration: none;
+    }
+
+
+    .back-link:hover {
+
+        text-decoration: underline;
+    }
+
+</style>
 
 </head>
 
-
 <body>
-
 
 <!-- =====================================================
      THÔNG TIN SẢN PHẨM
      ===================================================== -->
 
 <div class="product-box">
+<div class="product-brand">
 
-    <div class="product-brand">
-
-        {{ product.brand }}
-
-    </div>
-
-
-    <h2 class="product-name">
-
-        {{ product.name }}
-
-    </h2>
-
-
-    <hr>
-
-
-    <p>
-
-        <strong>
-            💰 Giá chính thức:
-        </strong>
-
-        {{ "{:,}".format(product.price) }} đ
-
-    </p>
-
-
-    <p>
-
-        <strong>
-            💵 Tiền cọc:
-        </strong>
-
-        {{ "{:,}".format(product.deposit) }} đ
-
-    </p>
-
-
-    <p>
-
-        <strong>
-            📦 Dự kiến trả hàng:
-        </strong>
-
-        {{ product.eta }}
-
-    </p>
+    {{ product.brand }}
 
 </div>
 
 
+<h2 class="product-name">
 
-<!-- =====================================================
-     ĐƠN CŨ ĐANG CHỜ THANH TOÁN
-     ===================================================== -->
+    {{ product.name }}
 
-<div
-    id="pending-order-box"
-    class="pending-box"
->
-
-    <h3>
-        🔔 Bạn đang có đơn hàng chưa thanh toán
-    </h3>
+</h2>
 
 
-    <p>
-
-        Mã đơn:
-
-        <strong id="pending-order-code">
-        </strong>
-
-    </p>
+<hr>
 
 
-    <p>
+<p>
 
-        Thời gian còn lại:
+    <strong>
+        💰 Giá chính thức:
+    </strong>
 
-        <span
-            id="pending-order-countdown"
-            class="countdown"
-        >
-            Đang kiểm tra...
-        </span>
+    {{ "{:,}".format(product.price) }} đ
 
-    </p>
+</p>
 
 
-    <button
-        type="button"
-        id="continue-payment-button"
-        class="payment-button"
-    >
+<p>
 
-        💳 Tiếp tục thanh toán
+    <strong>
+        💵 Tiền cọc:
+    </strong>
 
-    </button>
+    {{ "{:,}".format(product.deposit) }} đ
+
+</p>
 
 
-    <a
-        href="/"
-        style="
-            display:inline-block;
-            margin-left:10px;
-        "
-    >
+<p>
 
-        Quay lại trang chủ
+    <strong>
+        📦 Dự kiến trả hàng:
+    </strong>
 
-    </a>
+    {{ product.eta }}
+
+</p>
 
 </div>
-
-
 
 <!-- =====================================================
      FORM ĐẶT HÀNG
@@ -235,210 +209,243 @@
     id="preorder-form"
 >
 
+```
+<!-- =================================================
+     ID SẢN PHẨM
+     ================================================= -->
 
-    <!-- ID sản phẩm -->
+<input
+    type="hidden"
+    name="product_id"
+    value="{{ product.id }}"
+>
 
-    <input
-        type="hidden"
-        name="product_id"
-        value="{{ product.id }}"
-    >
 
 
-    <label>
-        Họ và tên
-    </label>
+<!-- =================================================
+     HỌ TÊN
+     ================================================= -->
 
-    <br>
+<label>
+    Họ và tên
+</label>
 
-    <input
-        type="text"
-        name="fullname"
-        required
-    >
+<br>
 
-    <br><br>
+<input
+    type="text"
+    name="fullname"
+    required
+>
 
+<br><br>
 
-    <label>
-        Số điện thoại
-    </label>
 
-    <br>
 
-    <input
-        type="text"
-        name="phone"
-        required
-    >
+<!-- =================================================
+     SỐ ĐIỆN THOẠI
+     ================================================= -->
 
-    <br><br>
+<label>
+    Số điện thoại
+</label>
 
+<br>
 
-    <label>
-        Facebook hoặc Zalo
-    </label>
+<input
+    type="text"
+    name="phone"
+    required
+>
 
-    <br>
+<br><br>
 
-    <input
-        type="text"
-        name="contact"
-    >
 
-    <br><br>
 
+<!-- =================================================
+     FACEBOOK / ZALO
+     ================================================= -->
 
-    <label>
-        Số lượng
-    </label>
+<label>
+    Facebook hoặc Zalo
+</label>
 
-    <br>
+<br>
 
-    <input
-        type="number"
-        name="quantity"
-        value="1"
-        min="1"
-    >
+<input
+    type="text"
+    name="contact"
+>
 
-    <br><br>
+<br><br>
 
 
-    <!-- =================================================
-         TỈNH / THÀNH PHỐ
-         ================================================= -->
 
-    <label>
-        Tỉnh / Thành phố
-    </label>
+<!-- =================================================
+     SỐ LƯỢNG
+     ================================================= -->
 
-    <br>
+<label>
+    Số lượng
+</label>
 
-    <select
-        id="province"
-        name="province"
-        required
-    >
+<br>
 
-        <option value="">
-            -- Chọn tỉnh --
-        </option>
+<input
+    type="number"
+    name="quantity"
+    value="1"
+    min="1"
+>
 
-    </select>
+<br><br>
 
 
-    <br><br>
 
+<!-- =================================================
+     TỈNH / THÀNH PHỐ
+     ================================================= -->
 
-    <!-- =================================================
-         QUẬN / HUYỆN
-         ================================================= -->
+<label>
+    Tỉnh / Thành phố
+</label>
 
-    <label>
-        Quận / Huyện
-    </label>
+<br>
 
-    <br>
+<select
+    id="province"
+    name="province"
+    required
+>
 
-    <select
-        id="district"
-        name="district"
-        disabled
-        required
-    >
+    <option value="">
+        -- Chọn tỉnh --
+    </option>
 
-        <option value="">
-            -- Chọn quận / huyện --
-        </option>
+</select>
 
-    </select>
+<br><br>
 
 
-    <br><br>
 
+<!-- =================================================
+     QUẬN / HUYỆN
+     ================================================= -->
 
-    <!-- =================================================
-         PHƯỜNG / XÃ
-         ================================================= -->
+<label>
+    Quận / Huyện
+</label>
 
-    <label>
-        Phường / Xã
-    </label>
+<br>
 
-    <br>
+<select
+    id="district"
+    name="district"
+    disabled
+    required
+>
 
-    <select
-        id="ward"
-        name="ward"
-        disabled
-        required
-    >
+    <option value="">
+        -- Chọn quận / huyện --
+    </option>
 
-        <option value="">
-            -- Chọn phường / xã --
-        </option>
+</select>
 
-    </select>
+<br><br>
 
 
-    <br><br>
 
+<!-- =================================================
+     PHƯỜNG / XÃ
+     ================================================= -->
 
-    <!-- =================================================
-         ĐỊA CHỈ CHI TIẾT
-         ================================================= -->
+<label>
+    Phường / Xã
+</label>
 
-    <label>
-        Địa chỉ chi tiết
-    </label>
+<br>
 
-    <br>
+<select
+    id="ward"
+    name="ward"
+    disabled
+    required
+>
 
-    <input
-        type="text"
-        name="address_detail"
-        placeholder="Ví dụ: Số 123 Nguyễn Trãi"
-        required
-    >
+    <option value="">
+        -- Chọn phường / xã --
+    </option>
 
+</select>
 
-    <br><br>
+<br><br>
 
 
-    <!-- =================================================
-         GHI CHÚ
-         ================================================= -->
 
-    <label>
-        Ghi chú
-    </label>
+<!-- =================================================
+     ĐỊA CHỈ CHI TIẾT
+     ================================================= -->
 
-    <br>
+<label>
+    Địa chỉ chi tiết
+</label>
 
-    <textarea
-        name="note"
-        placeholder="Ghi chú thêm (nếu có)"
-    ></textarea>
+<br>
 
+<input
+    type="text"
+    name="address_detail"
+    placeholder="Ví dụ: Số 123 Nguyễn Trãi"
+    required
+>
 
-    <br><br>
+<br><br>
 
 
-    <button
-        type="submit"
-        id="submit-order-button"
-        class="submit-button"
-    >
 
-        Gửi đơn
+<!-- =================================================
+     GHI CHÚ
+     ================================================= -->
 
-    </button>
+<label>
+    Ghi chú
+</label>
 
+<br>
+
+<textarea
+    name="note"
+    placeholder="Ghi chú thêm (nếu có)"
+></textarea>
+
+<br><br>
+
+
+
+<!-- =================================================
+     GỬI ĐƠN
+     ================================================= -->
+
+<button
+    type="submit"
+    id="submit-order-button"
+    class="submit-button"
+>
+
+    Gửi đơn
+
+</button>
 
 </form>
 
+<a
+href="/"
+class="back-link"
 
+>
+← Quay lại trang chủ
+
+</a>
 
 <!-- =====================================================
      JAVASCRIPT TỈNH / HUYỆN / XÃ
@@ -446,14 +453,24 @@
 
 <script>
 
+
 const provinceSelect =
-    document.getElementById("province");
+    document.getElementById(
+        "province"
+    );
+
 
 const districtSelect =
-    document.getElementById("district");
+    document.getElementById(
+        "district"
+    );
+
 
 const wardSelect =
-    document.getElementById("ward");
+    document.getElementById(
+        "ward"
+    );
+
 
 
 // =========================================================
@@ -479,14 +496,18 @@ fetch(
                         "option"
                     );
 
+
                 option.value =
                     province.name;
+
 
                 option.textContent =
                     province.name;
 
+
                 option.dataset.id =
                     province.code;
+
 
                 provinceSelect.appendChild(
                     option
@@ -518,6 +539,7 @@ fetch(
 provinceSelect.addEventListener(
     "change",
     function() {
+
 
         const selected =
             this.options[
@@ -555,7 +577,6 @@ provinceSelect.addEventListener(
                 true;
 
             return;
-
         }
 
 
@@ -584,14 +605,18 @@ provinceSelect.addEventListener(
                                 "option"
                             );
 
+
                         option.value =
                             district.name;
+
 
                         option.textContent =
                             district.name;
 
+
                         option.dataset.id =
                             district.code;
+
 
                         districtSelect.appendChild(
                             option
@@ -627,6 +652,7 @@ districtSelect.addEventListener(
     "change",
     function() {
 
+
         const selected =
             this.options[
                 this.selectedIndex
@@ -651,7 +677,6 @@ districtSelect.addEventListener(
                 true;
 
             return;
-
         }
 
 
@@ -680,11 +705,14 @@ districtSelect.addEventListener(
                                 "option"
                             );
 
+
                         option.value =
                             ward.name;
 
+
                         option.textContent =
                             ward.name;
+
 
                         wardSelect.appendChild(
                             option
@@ -711,245 +739,8 @@ districtSelect.addEventListener(
 );
 
 
-
-// =========================================================
-// KIỂM TRA ĐƠN CHƯA THANH TOÁN
-// =========================================================
-
-let pendingOrderTimer = null;
-
-
-async function checkPendingOrder() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/pending-order",
-                {
-                    method: "GET",
-                    credentials: "same-origin"
-                }
-            );
-
-
-        if (!response.ok) {
-
-            return;
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        const box =
-            document.getElementById(
-                "pending-order-box"
-            );
-
-
-        const submitButton =
-            document.getElementById(
-                "submit-order-button"
-            );
-
-
-        const orderCode =
-            document.getElementById(
-                "pending-order-code"
-            );
-
-
-        const countdown =
-            document.getElementById(
-                "pending-order-countdown"
-            );
-
-
-        const paymentButton =
-            document.getElementById(
-                "continue-payment-button"
-            );
-
-
-        // =================================================
-        // KHÔNG CÓ ĐƠN
-        // =================================================
-
-        if (!data.has_order) {
-
-            box.style.display =
-                "none";
-
-            return;
-
-        }
-
-
-        // =================================================
-        // CÓ ĐƠN
-        // =================================================
-
-        box.style.display =
-            "block";
-
-
-        orderCode.textContent =
-            data.order_code;
-
-
-        paymentButton.onclick =
-            function() {
-
-                window.location.href =
-                    data.payment_url;
-
-            };
-
-
-        // Không cho gửi đơn mới
-
-        submitButton.disabled =
-            true;
-
-
-        submitButton.style.background =
-            "#999";
-
-
-        submitButton.style.cursor =
-            "not-allowed";
-
-
-        // =================================================
-        // COUNTDOWN
-        // =================================================
-
-        const expiresAt =
-            new Date(
-                data.expires_at
-            ).getTime();
-
-
-        if (pendingOrderTimer) {
-
-            clearInterval(
-                pendingOrderTimer
-            );
-
-        }
-
-
-        function updateCountdown() {
-
-            const remaining =
-                expiresAt - Date.now();
-
-
-            if (remaining <= 0) {
-
-                clearInterval(
-                    pendingOrderTimer
-                );
-
-
-                countdown.textContent =
-                    "ĐÃ HẾT HẠN";
-
-
-                paymentButton.style.display =
-                    "none";
-
-
-                box.classList.add(
-                    "expired"
-                );
-
-
-                submitButton.disabled =
-                    false;
-
-
-                submitButton.style.background =
-                    "#198754";
-
-
-                submitButton.style.cursor =
-                    "pointer";
-
-
-                return;
-
-            }
-
-
-            const minutes =
-                Math.floor(
-                    remaining / 60000
-                );
-
-
-            const seconds =
-                Math.floor(
-                    (remaining % 60000) / 1000
-                );
-
-
-            countdown.textContent =
-                minutes
-                + " phút "
-                + String(seconds).padStart(
-                    2,
-                    "0"
-                )
-                + " giây";
-
-        }
-
-
-        updateCountdown();
-
-
-        pendingOrderTimer =
-            setInterval(
-                updateCountdown,
-                1000
-            );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Lỗi kiểm tra đơn:",
-            error
-        );
-
-    }
-
-}
-
-
-
-// =========================================================
-// CHẠY KHI MỞ TRANG
-// =========================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-        checkPendingOrder();
-
-    }
-);
-
 </script>
-
 
 </body>
 
 </html>
-
