@@ -1,5 +1,5 @@
-
-from flask import Blueprint, request, redirect, make_response
+```python
+from flask import Blueprint, request, redirect, make_response, render_template
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import time
@@ -67,11 +67,15 @@ def preorder(product_id):
                     payment_url,
                     expires_at,
                     status
+
                 FROM orders
+
                 WHERE order_token=%s
                 AND status=%s
                 AND expires_at > NOW()
+
                 ORDER BY id DESC
+
                 LIMIT 1
                 """,
                 (
@@ -240,11 +244,15 @@ def submit():
                     expires_at,
                     status,
                     order_token
+
                 FROM orders
+
                 WHERE order_token=%s
                 AND status=%s
                 AND expires_at > NOW()
+
                 ORDER BY id DESC
+
                 LIMIT 1
                 """,
                 (
@@ -271,11 +279,15 @@ def submit():
                     expires_at,
                     status,
                     order_token
+
                 FROM orders
+
                 WHERE phone=%s
                 AND status=%s
                 AND expires_at > NOW()
+
                 ORDER BY id DESC
+
                 LIMIT 1
                 """,
                 (
@@ -408,24 +420,51 @@ def submit():
 
         # =================================================
         # THỜI GIAN
+        #
+        # DÙNG UTC LÀM CHUẨN
         # =================================================
+
+        utc_tz = ZoneInfo("UTC")
 
         created_time = datetime.now(
-            ZoneInfo("UTC")
+            utc_tz
         )
 
-
         created_at = created_time
-    
-
-
-        # =================================================
-        # HẠN THANH TOÁN: 15 PHÚT
-        # =================================================
 
         expires_at = (
             created_time
             + timedelta(minutes=15)
+        )
+
+
+        # =================================================
+        # DEBUG THỜI GIAN
+        # =================================================
+
+        print(
+            "========== TIME DEBUG =========="
+        )
+
+        print(
+            "created_time:",
+            created_time
+        )
+
+        print(
+            "expires_at:",
+            expires_at
+        )
+
+        print(
+            "expires_timestamp:",
+            int(
+                expires_at.timestamp()
+            )
+        )
+
+        print(
+            "================================"
         )
 
 
@@ -635,17 +674,19 @@ def submit():
         raise
 
 
-
 # =========================================================
 # API: KIỂM TRA ĐƠN CHƯA THANH TOÁN
 # =========================================================
 
-@preorder_bp.route("/api/pending-order")
+@preorder_bp.route(
+    "/api/pending-order"
+)
 def pending_order():
 
     order_token = request.cookies.get(
         "order_token"
     )
+
 
     # =====================================================
     # KHÔNG CÓ COOKIE
@@ -666,6 +707,11 @@ def pending_order():
 
         # =================================================
         # TÌM ĐƠN CHƯA THANH TOÁN
+        #
+        # KHÔNG kiểm tra expires_at ở SQL.
+        #
+        # Frontend sẽ tự xác định:
+        # còn hạn / hết hạn.
         # =================================================
 
         cursor.execute(
@@ -731,19 +777,23 @@ def pending_order():
 
         # =================================================
         # CHUẨN HÓA EXPIRES_AT
+        #
+        # Database hiện dùng UTC.
         # =================================================
 
-        vietnam_tz = ZoneInfo(
-            "UTC"
-        )
+        utc_tz = ZoneInfo("UTC")
 
 
-        # Nếu DB trả về datetime không có timezone
         if expires_at.tzinfo is None:
 
             expires_at = expires_at.replace(
                 tzinfo=utc_tz
             )
+
+
+        expires_at = expires_at.astimezone(
+            utc_tz
+        )
 
 
         # =================================================
@@ -756,12 +806,36 @@ def pending_order():
 
 
         # =================================================
+        # DEBUG API
+        # =================================================
+
+        print(
+            "========== DEBUG PENDING =========="
+        )
+
+        print(
+            "expires_at DB:",
+            expires_at
+        )
+
+        print(
+            "expires_timestamp:",
+            expires_timestamp
+        )
+
+        print(
+            "==================================="
+        )
+
+
+        # =================================================
         # TRẢ DỮ LIỆU
         # =================================================
 
         return {
 
-            "has_order": True,
+            "has_order":
+                True,
 
             "order_code":
                 order_code,
@@ -787,3 +861,4 @@ def pending_order():
 
         cursor.close()
         conn.close()
+```
