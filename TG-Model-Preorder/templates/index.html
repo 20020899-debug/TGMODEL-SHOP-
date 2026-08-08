@@ -1,852 +1,1111 @@
-<!DOCTYPE html>
+from flask import (
+    Blueprint,
+    request,
+    redirect,
+    make_response,
+    render_template
+)
 
-<html lang="vi">
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
-<head>
+import time
+import secrets
 
-<meta charset="UTF-8">
+from database import get_db
+from config import products
+from payos_service import payos
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
 
-<title>TG MODEL SHOP</title>
+# =========================================================
+# CẤU HÌNH MÚI GIỜ
+# =========================================================
 
+VIETNAM_TZ = ZoneInfo(
+    "Asia/Ho_Chi_Minh"
+)
 
-<style>
 
-    body {
+preorder_bp = Blueprint(
+    "preorder",
+    __name__
+)
 
-        font-family: Arial, sans-serif;
 
-        background: #f5f5f5;
+# =========================================================
+# HÀM KIỂM TRA EXPIRES_AT
+# =========================================================
 
-        margin: 0;
+def normalize_expires_at(expires_at):
 
-        padding: 0;
-    }
+    if expires_at is None:
+        return None
 
 
-    .container {
+    # PostgreSQL TIMESTAMP không timezone
+    # nhưng giá trị trong DB được quy ước là giờ Việt Nam
 
-        max-width: 900px;
+    if expires_at.tzinfo is None:
 
-        margin: 0 auto;
+        expires_at = expires_at.replace(
+            tzinfo=VIETNAM_TZ
+        )
 
-        padding: 30px 20px;
-    }
+    else:
 
+        expires_at = expires_at.astimezone(
+            VIETNAM_TZ
+        )
 
-    .shop-title {
 
-        text-align: center;
+    return expires_at
 
-        margin-bottom: 30px;
-    }
 
+# =========================================================
+# TRANG PRE-ORDER
+# =========================================================
 
-    .product {
+@preorder_bp.route(
+    "/preorder/<int:product_id>"
+)
+def preorder(product_id):
 
-        background: white;
+    # =====================================================
+    # TÌM SẢN PHẨM
+    # =====================================================
 
-        padding: 25px;
+    product = next(
+        (
+            p
+            for p in products
+            if p["id"] == product_id
+        ),
+        None
+    )
 
-        margin-bottom: 25px;
 
-        border-radius: 12px;
+    if product is None:
 
-        box-shadow:
-            0 2px 8px
-            rgba(0,0,0,0.08);
-    }
+        return (
+            "Không tìm thấy sản phẩm",
+            404
+        )
 
 
-    .product h5 {
+    # =====================================================
+    # KIỂM TRA ĐƠN CŨ BẰNG COOKIE
+    # =====================================================
 
-        margin-bottom: 8px;
+    order_token = request.cookies.get(
+        "order_token"
+    )
 
-        color: #6c757d;
-    }
 
+    existing_order = None
 
-    .product h2 {
 
-        margin-top: 0;
-    }
+    if order_token:
 
+        conn = get_db()
+        cursor = conn.cursor()
 
-    .product hr {
 
-        border: none;
+        try:
 
-        border-top:
-            1px solid #ddd;
+            cursor.execute(
+                """
+                SELECT
+                    order_code,
+                    product_name,
+                    quantity,
+                    deposit,
+                    payment_url,
+                    expires_at,
+                    status
 
-        margin: 15px 0;
-    }
+                FROM orders
 
+                WHERE order_token=%s
+                AND status=%s
 
-    /* =================================================
-       NÚT CHUNG
-       ================================================= */
+                ORDER BY id DESC
 
-    .btn {
+                LIMIT 1
+                """,
+                (
+                    order_token,
+                    "Chưa thanh toán"
+                )
+            )
 
-        display: inline-block;
 
-        text-decoration: none;
+            order = cursor.fetchone()
 
-        padding: 12px 20px;
 
-        border-radius: 7px;
+            if order:
 
-        font-weight: bold;
+                expires_at = normalize_expires_at(
+                    order[5]
+                )
 
-        color: white;
-    }
 
+                now_vn = datetime.now(
+                    VIETNAM_TZ
+                )
 
-    /* =================================================
-       NÚT PRE-ORDER
-       ================================================= */
 
-    .btn-preorder {
+                if (
+                    expires_at is not None
+                    and expires_at > now_vn
+                ):
 
-        background: #ff9800;
+                    existing_order = order
 
-        color: white;
 
-        border: none;
+        finally:
 
-        transition:
-            background 0.2s ease;
-    }
+            cursor.close()
+            conn.close()
 
 
-    .btn-preorder:hover {
+    # =====================================================
+    # HIỂN THỊ TRANG PRE-ORDER
+    # =====================================================
 
-        background: #f57c00;
-    }
+    return render_template(
+        "preorder.html",
+        product=product,
+        existing_order=existing_order
+    )
 
 
-    /* =================================================
-       ĐƠN CHƯA THANH TOÁN
-       ================================================= */
+# =========================================================
+# TẠO ĐƠN HÀNG
+# =========================================================
 
-    #pending-order-box {
+@preorder_bp.route(
+    "/submit",
+    methods=["POST"]
+)
+def submit():
 
-        display: none;
+    # =====================================================
+    # LẤY SẢN PHẨM
+    # =====================================================
 
-        background: #fff3cd;
+    try:
 
-        border:
-            1px solid #ffc107;
+        product_id = int(
+            request.form.get(
+                "product_id"
+            )
+        )
 
-        border-radius: 12px;
+    except (TypeError, ValueError):
 
-        padding: 20px;
+        return (
+            "Sản phẩm không hợp lệ",
+            400
+        )
 
-        margin-bottom: 30px;
 
-        box-shadow:
-            0 2px 8px
-            rgba(0,0,0,0.08);
-    }
+    product = next(
+        (
+            p
+            for p in products
+            if p["id"] == product_id
+        ),
+        None
+    )
 
 
-    #pending-order-box h3 {
+    if product is None:
 
-        margin-top: 0;
+        return (
+            "Không tìm thấy sản phẩm",
+            404
+        )
 
-        color: #856404;
-    }
 
+    # =====================================================
+    # THÔNG TIN KHÁCH HÀNG
+    # =====================================================
 
-    #pending-order-code {
+    fullname = request.form.get(
+        "fullname",
+        ""
+    ).strip()
 
-        color: #dc3545;
-    }
 
+    phone = request.form.get(
+        "phone",
+        ""
+    ).strip()
 
-    /* =================================================
-       TRẠNG THÁI
-       ================================================= */
 
-    #pending-order-status {
+    contact = request.form.get(
+        "contact",
+        ""
+    ).strip()
 
-        font-size: 18px;
 
-        font-weight: bold;
+    province = request.form.get(
+        "province",
+        ""
+    ).strip()
 
-        color: #198754;
-    }
 
+    district = request.form.get(
+        "district",
+        ""
+    ).strip()
 
-    #pending-order-status.expired {
 
-        color: #dc3545;
-    }
+    ward = request.form.get(
+        "ward",
+        ""
+    ).strip()
 
 
-    /* =================================================
-       NÚT TIẾP TỤC THANH TOÁN
-       ================================================= */
+    address_detail = request.form.get(
+        "address_detail",
+        ""
+    ).strip()
 
-    #continue-payment-button {
 
-        background: #198754;
+    note = request.form.get(
+        "note",
+        ""
+    ).strip()
 
-        color: white;
 
-        border: none;
+    # =====================================================
+    # SỐ LƯỢNG
+    # =====================================================
 
-        padding: 12px 20px;
+    try:
 
-        border-radius: 7px;
+        quantity = int(
+            request.form.get(
+                "quantity",
+                1
+            )
+        )
 
-        font-size: 16px;
+    except (TypeError, ValueError):
 
-        font-weight: bold;
+        quantity = 1
 
-        cursor: pointer;
-    }
 
+    if quantity < 1:
 
-    #continue-payment-button:hover {
+        quantity = 1
 
-        background: #157347;
-    }
 
+    # =====================================================
+    # KẾT NỐI DATABASE
+    # =====================================================
 
-    #continue-payment-button:disabled {
+    conn = get_db()
+    cursor = conn.cursor()
 
-        background: #999;
 
-        cursor: not-allowed;
-    }
+    try:
 
+        # =================================================
+        # KIỂM TRA COOKIE ORDER TOKEN
+        # =================================================
 
-    /* =================================================
-       HẾT HẠN
-       ================================================= */
+        order_token = request.cookies.get(
+            "order_token"
+        )
 
-    #expired-message {
 
-        display: none;
+        existing_order = None
 
-        color: #dc3545;
 
-        font-weight: bold;
-    }
+        # =================================================
+        # TÌM ĐƠN BẰNG COOKIE
+        # =================================================
 
+        if order_token:
 
-    /* =================================================
-       LOADING
-       ================================================= */
+            cursor.execute(
+                """
+                SELECT
+                    order_code,
+                    payment_url,
+                    expires_at,
+                    status,
+                    order_token
 
-    #pending-loading {
+                FROM orders
 
-        color: #666;
+                WHERE order_token=%s
+                AND status=%s
 
-        font-size: 14px;
-    }
+                ORDER BY id DESC
 
-</style>
-```
+                LIMIT 1
+                """,
+                (
+                    order_token,
+                    "Chưa thanh toán"
+                )
+            )
 
-</head>
 
-<body>
+            candidate = cursor.fetchone()
 
-<div class="container">
 
-```
-<!-- =================================================
-     TIÊU ĐỀ SHOP
-     ================================================= -->
+            if candidate:
 
-<div class="shop-title">
+                candidate_expires_at = (
+                    normalize_expires_at(
+                        candidate[2]
+                    )
+                )
 
-    <h1>
-        TG MODEL SHOP
-    </h1>
 
-    <p>
-        Model Kit & Figure
-    </p>
+                now_vn = datetime.now(
+                    VIETNAM_TZ
+                )
 
-</div>
 
+                if (
+                    candidate_expires_at
+                    is not None
 
+                    and
 
-<!-- =================================================
-     ĐƠN HÀNG CHƯA THANH TOÁN
-     ================================================= -->
+                    candidate_expires_at
+                    > now_vn
+                ):
 
-<div
-    id="pending-order-box"
->
+                    existing_order = (
+                        candidate
+                    )
 
-    <h3>
-        🔔 Bạn đang có đơn hàng chưa thanh toán
-    </h3>
 
-
-    <p>
-
-        Mã đơn:
-
-        <b id="pending-order-code">
-            --
-        </b>
-
-    </p>
-
-
-    <p>
-
-        Sản phẩm:
-
-        <b id="pending-order-product">
-            --
-        </b>
-
-    </p>
-
-
-    <p>
-
-        Số lượng:
-
-        <b id="pending-order-quantity">
-            --
-        </b>
-
-    </p>
-
-
-    <p>
-
-        Thời gian còn lại:
-
-        <b id="pending-order-status">
-            Đang kiểm tra...
-        </b>
-
-    </p>
-
-
-    <p id="expired-message">
-
-        Đơn hàng đã hết hạn thanh toán.
-
-    </p>
-
-
-    <button
-        id="continue-payment-button"
-        type="button"
-    >
-
-        💳 TIẾP TỤC THANH TOÁN
-
-    </button>
-
-</div>
-
-
-
-<!-- =================================================
-     LOADING
-     ================================================= -->
-
-<div
-    id="pending-loading"
->
-
-</div>
-
-
-
-<!-- =================================================
-     DANH SÁCH SẢN PHẨM
-     ================================================= -->
-
-{% for product in products %}
-
-<div class="product">
-
-
-    <h5>
-
-        {{ product.brand }}
-
-    </h5>
-
-
-    <h2>
-
-        {{ product.name }}
-
-    </h2>
-
-
-    <hr>
-
-
-    <p>
-
-        <strong>
-            💰 Giá chính thức:
-        </strong>
-
-        {{ "{:,}".format(product.price) }} đ
-
-    </p>
-
-
-    <p>
-
-        <strong>
-            💵 Tiền cọc:
-        </strong>
-
-        {{ "{:,}".format(product.deposit) }} đ
-
-    </p>
-
-
-    <p>
-
-        <strong>
-            📦 Dự kiến trả hàng:
-        </strong>
-
-        {{ product.eta }}
-
-    </p>
-
-
-    <a
-        href="/preorder/{{ product.id }}"
-        class="btn btn-preorder"
-    >
-
-        ĐẶT PRE-ORDER
-
-    </a>
-
-
-</div>
-
-{% endfor %}
-```
-
-</div>
-
-<!-- =====================================================
-     JAVASCRIPT
-     ===================================================== -->
-
-<script>
-
-
-let pendingOrderTimer = null;
-
-
-// =========================================================
-// ELEMENT
-// =========================================================
-
-const pendingBox =
-    document.getElementById(
-        "pending-order-box"
-    );
-
-
-const pendingCode =
-    document.getElementById(
-        "pending-order-code"
-    );
-
-
-const pendingProduct =
-    document.getElementById(
-        "pending-order-product"
-    );
-
-
-const pendingQuantity =
-    document.getElementById(
-        "pending-order-quantity"
-    );
-
-
-const pendingStatus =
-    document.getElementById(
-        "pending-order-status"
-    );
-
-
-const continueButton =
-    document.getElementById(
-        "continue-payment-button"
-    );
-
-
-const expiredMessage =
-    document.getElementById(
-        "expired-message"
-    );
-
-
-// =========================================================
-// ẨN ĐƠN
-// =========================================================
-
-function hidePendingOrder() {
-
-    pendingBox.style.display =
-        "none";
-
-
-    if (pendingOrderTimer) {
-
-        clearInterval(
-            pendingOrderTimer
-        );
-
-        pendingOrderTimer = null;
-    }
-
-}
-
-
-// =========================================================
-// HIỆN ĐƠN
-// =========================================================
-
-function showPendingOrder(data) {
-
-    pendingBox.style.display =
-        "block";
-
-
-    pendingCode.textContent =
-        data.order_code || "--";
-
-
-    pendingProduct.textContent =
-        data.product_name || "--";
-
-
-    pendingQuantity.textContent =
-        data.quantity || "--";
-
-
-    expiredMessage.style.display =
-        "none";
-
-
-    pendingStatus.classList.remove(
-        "expired"
-    );
-
-
-    // =====================================================
-    // BACKEND TRẢ UNIX TIMESTAMP TÍNH BẰNG GIÂY
-    // =====================================================
-
-    const expiresAt =
-        Number(data.expires_at) * 1000;
-
-
-    // =====================================================
-    // TIMESTAMP KHÔNG HỢP LỆ
-    // =====================================================
-
-    if (
-        !Number.isFinite(expiresAt)
-    ) {
-
-        pendingStatus.textContent =
-            "Không xác định";
-
-
-        pendingStatus.classList.add(
-            "expired"
-        );
-
-
-        continueButton.style.display =
-            "none";
-
-
-        return;
-    }
-
-
-    // =====================================================
-    // NÚT THANH TOÁN
-    // =====================================================
-
-    continueButton.onclick =
-        function() {
-
-            if (data.payment_url) {
-
-                window.location.href =
-                    data.payment_url;
-
-            }
-
-        };
-
-
-    // =====================================================
-    // XÓA TIMER CŨ
-    // =====================================================
-
-    if (pendingOrderTimer) {
-
-        clearInterval(
-            pendingOrderTimer
-        );
-
-        pendingOrderTimer = null;
-    }
-
-
-    // =====================================================
-    // CẬP NHẬT THỜI GIAN
-    // =====================================================
-
-    function updateCountdown() {
-
-        const now =
-            Date.now();
-
-
-        const remaining =
-            expiresAt - now;
-
-
-        // =============================================
-        // HẾT HẠN
-        // =============================================
-
-        if (remaining <= 0) {
-
-            if (pendingOrderTimer) {
-
-                clearInterval(
-                    pendingOrderTimer
-                );
-
-                pendingOrderTimer = null;
-            }
-
-
-            pendingStatus.textContent =
-                "Hết hạn thanh toán";
-
-
-            pendingStatus.classList.add(
-                "expired"
-            );
-
-
-            continueButton.style.display =
-                "none";
-
-
-            expiredMessage.style.display =
-                "block";
-
-
-            return;
-        }
-
-
-        // =============================================
-        // CÒN HẠN
-        // =============================================
-
-        pendingStatus.classList.remove(
-            "expired"
-        );
-
-
-        expiredMessage.style.display =
-            "none";
-
-
-        continueButton.style.display =
-            "inline-block";
-
-
-        continueButton.disabled =
-            false;
-
-
-        // =============================================
-        // TÍNH PHÚT
-        // =============================================
-
-        const minutes =
-            Math.floor(
-                remaining / 60000
-            );
-
-
-        // =============================================
-        // TÍNH GIÂY
-        // =============================================
-
-        const seconds =
-            Math.floor(
-                (remaining % 60000) / 1000
-            );
-
-
-        // =============================================
-        // HIỂN THỊ
-        // =============================================
-
-        pendingStatus.textContent =
-            "Còn " +
-            minutes +
-            " phút " +
-            String(seconds)
-                .padStart(2, "0") +
-            " giây";
-
-    }
-
-
-    // Chạy ngay
-
-    updateCountdown();
-
-
-    // Chạy mỗi giây
-
-    pendingOrderTimer =
-        setInterval(
-            updateCountdown,
-            1000
-        );
-
-}
-
-
-// =========================================================
-// KIỂM TRA ĐƠN CHƯA THANH TOÁN
-// =========================================================
-
-async function checkPendingOrder() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/pending-order",
-                {
-                    method: "GET",
-
-                    credentials:
-                        "same-origin",
-
-                    cache:
-                        "no-store"
-                }
-            );
-
-
-        if (!response.ok) {
-
-            hidePendingOrder();
-
-            return;
-        }
-
-
-        const data =
-            await response.json();
-
-
-        // =============================================
-        // KHÔNG CÓ ĐƠN
-        // =============================================
-
-        if (!data.has_order) {
-
-            hidePendingOrder();
-
-            return;
-        }
-
-
-        // =============================================
-        // CÓ ĐƠN
-        // =============================================
+        # =================================================
+        # NẾU COOKIE KHÔNG CÓ ĐƠN
+        # THÌ KIỂM TRA BẰNG SĐT
+        # =================================================
 
         if (
-            data.payment_url &&
-            data.expires_at
-        ) {
+            existing_order is None
+            and phone
+        ):
 
-            showPendingOrder(
-                data
-            );
+            cursor.execute(
+                """
+                SELECT
+                    order_code,
+                    payment_url,
+                    expires_at,
+                    status,
+                    order_token
 
-        } else {
+                FROM orders
 
-            hidePendingOrder();
+                WHERE phone=%s
+                AND status=%s
 
+                ORDER BY id DESC
+
+                LIMIT 1
+                """,
+                (
+                    phone,
+                    "Chưa thanh toán"
+                )
+            )
+
+
+            candidate = cursor.fetchone()
+
+
+            if candidate:
+
+                candidate_expires_at = (
+                    normalize_expires_at(
+                        candidate[2]
+                    )
+                )
+
+
+                now_vn = datetime.now(
+                    VIETNAM_TZ
+                )
+
+
+                if (
+                    candidate_expires_at
+                    is not None
+
+                    and
+
+                    candidate_expires_at
+                    > now_vn
+                ):
+
+                    existing_order = (
+                        candidate
+                    )
+
+
+        # =================================================
+        # ĐÃ CÓ ĐƠN CHƯA THANH TOÁN CÒN HẠN
+        # =================================================
+
+        if existing_order:
+
+            old_order_code = (
+                existing_order[0]
+            )
+
+
+            old_payment_url = (
+                existing_order[1]
+            )
+
+
+            old_token = (
+                existing_order[4]
+            )
+
+
+            # =============================================
+            # ĐÃ CÓ PAYMENT URL
+            # =============================================
+
+            if old_payment_url:
+
+                response = make_response(
+                    redirect(
+                        old_payment_url
+                    )
+                )
+
+
+                if old_token:
+
+                    response.set_cookie(
+                        "order_token",
+                        old_token,
+
+                        max_age=
+                            60
+                            * 60
+                            * 24
+                            * 30,
+
+                        httponly=True,
+
+                        samesite="Lax",
+
+                        secure=True
+                    )
+
+
+                return response
+
+
+            # =============================================
+            # CÓ ĐƠN NHƯNG CHƯA CÓ LINK PAYOS
+            # =============================================
+
+            return f"""
+            <!DOCTYPE html>
+
+            <html lang="vi">
+
+            <head>
+
+                <meta charset="UTF-8">
+
+                <title>
+                    Đơn hàng đang chờ thanh toán
+                </title>
+
+            </head>
+
+            <body>
+
+                <h2>
+                    Bạn đang có một đơn hàng
+                    chưa thanh toán
+                </h2>
+
+                <p>
+                    Mã đơn:
+                    <b>{old_order_code}</b>
+                </p>
+
+                <p>
+                    Đơn hàng vẫn còn hạn
+                    thanh toán.
+                </p>
+
+                <a href="/">
+                    Quay lại trang chủ
+                </a>
+
+            </body>
+
+            </html>
+            """, 400
+
+
+        # =================================================
+        # TẠO MÃ ĐƠN SHOP
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                COALESCE(
+                    MAX(id),
+                    0
+                )
+
+            FROM orders
+            """
+        )
+
+
+        last_id = (
+            cursor.fetchone()[0]
+        )
+
+
+        order_id = (
+            last_id + 1
+        )
+
+
+        order_code = (
+            f"TGM{order_id:03d}"
+        )
+
+
+        # =================================================
+        # TẠO TOKEN COOKIE
+        # =================================================
+
+        new_order_token = (
+            secrets.token_urlsafe(
+                32
+            )
+        )
+
+
+        # =================================================
+        # MÃ ĐƠN PAYOS
+        # =================================================
+
+        payos_order_code = int(
+            time.time()
+        )
+
+
+        # =================================================
+        # THỜI GIAN VIỆT NAM
+        # =================================================
+
+        created_time = datetime.now(
+            VIETNAM_TZ
+        )
+
+
+        # =================================================
+        # created_at
+        #
+        # Nếu DB hiện tại đang để TEXT
+        # thì giữ dạng chuỗi để không phá schema cũ
+        # =================================================
+
+        created_at = (
+            created_time.strftime(
+                "%d/%m/%Y %H:%M:%S"
+            )
+        )
+
+
+        # =================================================
+        # HẠN THANH TOÁN: 15 PHÚT
+        # =================================================
+
+        expires_time = (
+            created_time
+            + timedelta(
+                minutes=15
+            )
+        )
+
+
+        # =================================================
+        # GIÁ TRỊ LƯU DATABASE
+        #
+        # Cột expires_at đang là TIMESTAMP
+        # không timezone.
+        #
+        # Vì vậy lưu đúng giờ Việt Nam
+        # nhưng bỏ tzinfo.
+        # =================================================
+
+        expires_at_db = (
+            expires_time.replace(
+                tzinfo=None
+            )
+        )
+
+
+        # =================================================
+        # DEBUG THỜI GIAN
+        # =================================================
+
+        print(
+            "========== TIME DEBUG =========="
+        )
+
+
+        print(
+            "created_time VN:",
+            created_time
+        )
+
+
+        print(
+            "expires_time VN:",
+            expires_time
+        )
+
+
+        print(
+            "expires_at DB:",
+            expires_at_db
+        )
+
+
+        print(
+            "expires_timestamp:",
+            int(
+                expires_time.timestamp()
+            )
+        )
+
+
+        print(
+            "================================"
+        )
+
+
+        # =================================================
+        # TẠO ĐƠN TRONG DATABASE
+        # =================================================
+
+        cursor.execute(
+            """
+            INSERT INTO orders
+            (
+                order_code,
+
+                fullname,
+                phone,
+                contact,
+
+                province,
+                district,
+                ward,
+                address_detail,
+
+                quantity,
+                note,
+
+                product_name,
+                product_brand,
+
+                price,
+                deposit,
+
+                status,
+
+                created_at,
+                expires_at,
+
+                payment_url,
+                order_token
+            )
+
+            VALUES
+            (
+                %s,
+
+                %s,%s,%s,
+
+                %s,%s,%s,%s,
+
+                %s,%s,
+
+                %s,%s,
+
+                %s,%s,
+
+                %s,
+
+                %s,%s,
+
+                %s,%s
+            )
+            """,
+            (
+                order_code,
+
+                fullname,
+                phone,
+                contact,
+
+                province,
+                district,
+                ward,
+                address_detail,
+
+                quantity,
+                note,
+
+                product["name"],
+                product["brand"],
+
+                product["price"],
+                product["deposit"],
+
+                "Chưa thanh toán",
+
+                created_at,
+                expires_at_db,
+
+                None,
+                new_order_token
+            )
+        )
+
+
+        conn.commit()
+
+
+        # =================================================
+        # TẠO PAYMENT PAYOS
+        # =================================================
+
+        payment_data = {
+
+            "orderCode":
+                payos_order_code,
+
+            "amount":
+                product["deposit"]
+                * quantity,
+
+            "description":
+                order_code,
+
+            "returnUrl":
+                (
+                    "https://"
+                    "tgmodel-shop.onrender.com"
+                    "/payment/success"
+                ),
+
+            "cancelUrl":
+                (
+                    "https://"
+                    "tgmodel-shop.onrender.com"
+                    "/payment/cancel"
+                ),
+
+            # =============================================
+            # PayOS nhận Unix timestamp.
+            #
+            # Phải dùng expires_time
+            # CÓ timezone Việt Nam.
+            # =============================================
+
+            "expiredAt":
+                int(
+                    expires_time.timestamp()
+                )
         }
 
-    }
 
-    catch (error) {
-
-        console.error(
-            "Lỗi kiểm tra đơn hàng:",
-            error
-        );
-
-    }
-
-}
+        payment_link = (
+            payos.payment_requests.create(
+                payment_data
+            )
+        )
 
 
-// =========================================================
-// CHẠY KHI LOAD
-// =========================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-        checkPendingOrder();
-
-    }
-);
+        payment_url = (
+            payment_link.checkout_url
+        )
 
 
-// =========================================================
-// KIỂM TRA LẠI MỖI 30 GIÂY
-// =========================================================
+        # =================================================
+        # LƯU PAYMENT URL
+        # =================================================
 
-setInterval(
-    checkPendingOrder,
-    30000
-);
+        cursor.execute(
+            """
+            UPDATE orders
+
+            SET payment_url=%s
+
+            WHERE order_code=%s
+            """,
+            (
+                payment_url,
+                order_code
+            )
+        )
 
 
-</script>
+        conn.commit()
 
-</body>
 
-</html>
+        # =================================================
+        # CHUYỂN SANG PAYOS
+        # =================================================
+
+        response = make_response(
+            redirect(
+                payment_url
+            )
+        )
+
+
+        # =================================================
+        # LƯU TOKEN COOKIE
+        # =================================================
+
+        response.set_cookie(
+            "order_token",
+
+            new_order_token,
+
+            max_age=
+                60
+                * 60
+                * 24
+                * 30,
+
+            httponly=True,
+
+            samesite="Lax",
+
+            secure=True
+        )
+
+
+        return response
+
+
+    except Exception:
+
+        conn.rollback()
+
+        raise
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+# =========================================================
+# API: KIỂM TRA ĐƠN CHƯA THANH TOÁN
+# =========================================================
+
+@preorder_bp.route(
+    "/api/pending-order"
+)
+def pending_order():
+
+    order_token = request.cookies.get(
+        "order_token"
+    )
+
+
+    # =====================================================
+    # KHÔNG CÓ COOKIE
+    # =====================================================
+
+    if not order_token:
+
+        return {
+            "has_order": False
+        }
+
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+
+    try:
+
+        # =================================================
+        # TÌM ĐƠN
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                order_code,
+                product_name,
+                quantity,
+                deposit,
+                payment_url,
+                expires_at,
+                status
+
+            FROM orders
+
+            WHERE order_token=%s
+            AND status=%s
+
+            ORDER BY id DESC
+
+            LIMIT 1
+            """,
+            (
+                order_token,
+                "Chưa thanh toán"
+            )
+        )
+
+
+        order = cursor.fetchone()
+
+
+        # =================================================
+        # KHÔNG CÓ ĐƠN
+        # =================================================
+
+        if order is None:
+
+            return {
+                "has_order": False
+            }
+
+
+        order_code = order[0]
+
+        product_name = order[1]
+
+        quantity = order[2]
+
+        deposit = order[3]
+
+        payment_url = order[4]
+
+        expires_at = order[5]
+
+
+        # =================================================
+        # CHƯA CÓ PAYMENT URL
+        # =================================================
+
+        if not payment_url:
+
+            return {
+                "has_order": False
+            }
+
+
+        # =================================================
+        # DATABASE LƯU GIỜ VIỆT NAM
+        # KHÔNG TIMEZONE
+        # =================================================
+
+        expires_at = (
+            normalize_expires_at(
+                expires_at
+            )
+        )
+
+
+        if expires_at is None:
+
+            return {
+                "has_order": False
+            }
+
+
+        # =================================================
+        # UNIX TIMESTAMP
+        # =================================================
+
+        expires_timestamp = int(
+            expires_at.timestamp()
+        )
+
+
+        # =================================================
+        # DEBUG
+        # =================================================
+
+        print(
+            "========== DEBUG PENDING =========="
+        )
+
+
+        print(
+            "expires_at VN:",
+            expires_at
+        )
+
+
+        print(
+            "expires_timestamp:",
+            expires_timestamp
+        )
+
+
+        print(
+            "==================================="
+        )
+
+
+        # =================================================
+        # TRẢ DỮ LIỆU
+        # =================================================
+
+        return {
+
+            "has_order":
+                True,
+
+            "order_code":
+                order_code,
+
+            "product_name":
+                product_name,
+
+            "quantity":
+                quantity,
+
+            "deposit":
+                deposit,
+
+            "payment_url":
+                payment_url,
+
+            "expires_at":
+                expires_timestamp
+        }
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
