@@ -7,12 +7,12 @@
 <meta charset="UTF-8">
 
 <meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
-
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
 >
 
 <title>TG MODEL SHOP</title>
+
 
 <style>
 
@@ -58,7 +58,7 @@ content="width=device-width, initial-scale=1.0"
 
         box-shadow:
             0 2px 8px
-            rgba(0,0,0,0.08);
+            rgba(0, 0, 0, 0.08);
     }
 
 
@@ -120,7 +120,8 @@ content="width=device-width, initial-scale=1.0"
         border: none;
 
         transition:
-            background 0.2s ease;
+            background 0.2s ease,
+            opacity 0.2s ease;
     }
 
 
@@ -130,9 +131,27 @@ content="width=device-width, initial-scale=1.0"
     }
 
 
-    /* ================================================
+    /* =================================================
+       NÚT PRE-ORDER BỊ KHÓA
+       ================================================= */
+
+    .btn-preorder.disabled {
+
+        background: #999;
+
+        color: #eee;
+
+        pointer-events: none;
+
+        cursor: not-allowed;
+
+        opacity: 0.7;
+    }
+
+
+    /* =================================================
        ĐƠN CHƯA THANH TOÁN
-       ================================================ */
+       ================================================= */
 
     #pending-order-box {
 
@@ -151,7 +170,7 @@ content="width=device-width, initial-scale=1.0"
 
         box-shadow:
             0 2px 8px
-            rgba(0,0,0,0.08);
+            rgba(0, 0, 0, 0.08);
     }
 
 
@@ -170,16 +189,16 @@ content="width=device-width, initial-scale=1.0"
 
 
     /* =================================================
-       TRẠNG THÁI ĐƠN
+       THỜI GIAN / TRẠNG THÁI
        ================================================= */
 
     #pending-order-status {
 
+        font-size: 18px;
+
         font-weight: bold;
 
         color: #198754;
-
-        font-size: 18px;
     }
 
 
@@ -219,6 +238,14 @@ content="width=device-width, initial-scale=1.0"
     }
 
 
+    #continue-payment-button:disabled {
+
+        background: #999;
+
+        cursor: not-allowed;
+    }
+
+
     /* =================================================
        THÔNG BÁO HẾT HẠN
        ================================================= */
@@ -232,19 +259,8 @@ content="width=device-width, initial-scale=1.0"
         font-weight: bold;
     }
 
-
-    /* =================================================
-       LOADING
-       ================================================= */
-
-    #pending-loading {
-
-        color: #666;
-
-        font-size: 14px;
-    }
-
 </style>
+```
 
 </head>
 
@@ -258,15 +274,17 @@ content="width=device-width, initial-scale=1.0"
 
 <div class="shop-title">
 
-<h1>
-    TG MODEL SHOP
-</h1>
+    <h1>
+        TG MODEL SHOP
+    </h1>
 
-<p>
-    Model Kit & Figure
-</p>
+    <p>
+        Model Kit & Figure
+    </p>
 
 </div>
+
+
 
 <!-- =================================================
      ĐƠN HÀNG CHƯA THANH TOÁN
@@ -275,82 +293,75 @@ content="width=device-width, initial-scale=1.0"
 <div
     id="pending-order-box"
 >
-<h3>
-    🔔 Bạn đang có đơn hàng chưa thanh toán
-</h3>
+
+    <h3>
+        🔔 Bạn đang có đơn hàng chưa thanh toán
+    </h3>
 
 
-<p>
+    <p>
 
-    Mã đơn:
+        Mã đơn:
 
-    <b id="pending-order-code">
-        --
-    </b>
+        <b id="pending-order-code">
+            --
+        </b>
 
-</p>
-
-
-<p>
-
-    Sản phẩm:
-
-    <b id="pending-order-product">
-        --
-    </b>
-
-</p>
+    </p>
 
 
-<p>
+    <p>
 
-    Số lượng:
+        Sản phẩm:
 
-    <b id="pending-order-quantity">
-        --
-    </b>
+        <b id="pending-order-product">
+            --
+        </b>
 
-</p>
-
-
-<p>
-
-    Thời gian còn lại:
-
-    <b id="pending-order-status">
-        Đang kiểm tra...
-    </b>
-
-</p>
+    </p>
 
 
-<p id="expired-message">
+    <p>
 
-    Đơn hàng đã hết hạn thanh toán.
+        Số lượng:
 
-</p>
+        <b id="pending-order-quantity">
+            --
+        </b>
+
+    </p>
 
 
-<button
-    id="continue-payment-button"
-    type="button"
->
+    <p>
 
-    💳 TIẾP TỤC THANH TOÁN
+        Thời gian còn lại:
 
-</button>
+        <b id="pending-order-status">
+            Đang kiểm tra...
+        </b>
 
-</div>
+    </p>
 
-<!-- =================================================
-     LOADING
-     ================================================= -->
 
-<div
-    id="pending-loading"
->
+    <p id="expired-message">
+
+        Đơn hàng đã hết hạn thanh toán.
+
+    </p>
+
+
+    <button
+        id="continue-payment-button"
+        type="button"
+    >
+
+        💳 TIẾP TỤC THANH TOÁN
+
+    </button>
 
 </div>
+
+
 
 <!-- =================================================
      DANH SÁCH SẢN PHẨM
@@ -360,64 +371,67 @@ content="width=device-width, initial-scale=1.0"
 
 <div class="product">
 
-<h5>
 
-    {{ product.brand }}
+    <h5>
 
-</h5>
+        {{ product.brand }}
 
-
-<h2>
-
-    {{ product.name }}
-
-</h2>
+    </h5>
 
 
-<hr>
+    <h2>
+
+        {{ product.name }}
+
+    </h2>
 
 
-<p>
-
-    <strong>
-        💰 Giá chính thức:
-    </strong>
-
-    {{ "{:,}".format(product.price) }} đ
-
-</p>
+    <hr>
 
 
-<p>
+    <p>
 
-    <strong>
-        💵 Tiền cọc:
-    </strong>
+        <strong>
+            💰 Giá chính thức:
+        </strong>
 
-    {{ "{:,}".format(product.deposit) }} đ
+        {{ "{:,}".format(product.price) }} đ
 
-</p>
-
-
-<p>
-
-    <strong>
-        📦 Dự kiến trả hàng:
-    </strong>
-
-    {{ product.eta }}
-
-</p>
+    </p>
 
 
-<a
-    href="/preorder/{{ product.id }}"
-    class="btn btn-preorder"
->
+    <p>
 
-    ĐẶT PRE-ORDER
+        <strong>
+            💵 Tiền cọc:
+        </strong>
 
-</a>
+        {{ "{:,}".format(product.deposit) }} đ
+
+    </p>
+
+
+    <p>
+
+        <strong>
+            📦 Dự kiến trả hàng:
+        </strong>
+
+        {{ product.eta }}
+
+    </p>
+
+
+    <a
+        href="/preorder/{{ product.id }}"
+        class="btn btn-preorder"
+        data-original-text="ĐẶT PRE-ORDER"
+    >
+
+        ĐẶT PRE-ORDER
+
+    </a>
+
 
 </div>
 
@@ -436,7 +450,7 @@ let pendingOrderTimer = null;
 
 
 // =========================================================
-// LẤY ELEMENT
+// ELEMENT
 // =========================================================
 
 const pendingBox =
@@ -481,8 +495,61 @@ const expiredMessage =
     );
 
 
+const preorderButtons =
+    document.querySelectorAll(
+        ".btn-preorder"
+    );
+
+
 // =========================================================
-// ẨN ĐƠN
+// KHÓA NÚT ĐẶT PRE-ORDER
+// =========================================================
+
+function disablePreorderButtons() {
+
+    preorderButtons.forEach(
+        function(button) {
+
+            button.classList.add(
+                "disabled"
+            );
+
+
+            button.textContent =
+                "ĐANG CÓ ĐƠN CHỜ THANH TOÁN";
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// MỞ LẠI NÚT ĐẶT PRE-ORDER
+// =========================================================
+
+function enablePreorderButtons() {
+
+    preorderButtons.forEach(
+        function(button) {
+
+            button.classList.remove(
+                "disabled"
+            );
+
+
+            button.textContent =
+                button.dataset.originalText
+                || "ĐẶT PRE-ORDER";
+
+        }
+    );
+
+}
+
+
+// =========================================================
+// ẨN KHỐI ĐƠN
 // =========================================================
 
 function hidePendingOrder() {
@@ -499,6 +566,9 @@ function hidePendingOrder() {
 
         pendingOrderTimer = null;
     }
+
+
+    enablePreorderButtons();
 
 }
 
@@ -523,6 +593,15 @@ function showPendingOrder(data) {
 
     pendingQuantity.textContent =
         data.quantity || "--";
+
+
+    expiredMessage.style.display =
+        "none";
+
+
+    pendingStatus.classList.remove(
+        "expired"
+    );
 
 
     // =====================================================
@@ -556,8 +635,7 @@ function showPendingOrder(data) {
             "none";
 
 
-        expiredMessage.style.display =
-            "none";
+        enablePreorderButtons();
 
 
         return;
@@ -596,7 +674,7 @@ function showPendingOrder(data) {
 
 
     // =====================================================
-    // HÀM ĐẾM NGƯỢC
+    // COUNTDOWN
     // =====================================================
 
     function updateCountdown() {
@@ -609,9 +687,9 @@ function showPendingOrder(data) {
             expiresAt - now;
 
 
-        // =================================================
+        // =============================================
         // HẾT HẠN
-        // =================================================
+        // =============================================
 
         if (remaining <= 0) {
 
@@ -642,13 +720,28 @@ function showPendingOrder(data) {
                 "block";
 
 
+            // =========================================
+            // HẾT HẠN → MỞ LẠI ĐẶT PRE-ORDER
+            // =========================================
+
+            enablePreorderButtons();
+
+
+            // =========================================
+            // GỌI LẠI API
+            // để backend cập nhật trạng thái DB
+            // =========================================
+
+            checkPendingOrder();
+
+
             return;
         }
 
 
-        // =================================================
+        // =============================================
         // CÒN HẠN
-        // =================================================
+        // =============================================
 
         pendingStatus.classList.remove(
             "expired"
@@ -663,9 +756,20 @@ function showPendingOrder(data) {
             "inline-block";
 
 
-        // =================================================
+        continueButton.disabled =
+            false;
+
+
+        // =============================================
+        // KHÓA ĐẶT ĐƠN MỚI
+        // =============================================
+
+        disablePreorderButtons();
+
+
+        // =============================================
         // PHÚT
-        // =================================================
+        // =============================================
 
         const minutes =
             Math.floor(
@@ -673,9 +777,9 @@ function showPendingOrder(data) {
             );
 
 
-        // =================================================
+        // =============================================
         // GIÂY
-        // =================================================
+        // =============================================
 
         const seconds =
             Math.floor(
@@ -683,9 +787,9 @@ function showPendingOrder(data) {
             );
 
 
-        // =================================================
-        // HIỂN THỊ THỜI GIAN
-        // =================================================
+        // =============================================
+        // HIỂN THỊ
+        // =============================================
 
         pendingStatus.textContent =
             minutes +
@@ -698,7 +802,7 @@ function showPendingOrder(data) {
 
 
     // =====================================================
-    // CHẠY NGAY LẦN ĐẦU
+    // CHẠY NGAY
     // =====================================================
 
     updateCountdown();
@@ -752,9 +856,9 @@ async function checkPendingOrder() {
             await response.json();
 
 
-        // =================================================
+        // =============================================
         // KHÔNG CÓ ĐƠN
-        // =================================================
+        // =============================================
 
         if (!data.has_order) {
 
@@ -764,12 +868,13 @@ async function checkPendingOrder() {
         }
 
 
-        // =================================================
+        // =============================================
         // CÓ ĐƠN
-        // =================================================
+        // =============================================
 
         if (
-            data.payment_url &&
+            data.payment_url
+            &&
             data.expires_at
         ) {
 
@@ -777,7 +882,9 @@ async function checkPendingOrder() {
                 data
             );
 
-        } else {
+        }
+
+        else {
 
             hidePendingOrder();
 
