@@ -570,15 +570,6 @@ function showPendingOrder(data) {
 // =================================================
 const expiresAt =
     Number(data.expires_at) * 1000;
-    console.log("========== DEBUG COUNTDOWN ==========");
-    console.log("data.expires_at:", data.expires_at);
-    console.log("expiresAt:", expiresAt);
-    console.log("Date.now():", Date.now());
-    console.log(
-        "remaining:",
-        expiresAt - Date.now()
-);
-    console.log("====================================");
 
     // =====================================================
     // XÓA TIMER CŨ
