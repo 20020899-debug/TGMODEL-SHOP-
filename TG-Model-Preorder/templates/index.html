@@ -7,12 +7,12 @@
 <meta charset="UTF-8">
 
 <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+
 >
 
 <title>TG MODEL SHOP</title>
-
 
 <style>
 
@@ -178,6 +178,8 @@
         font-weight: bold;
 
         color: #198754;
+
+        font-size: 18px;
     }
 
 
@@ -256,17 +258,17 @@
 
 <div class="shop-title">
 
-    <h1>
-        TG MODEL SHOP
-    </h1>
+```
+<h1>
+    TG MODEL SHOP
+</h1>
 
-    <p>
-        Model Kit & Figure
-    </p>
+<p>
+    Model Kit & Figure
+</p>
+```
 
 </div>
-
-
 
 <!-- =================================================
      ĐƠN HÀNG CHƯA THANH TOÁN
@@ -276,74 +278,74 @@
     id="pending-order-box"
 >
 
-    <h3>
-        🔔 Bạn đang có đơn hàng chưa thanh toán
-    </h3>
+```
+<h3>
+    🔔 Bạn đang có đơn hàng chưa thanh toán
+</h3>
 
 
-    <p>
+<p>
 
-        Mã đơn:
+    Mã đơn:
 
-        <b id="pending-order-code">
-            --
-        </b>
+    <b id="pending-order-code">
+        --
+    </b>
 
-    </p>
-
-
-    <p>
-
-        Sản phẩm:
-
-        <b id="pending-order-product">
-            --
-        </b>
-
-    </p>
+</p>
 
 
-    <p>
+<p>
 
-        Số lượng:
+    Sản phẩm:
 
-        <b id="pending-order-quantity">
-            --
-        </b>
+    <b id="pending-order-product">
+        --
+    </b>
 
-    </p>
-
-
-    <p>
-
-        Trạng thái:
-
-        <b id="pending-order-status">
-            Đang kiểm tra...
-        </b>
-
-    </p>
+</p>
 
 
-    <p id="expired-message">
+<p>
 
-        Đơn hàng đã hết hạn thanh toán.
+    Số lượng:
 
-    </p>
+    <b id="pending-order-quantity">
+        --
+    </b>
+
+</p>
 
 
-    <button
-        id="continue-payment-button"
-        type="button"
-    >
+<p>
 
-        💳 TIẾP TỤC THANH TOÁN
+    Thời gian còn lại:
 
-    </button>
+    <b id="pending-order-status">
+        Đang kiểm tra...
+    </b>
+
+</p>
+
+
+<p id="expired-message">
+
+    Đơn hàng đã hết hạn thanh toán.
+
+</p>
+
+
+<button
+    id="continue-payment-button"
+    type="button"
+>
+
+    💳 TIẾP TỤC THANH TOÁN
+
+</button>
+```
 
 </div>
-
-
 
 <!-- =================================================
      LOADING
@@ -355,8 +357,6 @@
 
 </div>
 
-
-
 <!-- =================================================
      DANH SÁCH SẢN PHẨM
      ================================================= -->
@@ -365,66 +365,66 @@
 
 <div class="product">
 
+```
+<h5>
 
-    <h5>
+    {{ product.brand }}
 
-        {{ product.brand }}
-
-    </h5>
-
-
-    <h2>
-
-        {{ product.name }}
-
-    </h2>
+</h5>
 
 
-    <hr>
+<h2>
+
+    {{ product.name }}
+
+</h2>
 
 
-    <p>
-
-        <strong>
-            💰 Giá chính thức:
-        </strong>
-
-        {{ "{:,}".format(product.price) }} đ
-
-    </p>
+<hr>
 
 
-    <p>
+<p>
 
-        <strong>
-            💵 Tiền cọc:
-        </strong>
+    <strong>
+        💰 Giá chính thức:
+    </strong>
 
-        {{ "{:,}".format(product.deposit) }} đ
+    {{ "{:,}".format(product.price) }} đ
 
-    </p>
-
-
-    <p>
-
-        <strong>
-            📦 Dự kiến trả hàng:
-        </strong>
-
-        {{ product.eta }}
-
-    </p>
+</p>
 
 
-    <a
-        href="/preorder/{{ product.id }}"
-        class="btn btn-preorder"
-    >
+<p>
 
-        ĐẶT PRE-ORDER
+    <strong>
+        💵 Tiền cọc:
+    </strong>
 
-    </a>
+    {{ "{:,}".format(product.deposit) }} đ
 
+</p>
+
+
+<p>
+
+    <strong>
+        📦 Dự kiến trả hàng:
+    </strong>
+
+    {{ product.eta }}
+
+</p>
+
+
+<a
+    href="/preorder/{{ product.id }}"
+    class="btn btn-preorder"
+>
+
+    ĐẶT PRE-ORDER
+
+</a>
+```
 
 </div>
 
@@ -437,6 +437,9 @@
      ===================================================== -->
 
 <script>
+
+
+let pendingOrderTimer = null;
 
 
 // =========================================================
@@ -494,6 +497,16 @@ function hidePendingOrder() {
     pendingBox.style.display =
         "none";
 
+
+    if (pendingOrderTimer) {
+
+        clearInterval(
+            pendingOrderTimer
+        );
+
+        pendingOrderTimer = null;
+    }
+
 }
 
 
@@ -520,59 +533,21 @@ function showPendingOrder(data) {
 
 
     // =====================================================
-    // KIỂM TRA THỜI GIAN HẾT HẠN
-    //
-    // Backend trả:
-    // expires_at = UNIX TIMESTAMP tính bằng GIÂY
-    //
-    // Date.now() trả:
-    // MILLI GIÂY
-    //
-    // Vì vậy phải * 1000
+    // BACKEND TRẢ UNIX TIMESTAMP TÍNH BẰNG GIÂY
     // =====================================================
 
     const expiresAt =
         Number(data.expires_at) * 1000;
 
 
-    const now =
-        Date.now();
-
-
-    const remaining =
-        expiresAt - now;
-
-
-    console.log(
-        "data.expires_at:",
-        data.expires_at
-    );
-
-
-    console.log(
-        "expiresAt:",
-        expiresAt
-    );
-
-
-    console.log(
-        "Date.now():",
-        now
-    );
-
-
-    console.log(
-        "remaining:",
-        remaining
-    );
-
-
     // =====================================================
-    // KHÔNG ĐỌC ĐƯỢC THỜI GIAN
+    // TIMESTAMP KHÔNG HỢP LỆ
     // =====================================================
 
     if (
         !Number.isFinite(expiresAt)
+        ||
+        expiresAt <= 0
     ) {
 
         pendingStatus.textContent =
@@ -597,52 +572,8 @@ function showPendingOrder(data) {
 
 
     // =====================================================
-    // HẾT HẠN
+    // NÚT TIẾP TỤC THANH TOÁN
     // =====================================================
-
-    if (remaining <= 0) {
-
-        pendingStatus.textContent =
-            "Hết hạn thanh toán";
-
-
-        pendingStatus.classList.add(
-            "expired"
-        );
-
-
-        continueButton.style.display =
-            "none";
-
-
-        expiredMessage.style.display =
-            "block";
-
-
-        return;
-    }
-
-
-    // =====================================================
-    // CÒN HẠN
-    // =====================================================
-
-    pendingStatus.textContent =
-        "Còn hạn";
-
-
-    pendingStatus.classList.remove(
-        "expired"
-    );
-
-
-    expiredMessage.style.display =
-        "none";
-
-
-    continueButton.style.display =
-        "inline-block";
-
 
     continueButton.onclick =
         function() {
@@ -655,6 +586,140 @@ function showPendingOrder(data) {
             }
 
         };
+
+
+    // =====================================================
+    // XÓA TIMER CŨ
+    // =====================================================
+
+    if (pendingOrderTimer) {
+
+        clearInterval(
+            pendingOrderTimer
+        );
+
+        pendingOrderTimer = null;
+    }
+
+
+    // =====================================================
+    // HÀM ĐẾM NGƯỢC
+    // =====================================================
+
+    function updateCountdown() {
+
+        const now =
+            Date.now();
+
+
+        const remaining =
+            expiresAt - now;
+
+
+        // =================================================
+        // HẾT HẠN
+        // =================================================
+
+        if (remaining <= 0) {
+
+            if (pendingOrderTimer) {
+
+                clearInterval(
+                    pendingOrderTimer
+                );
+
+                pendingOrderTimer = null;
+            }
+
+
+            pendingStatus.textContent =
+                "Hết hạn thanh toán";
+
+
+            pendingStatus.classList.add(
+                "expired"
+            );
+
+
+            continueButton.style.display =
+                "none";
+
+
+            expiredMessage.style.display =
+                "block";
+
+
+            return;
+        }
+
+
+        // =================================================
+        // CÒN HẠN
+        // =================================================
+
+        pendingStatus.classList.remove(
+            "expired"
+        );
+
+
+        expiredMessage.style.display =
+            "none";
+
+
+        continueButton.style.display =
+            "inline-block";
+
+
+        // =================================================
+        // PHÚT
+        // =================================================
+
+        const minutes =
+            Math.floor(
+                remaining / 60000
+            );
+
+
+        // =================================================
+        // GIÂY
+        // =================================================
+
+        const seconds =
+            Math.floor(
+                (remaining % 60000) / 1000
+            );
+
+
+        // =================================================
+        // HIỂN THỊ THỜI GIAN
+        // =================================================
+
+        pendingStatus.textContent =
+            minutes +
+            " phút " +
+            String(seconds)
+                .padStart(2, "0") +
+            " giây";
+
+    }
+
+
+    // =====================================================
+    // CHẠY NGAY LẦN ĐẦU
+    // =====================================================
+
+    updateCountdown();
+
+
+    // =====================================================
+    // CẬP NHẬT MỖI GIÂY
+    // =====================================================
+
+    pendingOrderTimer =
+        setInterval(
+            updateCountdown,
+            1000
+        );
 
 }
 
@@ -692,12 +757,6 @@ async function checkPendingOrder() {
 
         const data =
             await response.json();
-
-
-        console.log(
-            "Pending order:",
-            data
-        );
 
 
         // =================================================
