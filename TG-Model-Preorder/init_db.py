@@ -45,6 +45,7 @@ try:
             deposit INTEGER,
 
             status TEXT,
+            payment_type TEXT,
 
             created_at TEXT,
             expires_at TIMESTAMP,
@@ -74,6 +75,18 @@ try:
             expires_at TIMESTAMP
         """
     )
+    # =====================================================
+    # CHUYỂN KHOẢN FULL
+    # =====================================================
+    cursor.execute(
+        """
+        ALTER TABLE orders
+
+        ADD COLUMN IF NOT EXISTS
+            payment_type TEXT
+        """
+    )
+
 
 
     # =====================================================
