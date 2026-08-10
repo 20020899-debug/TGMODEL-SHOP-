@@ -16,7 +16,7 @@
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/admin_stock.css') }}"
+        href="{{ url_for('static', filename='css/admin.css') }}"
     >
 
 </head>
@@ -25,148 +25,139 @@
 <body>
 
 
-<div class="container">
+<div class="container container-medium">
 
 
-    <h1>
+    <h1 class="page-title">
         Quản lý tồn kho
     </h1>
 
 
-    <table>
+    <div class="table-wrapper">
 
 
-        <thead>
-
-            <tr>
-
-                <th>
-                    ID
-                </th>
-
-                <th>
-                    Sản phẩm
-                </th>
-
-                <th>
-                    Thương hiệu
-                </th>
-
-                <th>
-                    Tồn kho hiện tại
-                </th>
-
-                <th>
-                    Tồn kho mới
-                </th>
-
-                <th>
-                    Cập nhật
-                </th>
-
-            </tr>
-
-        </thead>
+        <table class="admin-table">
 
 
-        <tbody>
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Sản phẩm</th>
+
+                    <th>Thương hiệu</th>
+
+                    <th>Tồn kho hiện tại</th>
+
+                    <th>Tồn kho mới</th>
+
+                    <th>Cập nhật</th>
+
+                </tr>
+
+            </thead>
 
 
-            {% for product in products %}
+            <tbody>
 
 
-            <tr>
+                {% for product in products %}
 
 
-                <td>
-                    {{ product.id }}
-                </td>
+                <tr>
 
 
-                <td>
-                    {{ product.name }}
-                </td>
+                    <td>
+                        {{ product.id }}
+                    </td>
 
 
-                <td>
-                    {{ product.brand }}
-                </td>
+                    <td>
+                        {{ product.name }}
+                    </td>
 
 
-                <td>
-
-                    {% if product.stock > 0 %}
-
-                        <span class="stock-available">
-                            {{ product.stock }}
-                        </span>
-
-                    {% else %}
-
-                        <span class="stock-zero">
-                            0
-                        </span>
-
-                    {% endif %}
-
-                </td>
+                    <td>
+                        {{ product.brand }}
+                    </td>
 
 
-                <td colspan="2">
+                    <td>
+
+                        {% if product.stock > 0 %}
+
+                            <span class="stock-available">
+                                {{ product.stock }}
+                            </span>
+
+                        {% else %}
+
+                            <span class="stock-zero">
+                                0
+                            </span>
+
+                        {% endif %}
+
+                    </td>
 
 
-                    <form
-                        method="POST"
-                        action="/admin/stock"
-                        class="stock-form"
-                    >
+                    <td colspan="2">
 
-
-                        <input
-                            type="hidden"
-                            name="product_id"
-                            value="{{ product.id }}"
+                        <form
+                            method="POST"
+                            action="/admin/stock"
+                            class="stock-form"
                         >
 
-
-                        <input
-                            type="number"
-                            name="stock"
-                            value="{{ product.stock }}"
-                            min="0"
-                            required
-                        >
+                            <input
+                                type="hidden"
+                                name="product_id"
+                                value="{{ product.id }}"
+                            >
 
 
-                        <button
-                            type="submit"
-                            class="save-button"
-                        >
-                            Lưu
-                        </button>
+                            <input
+                                type="number"
+                                name="stock"
+                                class="form-control stock-input"
+                                value="{{ product.stock }}"
+                                min="0"
+                                required
+                            >
 
 
-                    </form>
+                            <button
+                                type="submit"
+                                class="btn btn-orange"
+                            >
+                                Lưu
+                            </button>
+
+                        </form>
+
+                    </td>
 
 
-                </td>
+                </tr>
 
 
-            </tr>
+                {% endfor %}
 
 
-            {% endfor %}
+            </tbody>
 
 
-        </tbody>
+        </table>
 
 
-    </table>
+    </div>
 
 
     <a
         href="/admin"
-        class="back-link"
+        class="link-orange"
     >
         ← Quay lại quản lý đơn
     </a>
