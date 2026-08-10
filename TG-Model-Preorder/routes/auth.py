@@ -1,23 +1,70 @@
-from flask import Blueprint
-from flask import render_template
-from flask import request
-from flask import redirect
-from flask import url_for
-from flask import session
+import os
 
-from config import ADMIN_USERNAME
-from config import ADMIN_PASSWORD
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session
+)
 
-auth_bp = Blueprint("auth", __name__)
+
+auth_bp = Blueprint(
+    "auth",
+    __name__
+)
 
 
-@auth_bp.route("/login", methods=["GET", "POST"])
+# =========================================================
+# TÀI KHOẢN ADMIN
+#
+# Lấy từ Environment Variables của Render
+# =========================================================
+
+ADMIN_USERNAME = os.environ.get(
+    "ADMIN_USERNAME",
+    "admin"
+)
+
+
+ADMIN_PASSWORD = os.environ.get(
+    "ADMIN_PASSWORD",
+    "123456"
+)
+
+
+# =========================================================
+# ĐĂNG NHẬP
+# =========================================================
+
+@auth_bp.route(
+    "/login",
+    methods=["GET", "POST"]
+)
 def login():
+
+    # =====================================================
+    # POST - XỬ LÝ ĐĂNG NHẬP
+    # =====================================================
 
     if request.method == "POST":
 
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
+
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+
+        # =================================================
+        # ĐÚNG TÀI KHOẢN
+        # =================================================
 
         if (
             username == ADMIN_USERNAME
@@ -27,19 +74,52 @@ def login():
 
             session["admin"] = True
 
-            return redirect(url_for("admin.admin"))
+
+            return redirect(
+                url_for(
+                    "admin.admin"
+                )
+            )
+
+
+        # =================================================
+        # SAI TÀI KHOẢN
+        # =================================================
 
         return render_template(
             "login.html",
-            error="Sai tài khoản hoặc mật khẩu!"
+            error=(
+                "Sai tài khoản hoặc mật khẩu!"
+            )
         )
 
-    return render_template("login.html")
+
+    # =====================================================
+    # GET - HIỂN THỊ TRANG LOGIN
+    # =====================================================
+
+    return render_template(
+        "login.html"
+    )
 
 
-@auth_bp.route("/logout")
+# =========================================================
+# ĐĂNG XUẤT
+# =========================================================
+
+@auth_bp.route(
+    "/logout"
+)
 def logout():
 
-    session.pop("admin", None)
+    session.pop(
+        "admin",
+        None
+    )
 
-    return redirect(url_for("auth.login"))
+
+    return redirect(
+        url_for(
+            "auth.login"
+        )
+    )
