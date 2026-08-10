@@ -21,7 +21,7 @@ const wardSelect =
 // =========================================================
 
 fetch(
-    "https://provinces.open-api.vn/api/v1/p/"
+    "https://provinces.open-api.vn/api/v2/p/"
 )
 
 .then(
@@ -126,7 +126,7 @@ provinceSelect.addEventListener(
 
 
         fetch(
-            "https://provinces.open-api.vn/api/v1/p/"
+            "https://provinces.open-api.vn/api/v2/p/"
             + provinceId
             + "?depth=2"
         )
@@ -224,7 +224,7 @@ districtSelect.addEventListener(
 
 
         fetch(
-            "https://provinces.open-api.vn/api/v1/d/"
+            "https://provinces.open-api.vn/api/v2/d/"
             + districtId
             + "?depth=2"
         )
