@@ -42,8 +42,6 @@ submit_order_bp = Blueprint(
 methods=["POST"]
 )
 def submit():
-
-```
 # =====================================================
 # LẤY PRODUCT ID
 # =====================================================
@@ -818,4 +816,3 @@ finally:
     cursor.close()
 
     conn.close()
-```
