@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Sửa sản phẩm
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/admin.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<div class="container container-small">
+
+
+    <!-- =================================================
+         TIÊU ĐỀ
+         ================================================= -->
+
+    <h1 class="page-title">
+        Sửa sản phẩm
+    </h1>
+
+
+    <!-- =================================================
+         ID
+         ================================================= -->
+
+    <div class="form-row">
+
+        <span class="form-label">
+            ID sản phẩm:
+        </span>
+
+        <strong>
+            {{ product["id"] }}
+        </strong>
+
+    </div>
+
+
+    <!-- =================================================
+         FORM
+         ================================================= -->
+
+    <form
+        method="POST"
+        action="/admin/products/{{ product['id'] }}/edit"
+    >
+
+
+        <!-- =============================================
+             TÊN
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Tên sản phẩm
+            </label>
+
+            <input
+                type="text"
+                name="name"
+                class="form-control"
+                value="{{ product['name'] }}"
+                required
+            >
+
+        </div>
+
+
+        <!-- =============================================
+             THƯƠNG HIỆU
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Thương hiệu
+            </label>
+
+            <input
+                type="text"
+                name="brand"
+                class="form-control"
+                value="{{ product['brand'] or '' }}"
+            >
+
+        </div>
+
+
+        <!-- =============================================
+             GIÁ
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Giá bán
+            </label>
+
+            <input
+                type="number"
+                name="price"
+                class="form-control"
+                value="{{ product['price'] or 0 }}"
+                min="0"
+                required
+            >
+
+        </div>
+
+
+        <!-- =============================================
+             CỌC
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Tiền cọc
+            </label>
+
+            <input
+                type="number"
+                name="deposit"
+                class="form-control"
+                value="{{ product['deposit'] or 0 }}"
+                min="0"
+                required
+            >
+
+        </div>
+
+
+        <!-- =============================================
+             ETA
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                ETA
+            </label>
+
+            <input
+                type="text"
+                name="eta"
+                class="form-control"
+                value="{{ product['eta'] or '' }}"
+                placeholder="Ví dụ: Tháng 10/2026"
+            >
+
+        </div>
+
+
+        <!-- =============================================
+             LINK ẢNH
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Link ảnh sản phẩm
+            </label>
+
+            <input
+                type="url"
+                name="image_url"
+                id="image-url"
+                class="form-control"
+                value="{{ product['image_url'] or '' }}"
+                placeholder="https://..."
+            >
+
+        </div>
+
+
+        <!-- =============================================
+             PREVIEW ẢNH
+             ============================================= -->
+
+        <div class="form-row">
+
+            <span class="form-label">
+                Ảnh hiện tại
+            </span>
+
+
+            {% if product["image_url"] %}
+
+                <img
+                    id="image-preview"
+                    src="{{ product['image_url'] }}"
+                    alt="{{ product['name'] }}"
+                    class="product-preview"
+                >
+
+            {% else %}
+
+                <img
+                    id="image-preview"
+                    src=""
+                    alt="Preview sản phẩm"
+                    class="product-preview product-preview-hidden"
+                >
+
+                <span
+                    id="no-image-message"
+                >
+                    Chưa có ảnh
+                </span>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- =============================================
+             STOCK
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Tồn kho
+            </label>
+
+            <input
+                type="number"
+                name="stock"
+                class="form-control stock-input"
+                value="{{ product['stock'] or 0 }}"
+                min="0"
+                required
+            >
+
+        </div>
+
+
+        <!-- =============================================
+             HIỂN THỊ
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Hiển thị sản phẩm
+            </label>
+
+            <select
+                name="active"
+                class="form-control"
+            >
+
+                <option
+                    value="1"
+                    {% if product["active"] %}selected{% endif %}
+                >
+                    Hiện sản phẩm
+                </option>
+
+                <option
+                    value="0"
+                    {% if not product["active"] %}selected{% endif %}
+                >
+                    Ẩn sản phẩm
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- =============================================
+             LƯU
+             ============================================= -->
+
+        <button
+            type="submit"
+            class="btn btn-orange"
+        >
+            💾 LƯU SẢN PHẨM
+        </button>
+
+
+    </form>
+
+
+    <br>
+
+
+    <a
+        href="/admin/products"
+        class="link-orange"
+    >
+        ← Quay lại quản lý sản phẩm
+    </a>
+
+
+</div>
+
+
+<!-- =====================================================
+     PREVIEW ẢNH KHI ĐỔI URL
+     ===================================================== -->
+
+<script>
+
+const imageUrlInput =
+    document.getElementById(
+        "image-url"
+    );
+
+
+const imagePreview =
+    document.getElementById(
+        "image-preview"
+    );
+
+
+const noImageMessage =
+    document.getElementById(
+        "no-image-message"
+    );
+
+
+imageUrlInput.addEventListener(
+    "input",
+    function() {
+
+        const url =
+            this.value.trim();
+
+
+        if (url) {
+
+            imagePreview.src =
+                url;
+
+
+            imagePreview.classList.remove(
+                "product-preview-hidden"
+            );
+
+
+            if (noImageMessage) {
+
+                noImageMessage.style.display =
+                    "none";
+
+            }
+
+        } else {
+
+            imagePreview.src =
+                "";
+
+
+            imagePreview.classList.add(
+                "product-preview-hidden"
+            );
+
+
+            if (noImageMessage) {
+
+                noImageMessage.style.display =
+                    "inline";
+
+            }
+
+        }
+
+    }
+);
+
+</script>
+
+
+</body>
+
+</html>
