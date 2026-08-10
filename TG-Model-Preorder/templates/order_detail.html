@@ -16,7 +16,7 @@
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/order_detail.css') }}"
+        href="{{ url_for('static', filename='css/admin.css') }}"
     >
 
 </head>
@@ -25,25 +25,17 @@
 <body>
 
 
-<div class="container">
+<div class="container container-small">
 
 
-    <!-- =================================================
-         TIÊU ĐỀ
-         ================================================= -->
-
-    <h1>
+    <h1 class="page-title">
         Chi tiết đơn hàng
     </h1>
 
 
-    <!-- =================================================
-         THÔNG TIN ĐƠN
-         ================================================= -->
+    <div class="form-row">
 
-    <div class="info-row">
-
-        <span class="info-label">
+        <span class="form-label">
             Mã đơn:
         </span>
 
@@ -54,9 +46,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Thời gian đặt:
         </span>
 
@@ -65,9 +57,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Họ và tên:
         </span>
 
@@ -76,9 +68,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Số điện thoại:
         </span>
 
@@ -87,9 +79,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Facebook / Zalo:
         </span>
 
@@ -98,18 +90,14 @@
     </div>
 
 
-    <!-- =================================================
-         ĐỊA CHỈ
-         ================================================= -->
-
-    <h2>
+    <h2 class="section-title">
         Địa chỉ giao hàng
     </h2>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Tỉnh / Thành phố:
         </span>
 
@@ -118,9 +106,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Quận / Huyện:
         </span>
 
@@ -129,9 +117,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Phường / Xã:
         </span>
 
@@ -140,9 +128,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Địa chỉ chi tiết:
         </span>
 
@@ -151,18 +139,14 @@
     </div>
 
 
-    <!-- =================================================
-         SẢN PHẨM
-         ================================================= -->
-
-    <h2>
+    <h2 class="section-title">
         Thông tin sản phẩm
     </h2>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Sản phẩm:
         </span>
 
@@ -171,9 +155,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Thương hiệu:
         </span>
 
@@ -182,9 +166,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Số lượng:
         </span>
 
@@ -193,9 +177,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Giá sản phẩm:
         </span>
 
@@ -204,9 +188,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Tiền cọc / sản phẩm:
         </span>
 
@@ -215,18 +199,14 @@
     </div>
 
 
-    <!-- =================================================
-         THANH TOÁN
-         ================================================= -->
-
-    <h2>
+    <h2 class="section-title">
         Thanh toán
     </h2>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Hình thức thanh toán:
         </span>
 
@@ -252,9 +232,9 @@
     </div>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
-        <span class="info-label">
+        <span class="form-label">
             Số tiền thanh toán:
         </span>
 
@@ -282,27 +262,19 @@
     </div>
 
 
-    <!-- =================================================
-         GHI CHÚ
-         ================================================= -->
-
-    <h2>
+    <h2 class="section-title">
         Ghi chú
     </h2>
 
 
-    <div class="info-row">
+    <div class="form-row">
 
         {{ order["note"] or "Không có ghi chú" }}
 
     </div>
 
 
-    <!-- =================================================
-         CẬP NHẬT TRẠNG THÁI
-         ================================================= -->
-
-    <h2>
+    <h2 class="section-title">
         Trạng thái đơn hàng
     </h2>
 
@@ -315,9 +287,9 @@
 
         <select
             name="status"
+            class="form-control"
             required
         >
-
 
             <option
                 value="Chưa thanh toán"
@@ -382,16 +354,15 @@
                 Hết hạn thanh toán
             </option>
 
-
         </select>
 
 
-        <br>
+        <br><br>
 
 
         <button
             type="submit"
-            class="save-button"
+            class="btn btn-orange"
         >
             💾 LƯU TRẠNG THÁI
         </button>
@@ -400,13 +371,12 @@
     </form>
 
 
-    <!-- =================================================
-         QUAY LẠI
-         ================================================= -->
+    <br>
+
 
     <a
         href="/admin"
-        class="back-link"
+        class="link-orange"
     >
         ⬅ Quay lại danh sách
     </a>
