@@ -60,7 +60,48 @@ try:
         )
         """
     )
+# =====================================================
+# ĐỒNG BỘ SẢN PHẨM TỪ CONFIG.PY
+#
+# Sản phẩm mới sẽ được tạo với tồn kho = 0.
+#
+# ON CONFLICT DO NOTHING:
+# không làm thay đổi tồn kho sản phẩm đã tồn tại.
+# =====================================================
 
+for product in products:
+
+    product_id = product.get(
+        "id"
+    )
+
+
+    if product_id is None:
+
+        continue
+
+
+    cursor.execute(
+        """
+        INSERT INTO product_stock
+        (
+            product_id,
+            stock
+        )
+
+        VALUES
+        (
+            %s,
+            0
+        )
+
+        ON CONFLICT (product_id)
+        DO NOTHING
+        """,
+        (
+            product_id,
+        )
+    )
 
     # =====================================================
     # CÁC CỘT CŨ
