@@ -1,8 +1,8 @@
 from flask import (
-    Blueprint,
-    request,
-    redirect,
-    make_response
+Blueprint,
+request,
+redirect,
+make_response
 )
 
 from datetime import timedelta
@@ -15,20 +15,19 @@ from config import products
 from payos_service import payos
 
 from services.order_service import (
-    get_now_vn,
-    normalize_expires_at,
-    is_order_expired,
-    mark_order_expired
+get_now_vn,
+normalize_expires_at,
+is_order_expired,
+mark_order_expired
 )
 
 from services.stock_service import (
-    reserve_stock
+reserve_stock
 )
 
-
 submit_order_bp = Blueprint(
-    "submit_order",
-    __name__
+"submit_order",
+**name**
 )
 
 # =========================================================
@@ -42,6 +41,7 @@ submit_order_bp = Blueprint(
 methods=["POST"]
 )
 def submit():
+
 # =====================================================
 # LẤY PRODUCT ID
 # =====================================================
@@ -63,7 +63,7 @@ except (TypeError, ValueError):
 
 
 # =====================================================
-# TÌM SẢN PHẨM TRONG CONFIG
+# TÌM SẢN PHẨM
 # =====================================================
 
 product = next(
@@ -170,7 +170,7 @@ cursor = conn.cursor()
 try:
 
     # =================================================
-    # COOKIE ĐƠN HÀNG
+    # COOKIE
     # =================================================
 
     order_token = request.cookies.get(
@@ -224,10 +224,6 @@ try:
             )
 
 
-            # =========================================
-            # ĐƠN CŨ ĐÃ HẾT HẠN
-            # =========================================
-
             if is_order_expired(
                 candidate_expires_at
             ):
@@ -238,18 +234,13 @@ try:
                     candidate[0]
                 )
 
-
-            # =========================================
-            # ĐƠN CŨ VẪN CÒN HẠN
-            # =========================================
-
             else:
 
                 existing_order = candidate
 
 
     # =================================================
-    # KIỂM TRA ĐƠN THEO SỐ ĐIỆN THOẠI
+    # KIỂM TRA ĐƠN THEO SĐT
     # =================================================
 
     if (
@@ -294,10 +285,6 @@ try:
             )
 
 
-            # =========================================
-            # ĐƠN CŨ ĐÃ HẾT HẠN
-            # =========================================
-
             if is_order_expired(
                 candidate_expires_at
             ):
@@ -308,18 +295,13 @@ try:
                     candidate[0]
                 )
 
-
-            # =========================================
-            # ĐƠN CŨ VẪN CÒN HẠN
-            # =========================================
-
             else:
 
                 existing_order = candidate
 
 
     # =================================================
-    # ĐÃ CÓ ĐƠN CHƯA THANH TOÁN CÒN HẠN
+    # ĐÃ CÓ ĐƠN CÒN HẠN
     # =================================================
 
     if existing_order:
@@ -338,10 +320,6 @@ try:
             existing_order[4]
         )
 
-
-        # =============================================
-        # ĐÃ CÓ LINK PAYOS
-        # =============================================
 
         if old_payment_url:
 
@@ -375,23 +353,17 @@ try:
             return response
 
 
-        # =============================================
-        # CÓ ĐƠN NHƯNG CHƯA CÓ LINK PAYOS
-        # =============================================
-
         return f"""
         <!DOCTYPE html>
 
         <html lang="vi">
 
         <head>
-
             <meta charset="UTF-8">
 
             <title>
-                Đơn hàng đang chờ thanh toán
+                Đơn đang chờ thanh toán
             </title>
-
         </head>
 
         <body>
@@ -416,9 +388,7 @@ try:
 
 
     # =================================================
-    # GIỮ HÀNG / TRỪ TỒN KHO
-    #
-    # Chỉ tiếp tục tạo đơn nếu kho còn đủ.
+    # GIỮ / TRỪ TỒN KHO
     # =================================================
 
     stock_reserved = reserve_stock(
@@ -429,10 +399,12 @@ try:
 
 
     # =================================================
-    # KHÔNG ĐỦ TỒN KHO
+    # KHÔNG ĐỦ HÀNG
     # =================================================
 
     if not stock_reserved:
+
+        conn.rollback()
 
         return """
         <!DOCTYPE html>
@@ -440,13 +412,11 @@ try:
         <html lang="vi">
 
         <head>
-
             <meta charset="UTF-8">
 
             <title>
                 Không đủ hàng
             </title>
-
         </head>
 
         <body>
@@ -456,13 +426,8 @@ try:
             </h2>
 
             <p>
-                Số lượng bạn đặt hiện lớn hơn
-                số lượng sản phẩm còn trong kho.
-            </p>
-
-            <p>
-                Vui lòng quay lại trang chủ
-                và chọn số lượng nhỏ hơn.
+                Vui lòng quay lại và chọn
+                số lượng nhỏ hơn.
             </p>
 
             <a href="/">
@@ -476,7 +441,7 @@ try:
 
 
     # =================================================
-    # TẠO MÃ ĐƠN SHOP
+    # TẠO MÃ ĐƠN
     # =================================================
 
     cursor.execute(
@@ -496,14 +461,13 @@ try:
 
     order_id = last_id + 1
 
-
     order_code = (
         f"TGM{order_id:03d}"
     )
 
 
     # =================================================
-    # TOKEN ĐƠN HÀNG
+    # TOKEN
     # =================================================
 
     new_order_token = (
@@ -523,7 +487,7 @@ try:
 
 
     # =================================================
-    # THỜI GIAN HIỆN TẠI
+    # THỜI GIAN
     # =================================================
 
     created_time = get_now_vn()
@@ -549,8 +513,7 @@ try:
 
 
     # =================================================
-    # DATABASE LƯU GIỜ VIỆT NAM
-    # KHÔNG KÈM TIMEZONE
+    # DB LƯU GIỜ VIỆT NAM KHÔNG TIMEZONE
     # =================================================
 
     expires_at_db = (
@@ -561,16 +524,7 @@ try:
 
 
     # =================================================
-    # TẠO ĐƠN TRONG DATABASE
-    #
-    # QUAN TRỌNG:
-    #
-    # Chưa COMMIT ở đây.
-    #
-    # Nếu PayOS lỗi thì rollback toàn bộ:
-    #
-    # - INSERT order
-    # - trừ tồn kho
+    # INSERT ORDER
     # =================================================
 
     cursor.execute(
@@ -672,7 +626,7 @@ try:
 
 
     # =================================================
-    # TẠO LINK THANH TOÁN PAYOS
+    # TẠO PAYOS
     # =================================================
 
     payment_data = {
@@ -740,20 +694,21 @@ try:
 
 
     # =================================================
-    # COMMIT DUY NHẤT
+    # COMMIT
     #
-    # Đến đây mới xác nhận:
-    #
+    # Chỉ commit sau khi:
     # - trừ kho
-    # - tạo đơn
+    # - tạo order
+    # - tạo PayOS
     # - lưu payment URL
+    # đều thành công
     # =================================================
 
     conn.commit()
 
 
     # =================================================
-    # CHUYỂN SANG PAYOS
+    # REDIRECT PAYOS
     # =================================================
 
     response = make_response(
@@ -764,7 +719,7 @@ try:
 
 
     # =================================================
-    # LƯU TOKEN VÀO COOKIE
+    # COOKIE
     # =================================================
 
     response.set_cookie(
@@ -790,17 +745,10 @@ try:
 
 
 # =====================================================
-# CÓ LỖI
+# LỖI
 # =====================================================
 
 except Exception:
-
-    # =================================================
-    # ROLLBACK TOÀN BỘ
-    #
-    # Nếu đã reserve_stock nhưng PayOS lỗi:
-    # lượng hàng cũng được hoàn lại vì chưa commit.
-    # =================================================
 
     conn.rollback()
 
