@@ -1,6 +1,5 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from collections.abc import Mapping
 
 from services.stock_service import (
     release_stock
@@ -29,9 +28,6 @@ def get_now_vn():
 
 # =========================================================
 # CHUẨN HÓA EXPIRES_AT
-#
-# Database đang lưu giờ Việt Nam
-# dưới dạng TIMESTAMP không timezone.
 # =========================================================
 
 def normalize_expires_at(
@@ -44,8 +40,7 @@ def normalize_expires_at(
 
 
     # =====================================================
-    # TIMESTAMP KHÔNG CÓ TIMEZONE
-    # → coi là giờ Việt Nam
+    # Database lưu giờ Việt Nam nhưng không timezone
     # =====================================================
 
     if expires_at.tzinfo is None:
@@ -53,12 +48,6 @@ def normalize_expires_at(
         expires_at = expires_at.replace(
             tzinfo=VIETNAM_TZ
         )
-
-
-    # =====================================================
-    # ĐÃ CÓ TIMEZONE
-    # → đổi sang giờ Việt Nam
-    # =====================================================
 
     else:
 
@@ -83,20 +72,13 @@ def is_order_expired(
     )
 
 
-    # =====================================================
-    # KHÔNG CÓ THỜI GIAN HẾT HẠN
-    # → coi như đã hết hạn
-    # =====================================================
-
     if expires_at is None:
 
         return True
 
 
     return (
-        expires_at
-        <=
-        get_now_vn()
+        expires_at <= get_now_vn()
     )
 
 
@@ -121,37 +103,6 @@ def expires_to_timestamp(
     return int(
         expires_at.timestamp()
     )
-
-
-# =========================================================
-# LẤY GIÁ TRỊ TỪ DATABASE ROW
-#
-# Hỗ trợ:
-#
-# cursor thường:
-# tuple
-#
-# RealDictCursor:
-# RealDictRow
-# =========================================================
-
-def get_row_value(
-    row,
-    key,
-    index
-):
-
-    if isinstance(
-        row,
-        Mapping
-    ):
-
-        return row.get(
-            key
-        )
-
-
-    return row[index]
 
 
 # =========================================================
@@ -202,38 +153,10 @@ def mark_order_expired(
         return False
 
 
-    # =====================================================
-    # ĐỌC DỮ LIỆU
-    #
-    # Hỗ trợ cả tuple và RealDictRow
-    # =====================================================
-
-    product_id = get_row_value(
-        order,
-        "product_id",
-        0
-    )
-
-
-    quantity = get_row_value(
-        order,
-        "quantity",
-        1
-    )
-
-
-    stock_reserved = get_row_value(
-        order,
-        "stock_reserved",
-        2
-    )
-
-
-    status = get_row_value(
-        order,
-        "status",
-        3
-    )
+    product_id = order[0]
+    quantity = order[1]
+    stock_reserved = order[2]
+    status = order[3]
 
 
     # =====================================================
@@ -246,8 +169,7 @@ def mark_order_expired(
 
 
     # =====================================================
-    # NẾU ĐƠN ĐANG GIỮ HÀNG
-    # → HOÀN HÀNG VỀ KHO
+    # NẾU ĐANG GIỮ HÀNG → TRẢ HÀNG VỀ KHO
     # =====================================================
 
     if (
@@ -271,15 +193,12 @@ def mark_order_expired(
 
             raise RuntimeError(
                 "Không thể hoàn tồn kho cho đơn "
-                + str(
-                    order_code
-                )
+                + str(order_code)
             )
 
 
     # =====================================================
-    # ĐỔI TRẠNG THÁI
-    # + BỎ GIỮ HÀNG
+    # ĐỔI TRẠNG THÁI + BỎ GIỮ HÀNG
     # =====================================================
 
     cursor.execute(
