@@ -2,10 +2,18 @@
     id="pending-order-box"
 >
 
+    <!-- =================================================
+         TIÊU ĐỀ
+         ================================================= -->
+
     <h3>
         🔔 Bạn đang có đơn hàng chưa thanh toán
     </h3>
 
+
+    <!-- =================================================
+         MÃ ĐƠN
+         ================================================= -->
 
     <p>
 
@@ -18,6 +26,10 @@
     </p>
 
 
+    <!-- =================================================
+         SẢN PHẨM
+         ================================================= -->
+
     <p>
 
         Sản phẩm:
@@ -28,6 +40,10 @@
 
     </p>
 
+
+    <!-- =================================================
+         SỐ LƯỢNG
+         ================================================= -->
 
     <p>
 
@@ -40,6 +56,10 @@
     </p>
 
 
+    <!-- =================================================
+         THỜI GIAN CÒN LẠI
+         ================================================= -->
+
     <p>
 
         Thời gian còn lại:
@@ -51,12 +71,20 @@
     </p>
 
 
+    <!-- =================================================
+         HẾT HẠN
+         ================================================= -->
+
     <p id="expired-message">
 
         Đơn hàng đã hết hạn thanh toán.
 
     </p>
 
+
+    <!-- =================================================
+         TIẾP TỤC THANH TOÁN
+         ================================================= -->
 
     <button
         id="continue-payment-button"
@@ -68,3 +96,457 @@
     </button>
 
 </div>
+
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        // =================================================
+        // ELEMENT
+        // =================================================
+
+        const pendingBox =
+            document.getElementById(
+                "pending-order-box"
+            );
+
+
+        const orderCode =
+            document.getElementById(
+                "pending-order-code"
+            );
+
+
+        const productName =
+            document.getElementById(
+                "pending-order-product"
+            );
+
+
+        const quantity =
+            document.getElementById(
+                "pending-order-quantity"
+            );
+
+
+        const statusElement =
+            document.getElementById(
+                "pending-order-status"
+            );
+
+
+        const continueButton =
+            document.getElementById(
+                "continue-payment-button"
+            );
+
+
+        const expiredMessage =
+            document.getElementById(
+                "expired-message"
+            );
+
+
+        let countdownTimer = null;
+
+
+        // =================================================
+        // KHÓA NÚT PRE-ORDER
+        // =================================================
+
+        function disablePreorderButtons() {
+
+            const buttons =
+                document.querySelectorAll(
+                    ".btn-preorder"
+                );
+
+
+            buttons.forEach(
+                function(button) {
+
+                    button.classList.add(
+                        "disabled"
+                    );
+
+
+                    button.setAttribute(
+                        "aria-disabled",
+                        "true"
+                    );
+
+
+                    button.dataset.originalText =
+                        button.dataset.originalText
+                        || button.textContent.trim();
+
+
+                    button.textContent =
+                        "ĐANG CÓ ĐƠN CHỜ THANH TOÁN";
+
+                }
+            );
+
+        }
+
+
+        // =================================================
+        // MỞ LẠI NÚT PRE-ORDER
+        // =================================================
+
+        function enablePreorderButtons() {
+
+            const buttons =
+                document.querySelectorAll(
+                    ".btn-preorder"
+                );
+
+
+            buttons.forEach(
+                function(button) {
+
+                    button.classList.remove(
+                        "disabled"
+                    );
+
+
+                    button.removeAttribute(
+                        "aria-disabled"
+                    );
+
+
+                    button.textContent =
+                        button.dataset.originalText
+                        || "ĐẶT PRE-ORDER";
+
+                }
+            );
+
+        }
+
+
+        // =================================================
+        // FORMAT COUNTDOWN
+        // =================================================
+
+        function formatTime(
+            seconds
+        ) {
+
+            if (seconds < 0) {
+
+                seconds = 0;
+
+            }
+
+
+            const minutes =
+                Math.floor(
+                    seconds / 60
+                );
+
+
+            const remainingSeconds =
+                seconds % 60;
+
+
+            return (
+                String(
+                    minutes
+                ).padStart(
+                    2,
+                    "0"
+                )
+                +
+                ":"
+                +
+                String(
+                    remainingSeconds
+                ).padStart(
+                    2,
+                    "0"
+                )
+            );
+
+        }
+
+
+        // =================================================
+        // XỬ LÝ HẾT HẠN
+        // =================================================
+
+        function handleExpired() {
+
+            if (countdownTimer) {
+
+                clearInterval(
+                    countdownTimer
+                );
+
+                countdownTimer = null;
+
+            }
+
+
+            statusElement.textContent =
+                "00:00";
+
+
+            statusElement.classList.add(
+                "expired"
+            );
+
+
+            expiredMessage.style.display =
+                "block";
+
+
+            continueButton.style.display =
+                "none";
+
+
+            enablePreorderButtons();
+
+
+            // =================================================
+            // GỌI API LẠI
+            //
+            // Backend sẽ đổi đơn sang
+            // "Hết hạn thanh toán"
+            // và hoàn tồn kho.
+            // =================================================
+
+            fetch(
+                "/api/pending-order",
+                {
+                    method: "GET",
+                    credentials: "same-origin",
+                    cache: "no-store"
+                }
+            )
+            .catch(
+                function(error) {
+
+                    console.error(
+                        "Không thể cập nhật đơn hết hạn:",
+                        error
+                    );
+
+                }
+            );
+
+        }
+
+
+        // =================================================
+        // BẮT ĐẦU COUNTDOWN
+        // =================================================
+
+        function startCountdown(
+            expiresAt
+        ) {
+
+            if (!expiresAt) {
+
+                return;
+
+            }
+
+
+            const expiresMilliseconds =
+                Number(
+                    expiresAt
+                )
+                * 1000;
+
+
+            function updateCountdown() {
+
+                const now =
+                    Date.now();
+
+
+                const remainingMilliseconds =
+                    expiresMilliseconds
+                    -
+                    now;
+
+
+                const remainingSeconds =
+                    Math.ceil(
+                        remainingMilliseconds
+                        / 1000
+                    );
+
+
+                if (remainingSeconds <= 0) {
+
+                    handleExpired();
+
+                    return;
+
+                }
+
+
+                statusElement.classList.remove(
+                    "expired"
+                );
+
+
+                statusElement.textContent =
+                    formatTime(
+                        remainingSeconds
+                    );
+
+            }
+
+
+            updateCountdown();
+
+
+            countdownTimer =
+                setInterval(
+                    updateCountdown,
+                    1000
+                );
+
+        }
+
+
+        // =================================================
+        // KIỂM TRA ĐƠN ĐANG CHỜ
+        // =================================================
+
+        fetch(
+            "/api/pending-order",
+            {
+                method: "GET",
+                credentials: "same-origin",
+                cache: "no-store"
+            }
+        )
+        .then(
+            function(response) {
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Không thể kiểm tra đơn hàng"
+                    );
+
+                }
+
+
+                return response.json();
+
+            }
+        )
+        .then(
+            function(data) {
+
+                // =========================================
+                // KHÔNG CÓ ĐƠN
+                // =========================================
+
+                if (!data.has_order) {
+
+                    pendingBox.style.display =
+                        "none";
+
+
+                    enablePreorderButtons();
+
+
+                    return;
+
+                }
+
+
+                // =========================================
+                // CÓ ĐƠN CHỜ THANH TOÁN
+                // =========================================
+
+                pendingBox.style.display =
+                    "block";
+
+
+                orderCode.textContent =
+                    data.order_code
+                    || "--";
+
+
+                productName.textContent =
+                    data.product_name
+                    || "--";
+
+
+                quantity.textContent =
+                    data.quantity
+                    || "--";
+
+
+                expiredMessage.style.display =
+                    "none";
+
+
+                continueButton.style.display =
+                    "inline-block";
+
+
+                disablePreorderButtons();
+
+
+                // =========================================
+                // TIẾP TỤC THANH TOÁN
+                // =========================================
+
+                continueButton.onclick =
+                    function() {
+
+                        if (
+                            data.payment_url
+                        ) {
+
+                            window.location.href =
+                                data.payment_url;
+
+                        }
+
+                    };
+
+
+                // =========================================
+                // COUNTDOWN
+                // =========================================
+
+                startCountdown(
+                    data.expires_at
+                );
+
+            }
+        )
+        .catch(
+            function(error) {
+
+                console.error(
+                    "Lỗi pending order:",
+                    error
+                );
+
+
+                pendingBox.style.display =
+                    "none";
+
+
+                enablePreorderButtons();
+
+            }
+        );
+
+    }
+);
+
+</script>
