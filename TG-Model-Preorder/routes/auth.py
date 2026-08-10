@@ -30,7 +30,7 @@ ADMIN_USERNAME = os.environ.get(
 
 ADMIN_PASSWORD = os.environ.get(
     "ADMIN_PASSWORD",
-    "123456"
+    "04082002z"
 )
 
 
