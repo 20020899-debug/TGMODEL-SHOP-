@@ -493,3 +493,65 @@ select.form-control {
     border-radius: 6px;
     background: #f5f5f5;
 }
+/* =================================================
+   ẢNH SẢN PHẨM - DANH SÁCH
+   ================================================= */
+
+.product-thumb {
+
+    width: 80px;
+
+    height: 80px;
+
+    object-fit: contain;
+
+    border-radius: 6px;
+
+    background: #f5f5f5;
+
+    border: 1px solid #ddd;
+}
+
+
+/* =================================================
+   ẢNH SẢN PHẨM - PREVIEW KHI SỬA
+   ================================================= */
+
+.product-preview {
+
+    width: 220px;
+
+    max-width: 100%;
+
+    max-height: 220px;
+
+    object-fit: contain;
+
+    border-radius: 8px;
+
+    background: #f5f5f5;
+
+    border: 1px solid #ddd;
+
+    padding: 5px;
+
+    box-sizing: border-box;
+}
+
+
+.product-preview-hidden {
+
+    display: none;
+}
+
+
+/* =================================================
+   FORM XÓA
+   ================================================= */
+
+.delete-form {
+
+    display: inline-block;
+
+    margin-top: 8px;
+}
