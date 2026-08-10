@@ -1,6 +1,10 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from services.stock_service import (
+    release_stock
+)
+
 
 # =========================================================
 # MÚI GIỜ VIỆT NAM
@@ -36,8 +40,7 @@ def normalize_expires_at(
 
 
     # =====================================================
-    # DB đang lưu TIMESTAMP không timezone
-    # nhưng quy ước giá trị là giờ Việt Nam
+    # Database lưu giờ Việt Nam nhưng không timezone
     # =====================================================
 
     if expires_at.tzinfo is None:
@@ -45,7 +48,6 @@ def normalize_expires_at(
         expires_at = expires_at.replace(
             tzinfo=VIETNAM_TZ
         )
-
 
     else:
 
@@ -75,11 +77,8 @@ def is_order_expired(
         return True
 
 
-    now_vn = get_now_vn()
-
-
     return (
-        expires_at <= now_vn
+        expires_at <= get_now_vn()
     )
 
 
@@ -107,7 +106,9 @@ def expires_to_timestamp(
 
 
 # =========================================================
-# TỰ ĐỘNG CHUYỂN ĐƠN HẾT HẠN
+# CHUYỂN ĐƠN THÀNH HẾT HẠN
+#
+# Đồng thời hoàn tồn kho nếu đơn đang giữ hàng.
 # =========================================================
 
 def mark_order_expired(
@@ -116,11 +117,97 @@ def mark_order_expired(
     order_code
 ):
 
+    # =====================================================
+    # LẤY THÔNG TIN ĐƠN
+    # =====================================================
+
+    cursor.execute(
+        """
+        SELECT
+            product_id,
+            quantity,
+            stock_reserved,
+            status
+
+        FROM orders
+
+        WHERE order_code=%s
+
+        LIMIT 1
+        """,
+        (
+            order_code,
+        )
+    )
+
+
+    order = cursor.fetchone()
+
+
+    # =====================================================
+    # KHÔNG TÌM THẤY ĐƠN
+    # =====================================================
+
+    if order is None:
+
+        return False
+
+
+    product_id = order[0]
+    quantity = order[1]
+    stock_reserved = order[2]
+    status = order[3]
+
+
+    # =====================================================
+    # CHỈ XỬ LÝ ĐƠN CHƯA THANH TOÁN
+    # =====================================================
+
+    if status != "Chưa thanh toán":
+
+        return False
+
+
+    # =====================================================
+    # NẾU ĐANG GIỮ HÀNG → TRẢ HÀNG VỀ KHO
+    # =====================================================
+
+    if (
+        stock_reserved
+        and
+        product_id is not None
+        and
+        quantity is not None
+        and
+        quantity > 0
+    ):
+
+        released = release_stock(
+            cursor,
+            product_id,
+            quantity
+        )
+
+
+        if not released:
+
+            raise RuntimeError(
+                "Không thể hoàn tồn kho cho đơn "
+                + str(order_code)
+            )
+
+
+    # =====================================================
+    # ĐỔI TRẠNG THÁI + BỎ GIỮ HÀNG
+    # =====================================================
+
     cursor.execute(
         """
         UPDATE orders
 
-        SET status=%s
+        SET
+            status=%s,
+            stock_reserved=FALSE
 
         WHERE order_code=%s
         AND status=%s
@@ -133,4 +220,11 @@ def mark_order_expired(
     )
 
 
+    # =====================================================
+    # COMMIT
+    # =====================================================
+
     conn.commit()
+
+
+    return True
