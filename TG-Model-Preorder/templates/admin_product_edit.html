@@ -171,6 +171,68 @@
 
 
         <!-- =============================================
+             LINK ẢNH
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Link ảnh sản phẩm
+            </label>
+
+            <input
+                type="url"
+                name="image_url"
+                id="image-url"
+                class="form-control"
+                value="{{ product['image_url'] or '' }}"
+                placeholder="https://..."
+            >
+
+        </div>
+
+
+        <!-- =============================================
+             PREVIEW ẢNH
+             ============================================= -->
+
+        <div class="form-row">
+
+            <span class="form-label">
+                Ảnh hiện tại
+            </span>
+
+
+            {% if product["image_url"] %}
+
+                <img
+                    id="image-preview"
+                    src="{{ product['image_url'] }}"
+                    alt="{{ product['name'] }}"
+                    class="product-preview"
+                >
+
+            {% else %}
+
+                <img
+                    id="image-preview"
+                    src=""
+                    alt="Preview sản phẩm"
+                    class="product-preview product-preview-hidden"
+                >
+
+                <span
+                    id="no-image-message"
+                >
+                    Chưa có ảnh
+                </span>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- =============================================
              STOCK
              ============================================= -->
 
@@ -253,6 +315,82 @@
 
 
 </div>
+
+
+<!-- =====================================================
+     PREVIEW ẢNH KHI ĐỔI URL
+     ===================================================== -->
+
+<script>
+
+const imageUrlInput =
+    document.getElementById(
+        "image-url"
+    );
+
+
+const imagePreview =
+    document.getElementById(
+        "image-preview"
+    );
+
+
+const noImageMessage =
+    document.getElementById(
+        "no-image-message"
+    );
+
+
+imageUrlInput.addEventListener(
+    "input",
+    function() {
+
+        const url =
+            this.value.trim();
+
+
+        if (url) {
+
+            imagePreview.src =
+                url;
+
+
+            imagePreview.classList.remove(
+                "product-preview-hidden"
+            );
+
+
+            if (noImageMessage) {
+
+                noImageMessage.style.display =
+                    "none";
+
+            }
+
+        } else {
+
+            imagePreview.src =
+                "";
+
+
+            imagePreview.classList.add(
+                "product-preview-hidden"
+            );
+
+
+            if (noImageMessage) {
+
+                noImageMessage.style.display =
+                    "inline";
+
+            }
+
+        }
+
+    }
+);
+
+</script>
 
 
 </body>
