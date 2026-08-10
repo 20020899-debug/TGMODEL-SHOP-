@@ -9,8 +9,8 @@ products = [
         "id": 1,
         "brand": "IN ERA+",
         "name": "IN ERA+ TR-2243EX AZURE FALCON 1/72",
-        "price": 1300000,
-        "deposit": 10000,
+        "price": 10000,
+        "deposit": 5000,
         "eta": "Tháng 9/2026"
     },
 
