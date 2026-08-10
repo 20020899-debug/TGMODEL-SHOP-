@@ -11,7 +11,6 @@ import time
 import secrets
 
 from database import get_db
-from config import products
 from payos_service import payos
 
 from services.order_service import (
@@ -43,7 +42,7 @@ submit_order_bp = Blueprint(
 def submit():
 
     # =====================================================
-    # LẤY PRODUCT ID
+    # PRODUCT ID
     # =====================================================
 
     try:
@@ -59,28 +58,6 @@ def submit():
         return (
             "Sản phẩm không hợp lệ",
             400
-        )
-
-
-    # =====================================================
-    # TÌM SẢN PHẨM
-    # =====================================================
-
-    product = next(
-        (
-            p
-            for p in products
-            if p["id"] == product_id
-        ),
-        None
-    )
-
-
-    if product is None:
-
-        return (
-            "Không tìm thấy sản phẩm",
-            404
         )
 
 
@@ -138,9 +115,6 @@ def submit():
 
     # =====================================================
     # HÌNH THỨC THANH TOÁN
-    #
-    # deposit = cọc một phần
-    # full    = thanh toán toàn bộ
     # =====================================================
 
     payment_type = request.form.get(
@@ -179,7 +153,7 @@ def submit():
 
 
     # =====================================================
-    # GIỚI HẠN SỐ LƯỢNG 1 - 2
+    # GIỚI HẠN 1 - 2 SẢN PHẨM
     # =====================================================
 
     if quantity < 1 or quantity > 2:
@@ -206,7 +180,7 @@ def submit():
             </h2>
 
             <p>
-                Vui lòng quay lại và chọn số lượng từ 1 đến 2.
+                Vui lòng chọn số lượng từ 1 đến 2.
             </p>
 
             <a href="/">
@@ -220,33 +194,86 @@ def submit():
 
 
     # =====================================================
-    # TÍNH SỐ TIỀN THANH TOÁN
-    # =====================================================
-
-    if payment_type == "full":
-
-        payment_amount = (
-            product["price"]
-            * quantity
-        )
-
-    else:
-
-        payment_amount = (
-            product["deposit"]
-            * quantity
-        )
-
-
-    # =====================================================
     # DATABASE
     # =====================================================
 
     conn = get_db()
+
     cursor = conn.cursor()
 
 
     try:
+
+        # =================================================
+        # LẤY SẢN PHẨM TRỰC TIẾP TỪ DATABASE
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                name,
+                brand,
+                price,
+                deposit,
+                eta,
+                active
+
+            FROM products
+
+            WHERE id=%s
+            AND active=TRUE
+
+            LIMIT 1
+            """,
+            (
+                product_id,
+            )
+        )
+
+
+        product = cursor.fetchone()
+
+
+        # =================================================
+        # KHÔNG TÌM THẤY SẢN PHẨM
+        # =================================================
+
+        if product is None:
+
+            return (
+                "Không tìm thấy sản phẩm",
+                404
+            )
+
+
+        product_name = product[1]
+
+        product_brand = product[2]
+
+        product_price = product[3]
+
+        product_deposit = product[4]
+
+
+        # =================================================
+        # TÍNH SỐ TIỀN THANH TOÁN
+        # =================================================
+
+        if payment_type == "full":
+
+            payment_amount = (
+                product_price
+                * quantity
+            )
+
+        else:
+
+            payment_amount = (
+                product_deposit
+                * quantity
+            )
+
 
         # =================================================
         # COOKIE
@@ -523,7 +550,7 @@ def submit():
 
 
         # =================================================
-        # TẠO MÃ ĐƠN SHOP
+        # TẠO MÃ ĐƠN
         # =================================================
 
         cursor.execute(
@@ -539,9 +566,14 @@ def submit():
         )
 
 
-        last_id = cursor.fetchone()[0]
+        last_id = (
+            cursor.fetchone()[0]
+        )
 
-        order_id = last_id + 1
+
+        order_id = (
+            last_id + 1
+        )
 
 
         order_code = (
@@ -585,8 +617,6 @@ def submit():
 
         # =================================================
         # HẠN THANH TOÁN
-        #
-        # Muốn đổi thời gian chỉ cần sửa minutes=15
         # =================================================
 
         expires_time = (
@@ -597,10 +627,6 @@ def submit():
         )
 
 
-        # =================================================
-        # DB LƯU GIỜ VIỆT NAM KHÔNG TIMEZONE
-        # =================================================
-
         expires_at_db = (
             expires_time.replace(
                 tzinfo=None
@@ -610,6 +636,11 @@ def submit():
 
         # =================================================
         # INSERT ORDER
+        #
+        # LƯU SNAPSHOT TÊN / GIÁ / CỌC
+        #
+        # Sau này Admin đổi giá sản phẩm thì đơn cũ
+        # vẫn giữ đúng giá tại thời điểm khách đặt.
         # =================================================
 
         cursor.execute(
@@ -666,8 +697,7 @@ def submit():
 
                 %s,%s,
 
-                %s,
-                %s,
+                %s,%s,
 
                 %s,%s,
 
@@ -693,11 +723,11 @@ def submit():
 
                 product_id,
 
-                product["name"],
-                product["brand"],
+                product_name,
+                product_brand,
 
-                product["price"],
-                product["deposit"],
+                product_price,
+                product_deposit,
 
                 payment_type,
                 "Chưa thanh toán",
@@ -714,7 +744,7 @@ def submit():
 
 
         # =================================================
-        # TẠO PAYOS
+        # PAYOS
         # =================================================
 
         payment_data = {
