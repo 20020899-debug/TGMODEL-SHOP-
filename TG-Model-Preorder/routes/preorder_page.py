@@ -1,7 +1,12 @@
-from flask import Blueprint, request, render_template
+from flask import (
+    Blueprint,
+    request,
+    render_template
+)
+
+from psycopg2.extras import RealDictCursor
 
 from database import get_db
-from config import products
 
 from services.order_service import (
     normalize_expires_at,
@@ -26,46 +31,94 @@ preorder_page_bp = Blueprint(
 def preorder(product_id):
 
     # =====================================================
-    # TÌM SẢN PHẨM
+    # DATABASE
     # =====================================================
 
-    product = next(
-        (
-            p
-            for p in products
-            if p["id"] == product_id
-        ),
-        None
+    conn = get_db()
+
+    cursor = conn.cursor(
+        cursor_factory=RealDictCursor
     )
 
 
-    if product is None:
+    try:
 
-        return (
-            "Không tìm thấy sản phẩm",
-            404
+        # =================================================
+        # TÌM SẢN PHẨM TRỰC TIẾP TỪ DATABASE
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                p.id,
+                p.name,
+                p.brand,
+                p.price,
+                p.deposit,
+                p.eta,
+                p.active,
+
+                COALESCE(
+                    ps.stock,
+                    0
+                ) AS stock
+
+            FROM products p
+
+            LEFT JOIN product_stock ps
+                ON ps.product_id = p.id
+
+            WHERE p.id=%s
+            AND p.active=TRUE
+
+            LIMIT 1
+            """,
+            (
+                product_id,
+            )
         )
 
 
-    # =====================================================
-    # KIỂM TRA ĐƠN CŨ THEO COOKIE
-    # =====================================================
-
-    order_token = request.cookies.get(
-        "order_token"
-    )
+        product = cursor.fetchone()
 
 
-    existing_order = None
+        # =================================================
+        # KHÔNG TÌM THẤY SẢN PHẨM
+        # =================================================
+
+        if product is None:
+
+            return (
+                "Không tìm thấy sản phẩm",
+                404
+            )
 
 
-    if order_token:
+        # =================================================
+        # KIỂM TRA TỒN KHO
+        # =================================================
 
-        conn = get_db()
-        cursor = conn.cursor()
+        if product["stock"] <= 0:
+
+            return (
+                "Sản phẩm hiện đã hết hàng",
+                400
+            )
 
 
-        try:
+        # =================================================
+        # KIỂM TRA ĐƠN CŨ THEO COOKIE
+        # =================================================
+
+        order_token = request.cookies.get(
+            "order_token"
+        )
+
+
+        existing_order = None
+
+
+        if order_token:
 
             cursor.execute(
                 """
@@ -99,13 +152,15 @@ def preorder(product_id):
 
             if order:
 
-                expires_at = normalize_expires_at(
-                    order[5]
+                expires_at = (
+                    normalize_expires_at(
+                        order["expires_at"]
+                    )
                 )
 
 
                 # =========================================
-                # ĐÃ HẾT HẠN
+                # ĐƠN ĐÃ HẾT HẠN
                 # =========================================
 
                 if is_order_expired(
@@ -115,12 +170,12 @@ def preorder(product_id):
                     mark_order_expired(
                         cursor,
                         conn,
-                        order[0]
+                        order["order_code"]
                     )
 
 
                 # =========================================
-                # CÒN HẠN
+                # ĐƠN VẪN CÒN HẠN
                 # =========================================
 
                 else:
@@ -128,18 +183,19 @@ def preorder(product_id):
                     existing_order = order
 
 
-        finally:
+        # =================================================
+        # HIỂN THỊ FORM
+        # =================================================
 
-            cursor.close()
-            conn.close()
+        return render_template(
+            "preorder.html",
+            product=product,
+            existing_order=existing_order
+        )
 
 
-    # =====================================================
-    # HIỂN THỊ FORM
-    # =====================================================
+    finally:
 
-    return render_template(
-        "preorder.html",
-        product=product,
-        existing_order=existing_order
-    )
+        cursor.close()
+
+        conn.close()
