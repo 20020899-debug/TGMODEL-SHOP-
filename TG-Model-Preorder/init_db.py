@@ -1,5 +1,4 @@
 from database import get_db
-from config import products
 
 
 # =========================================================
@@ -131,9 +130,6 @@ try:
 
     # =====================================================
     # TẠO BẢNG PRODUCTS
-    #
-    # Từ đây sản phẩm sẽ dần được quản lý bằng PostgreSQL
-    # thay vì phải sửa config.py mỗi lần.
     # =====================================================
 
     cursor.execute(
@@ -166,7 +162,77 @@ try:
 
 
     # =====================================================
-    # BẢNG TỒN KHO
+    # BỔ SUNG CỘT PRODUCTS CHO DATABASE CŨ
+    # =====================================================
+
+    cursor.execute(
+        """
+        ALTER TABLE products
+
+        ADD COLUMN IF NOT EXISTS
+            name TEXT
+        """
+    )
+
+
+    cursor.execute(
+        """
+        ALTER TABLE products
+
+        ADD COLUMN IF NOT EXISTS
+            brand TEXT
+        """
+    )
+
+
+    cursor.execute(
+        """
+        ALTER TABLE products
+
+        ADD COLUMN IF NOT EXISTS
+            price INTEGER
+            NOT NULL
+            DEFAULT 0
+        """
+    )
+
+
+    cursor.execute(
+        """
+        ALTER TABLE products
+
+        ADD COLUMN IF NOT EXISTS
+            deposit INTEGER
+            NOT NULL
+            DEFAULT 0
+        """
+    )
+
+
+    cursor.execute(
+        """
+        ALTER TABLE products
+
+        ADD COLUMN IF NOT EXISTS
+            eta TEXT
+        """
+    )
+
+
+    cursor.execute(
+        """
+        ALTER TABLE products
+
+        ADD COLUMN IF NOT EXISTS
+            active BOOLEAN
+            NOT NULL
+            DEFAULT TRUE
+        """
+    )
+
+
+    # =====================================================
+    # TẠO BẢNG TỒN KHO
     # =====================================================
 
     cursor.execute(
@@ -187,128 +253,52 @@ try:
 
 
     # =====================================================
-    # MIGRATE SẢN PHẨM TỪ CONFIG.PY
-    #
-    # Chỉ thêm sản phẩm nếu ID chưa tồn tại.
-    #
-    # Nếu sau này sửa sản phẩm trong Admin,
-    # chạy lại init_db.py cũng KHÔNG ghi đè dữ liệu.
+    # BỔ SUNG STOCK CHO DATABASE CŨ
     # =====================================================
 
-    for product in products:
+    cursor.execute(
+        """
+        ALTER TABLE product_stock
 
-        product_id = product.get(
-            "id"
+        ADD COLUMN IF NOT EXISTS
+            stock INTEGER
+            NOT NULL
+            DEFAULT 0
+        """
+    )
+
+
+    # =====================================================
+    # ĐẢM BẢO MỌI PRODUCT ĐỀU CÓ DÒNG STOCK
+    #
+    # Sản phẩm tạo từ Admin về sau đã có stock.
+    # Đoạn này chỉ dùng để vá nếu có product nào bị thiếu.
+    # =====================================================
+
+    cursor.execute(
+        """
+        INSERT INTO product_stock
+        (
+            product_id,
+            stock
         )
 
+        SELECT
+            p.id,
+            0
 
-        if product_id is None:
+        FROM products p
 
-            continue
+        LEFT JOIN product_stock ps
+            ON ps.product_id = p.id
 
-
-        # =================================================
-        # THÊM VÀO PRODUCTS
-        # =================================================
-
-        cursor.execute(
-            """
-            INSERT INTO products
-            (
-                id,
-                name,
-                brand,
-                price,
-                deposit,
-                eta,
-                active
-            )
-
-            VALUES
-            (
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                TRUE
-            )
-
-            ON CONFLICT (id)
-            DO NOTHING
-            """,
-            (
-                product_id,
-
-                product.get(
-                    "name",
-                    ""
-                ),
-
-                product.get(
-                    "brand",
-                    ""
-                ),
-
-                product.get(
-                    "price",
-                    0
-                ),
-
-                product.get(
-                    "deposit",
-                    0
-                ),
-
-                product.get(
-                    "eta",
-                    ""
-                )
-            )
-        )
-
-
-        # =================================================
-        # TẠO TỒN KHO CHO PRODUCT
-        #
-        # Nếu đã có stock thì giữ nguyên.
-        # =================================================
-
-        cursor.execute(
-            """
-            INSERT INTO product_stock
-            (
-                product_id,
-                stock
-            )
-
-            VALUES
-            (
-                %s,
-                0
-            )
-
-            ON CONFLICT (product_id)
-            DO NOTHING
-            """,
-            (
-                product_id,
-            )
-        )
+        WHERE ps.product_id IS NULL
+        """
+    )
 
 
     # =====================================================
     # ĐỒNG BỘ SEQUENCE PRODUCTS.ID
-    #
-    # Ví dụ config hiện có:
-    #
-    # 1
-    # 2
-    # 3
-    #
-    # thì khi Admin thêm sản phẩm tiếp theo,
-    # PostgreSQL sẽ sinh ID 4.
     # =====================================================
 
     cursor.execute(
@@ -318,6 +308,7 @@ try:
                 'products',
                 'id'
             ),
+
             GREATEST(
                 COALESCE(
                     (
@@ -328,6 +319,7 @@ try:
                 ),
                 1
             ),
+
             TRUE
         )
         """
@@ -391,6 +383,20 @@ try:
 
 
     # =====================================================
+    # INDEX PRODUCTS - NAME
+    # =====================================================
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+            idx_products_name
+
+        ON products(name)
+        """
+    )
+
+
+    # =====================================================
     # COMMIT
     # =====================================================
 
@@ -414,6 +420,10 @@ try:
     )
 
     print(
+        "product_stock: OK"
+    )
+
+    print(
         "payment_type: OK"
     )
 
@@ -426,15 +436,11 @@ try:
     )
 
     print(
-        "product_stock: OK"
-    )
-
-    print(
-        "Migrate sản phẩm từ config.py: OK"
-    )
-
-    print(
         "Product ID sequence: OK"
+    )
+
+    print(
+        "Không còn phụ thuộc config.py"
     )
 
     print(
