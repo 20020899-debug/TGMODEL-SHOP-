@@ -137,6 +137,27 @@ def submit():
 
 
     # =====================================================
+    # HÌNH THỨC THANH TOÁN
+    #
+    # deposit = cọc một phần
+    # full    = thanh toán toàn bộ
+    # =====================================================
+
+    payment_type = request.form.get(
+        "payment_type",
+        "deposit"
+    ).strip()
+
+
+    if payment_type not in (
+        "deposit",
+        "full"
+    ):
+
+        payment_type = "deposit"
+
+
+    # =====================================================
     # SỐ LƯỢNG
     # =====================================================
 
@@ -157,6 +178,25 @@ def submit():
     if quantity < 1:
 
         quantity = 1
+
+
+    # =====================================================
+    # TÍNH SỐ TIỀN PAYOS
+    # =====================================================
+
+    if payment_type == "full":
+
+        payment_amount = (
+            product["price"]
+            * quantity
+        )
+
+    else:
+
+        payment_amount = (
+            product["deposit"]
+            * quantity
+        )
 
 
     # =====================================================
@@ -224,6 +264,10 @@ def submit():
                 )
 
 
+                # =========================================
+                # ĐƠN ĐÃ HẾT HẠN
+                # =========================================
+
                 if is_order_expired(
                     candidate_expires_at
                 ):
@@ -234,13 +278,18 @@ def submit():
                         candidate[0]
                     )
 
+
+                # =========================================
+                # ĐƠN VẪN CÒN HẠN
+                # =========================================
+
                 else:
 
                     existing_order = candidate
 
 
         # =================================================
-        # KIỂM TRA ĐƠN THEO SĐT
+        # KIỂM TRA ĐƠN THEO SỐ ĐIỆN THOẠI
         # =================================================
 
         if (
@@ -285,6 +334,10 @@ def submit():
                 )
 
 
+                # =========================================
+                # ĐƠN ĐÃ HẾT HẠN
+                # =========================================
+
                 if is_order_expired(
                     candidate_expires_at
                 ):
@@ -294,6 +347,11 @@ def submit():
                         conn,
                         candidate[0]
                     )
+
+
+                # =========================================
+                # ĐƠN VẪN CÒN HẠN
+                # =========================================
 
                 else:
 
@@ -320,6 +378,10 @@ def submit():
                 existing_order[4]
             )
 
+
+            # =============================================
+            # ĐÃ CÓ LINK PAYOS
+            # =============================================
 
             if old_payment_url:
 
@@ -353,13 +415,25 @@ def submit():
                 return response
 
 
+            # =============================================
+            # CÓ ĐƠN NHƯNG CHƯA CÓ LINK PAYOS
+            # =============================================
+
             return f"""
             <!DOCTYPE html>
+
             <html lang="vi">
+
             <head>
+
                 <meta charset="UTF-8">
-                <title>Đơn đang chờ thanh toán</title>
+
+                <title>
+                    Đơn đang chờ thanh toán
+                </title>
+
             </head>
+
             <body>
 
                 <h2>
@@ -376,6 +450,7 @@ def submit():
                 </a>
 
             </body>
+
             </html>
             """, 400
 
@@ -401,11 +476,19 @@ def submit():
 
             return """
             <!DOCTYPE html>
+
             <html lang="vi">
+
             <head>
+
                 <meta charset="UTF-8">
-                <title>Không đủ hàng</title>
+
+                <title>
+                    Không đủ hàng
+                </title>
+
             </head>
+
             <body>
 
                 <h2>
@@ -421,12 +504,13 @@ def submit():
                 </a>
 
             </body>
+
             </html>
             """, 400
 
 
         # =================================================
-        # TẠO MÃ ĐƠN
+        # TẠO MÃ ĐƠN SHOP
         # =================================================
 
         cursor.execute(
@@ -445,6 +529,7 @@ def submit():
         last_id = cursor.fetchone()[0]
 
         order_id = last_id + 1
+
 
         order_code = (
             f"TGM{order_id:03d}"
@@ -498,7 +583,7 @@ def submit():
 
 
         # =================================================
-        # DB LƯU GIỜ VIỆT NAM KHÔNG TIMEZONE
+        # DATABASE LƯU GIỜ VN KHÔNG TIMEZONE
         # =================================================
 
         expires_at_db = (
@@ -538,6 +623,7 @@ def submit():
                 price,
                 deposit,
 
+                payment_type,
                 status,
 
                 created_at,
@@ -565,6 +651,7 @@ def submit():
 
                 %s,%s,
 
+                %s,
                 %s,
 
                 %s,%s,
@@ -597,6 +684,7 @@ def submit():
                 product["price"],
                 product["deposit"],
 
+                payment_type,
                 "Chưa thanh toán",
 
                 created_at,
@@ -620,8 +708,7 @@ def submit():
                 payos_order_code,
 
             "amount":
-                product["deposit"]
-                * quantity,
+                payment_amount,
 
             "description":
                 order_code,
@@ -720,12 +807,20 @@ def submit():
         return response
 
 
+    # =====================================================
+    # LỖI
+    # =====================================================
+
     except Exception:
 
         conn.rollback()
 
         raise
 
+
+    # =====================================================
+    # ĐÓNG DATABASE
+    # =====================================================
 
     finally:
 
