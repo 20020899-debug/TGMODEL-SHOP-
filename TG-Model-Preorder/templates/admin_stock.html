@@ -14,136 +14,10 @@
         Quản lý tồn kho
     </title>
 
-
-    <style>
-
-        body {
-
-            font-family: Arial, sans-serif;
-
-            background: #f5f5f5;
-
-            margin: 0;
-
-            padding: 30px;
-        }
-
-
-        .container {
-
-            max-width: 1000px;
-
-            margin: 0 auto;
-
-            background: white;
-
-            padding: 25px;
-
-            border-radius: 10px;
-
-            box-shadow:
-                0 2px 8px
-                rgba(0,0,0,0.08);
-        }
-
-
-        h1 {
-
-            margin-top: 0;
-        }
-
-
-        table {
-
-            width: 100%;
-
-            border-collapse: collapse;
-
-            margin-top: 20px;
-        }
-
-
-        th,
-        td {
-
-            border: 1px solid #ddd;
-
-            padding: 12px;
-
-            text-align: left;
-        }
-
-
-        th {
-
-            background: #ff9800;
-
-            color: white;
-        }
-
-
-        input[type="number"] {
-
-            width: 90px;
-
-            padding: 8px;
-
-            box-sizing: border-box;
-        }
-
-
-        button {
-
-            background: #0d6efd;
-
-            color: white;
-
-            border: none;
-
-            padding: 8px 14px;
-
-            border-radius: 5px;
-
-            cursor: pointer;
-
-            font-weight: bold;
-        }
-
-
-        button:hover {
-
-            background: #0b5ed7;
-        }
-
-
-        .stock-zero {
-
-            color: #dc3545;
-
-            font-weight: bold;
-        }
-
-
-        .stock-available {
-
-            color: #ff9800;
-
-            font-weight: bold;
-        }
-
-
-        .back-link {
-
-            display: inline-block;
-
-            margin-top: 20px;
-
-            text-decoration: none;
-
-            color: #0d6efd;
-        }
-
-    </style>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/admin_stock.css') }}"
+    >
 
 </head>
 
@@ -198,30 +72,24 @@
         <tbody>
 
 
-        {% for product in products %}
+            {% for product in products %}
 
 
             <tr>
 
 
                 <td>
-
                     {{ product.id }}
-
                 </td>
 
 
                 <td>
-
                     {{ product.name }}
-
                 </td>
 
 
                 <td>
-
                     {{ product.brand }}
-
                 </td>
 
 
@@ -230,17 +98,13 @@
                     {% if product.stock > 0 %}
 
                         <span class="stock-available">
-
                             {{ product.stock }}
-
                         </span>
 
                     {% else %}
 
                         <span class="stock-zero">
-
                             0
-
                         </span>
 
                     {% endif %}
@@ -254,6 +118,7 @@
                     <form
                         method="POST"
                         action="/admin/stock"
+                        class="stock-form"
                     >
 
 
@@ -275,10 +140,9 @@
 
                         <button
                             type="submit"
+                            class="save-button"
                         >
-
                             Lưu
-
                         </button>
 
 
@@ -291,7 +155,7 @@
             </tr>
 
 
-        {% endfor %}
+            {% endfor %}
 
 
         </tbody>
@@ -304,9 +168,7 @@
         href="/admin"
         class="back-link"
     >
-
         ← Quay lại quản lý đơn
-
     </a>
 
 
