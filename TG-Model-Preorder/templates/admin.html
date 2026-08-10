@@ -707,9 +707,35 @@
 
                     <td>
 
-                        {{ "{:,}".format(order["deposit"] or 0) }} đ
+    {% if order["payment_type"] == "full" %}
 
-                    </td>
+        {{ "{:,}".format(
+            (order["price"] or 0)
+            * (order["quantity"] or 1)
+        ) }} đ
+
+        <br>
+
+        <small style="color:#198754;">
+            Full
+        </small>
+
+    {% else %}
+
+        {{ "{:,}".format(
+            (order["deposit"] or 0)
+            * (order["quantity"] or 1)
+        ) }} đ
+
+        <br>
+
+        <small style="color:#f57c00;">
+            Cọc
+        </small>
+
+    {% endif %}
+
+</td>
 
 
                     <!-- =====================================
