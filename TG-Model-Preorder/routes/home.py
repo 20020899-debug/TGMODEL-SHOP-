@@ -1,7 +1,11 @@
-from flask import Blueprint
-from flask import render_template
+from flask import (
+    Blueprint,
+    render_template
+)
 
 from config import products
+from database import get_db
+
 
 home_bp = Blueprint(
     "home",
@@ -9,34 +13,95 @@ home_bp = Blueprint(
 )
 
 
+# =========================================================
+# TRANG CHỦ
+# =========================================================
+
 @home_bp.route("/")
 def home():
 
-    return render_template(
-        "index.html",
-        products=products
-    )
+    conn = get_db()
+    cursor = conn.cursor()
 
 
-@home_bp.route("/preorder/<int:id>")
-def preorder(id):
+    try:
 
-    product = None
+        # =================================================
+        # LẤY TỒN KHO
+        # =================================================
 
-    for p in products:
+        cursor.execute(
+            """
+            SELECT
+                product_id,
+                stock
 
-        if p["id"] == id:
-
-            product = p
-            break
-
-
-    if product is None:
-
-        return "Không tìm thấy sản phẩm"
+            FROM product_stock
+            """
+        )
 
 
-    return render_template(
-        "preorder.html",
-        product=product
-    )
+        stock_rows = cursor.fetchall()
+
+
+        # =================================================
+        # CHUYỂN THÀNH DICTIONARY
+        #
+        # Ví dụ:
+        #
+        # {
+        #     1: 5,
+        #     2: 10
+        # }
+        # =================================================
+
+        stock_map = {
+
+            row[0]: row[1]
+
+            for row in stock_rows
+        }
+
+
+        # =================================================
+        # GẮN TỒN KHO VÀO SẢN PHẨM
+        #
+        # Không sửa trực tiếp products trong config.py
+        # =================================================
+
+        products_with_stock = []
+
+
+        for product in products:
+
+            item = product.copy()
+
+
+            item["stock"] = (
+                stock_map.get(
+                    product["id"],
+                    0
+                )
+            )
+
+
+            products_with_stock.append(
+                item
+            )
+
+
+        # =================================================
+        # RENDER TRANG CHỦ
+        # =================================================
+
+        return render_template(
+            "index.html",
+            products=products_with_stock
+        )
+
+
+    finally:
+
+        cursor.close()
+
+        conn.close()
