@@ -236,3 +236,39 @@ body {
 
     font-weight: bold;
 }
+
+
+/* =================================================
+   TỒN KHO
+   ================================================= */
+
+.stock-available {
+
+    color: #198754;
+
+    font-weight: bold;
+}
+
+
+.stock-out {
+
+    color: #dc3545;
+
+    font-weight: bold;
+}
+
+
+/* =================================================
+   NÚT HẾT HÀNG
+   ================================================= */
+
+.btn-out-of-stock {
+
+    background: #999;
+
+    color: white;
+
+    cursor: not-allowed;
+
+    opacity: 0.75;
+}
