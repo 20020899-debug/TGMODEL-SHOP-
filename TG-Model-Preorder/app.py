@@ -11,7 +11,6 @@ from routes.submit_order import submit_order_bp
 from routes.payment_success import payment_success_bp
 from routes.payment_cancel import payment_cancel_bp
 from routes.payment_webhook import payment_webhook_bp
-from routes.admin_stock import admin_stock_bp
 from routes.admin_products import admin_products_bp
 
 
@@ -84,11 +83,6 @@ app.register_blueprint(
 
 app.register_blueprint(
     payment_webhook_bp
-)
-
-
-app.register_blueprint(
-    admin_stock_bp
 )
 
 
