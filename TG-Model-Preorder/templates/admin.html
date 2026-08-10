@@ -2,269 +2,886 @@
 <html lang="vi">
 
 <head>
+
     <meta charset="UTF-8">
-    <title>Quản lý đơn hàng</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Quản lý đơn hàng
+    </title>
+
+
+    <style>
+
+        /* =================================================
+           BODY
+           ================================================= */
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            background: #f5f5f5;
+
+            margin: 0;
+
+            padding: 30px;
+        }
+
+
+        /* =================================================
+           CONTAINER
+           ================================================= */
+
+        .container {
+
+            max-width: 1400px;
+
+            margin: 0 auto;
+
+            background: white;
+
+            padding: 25px;
+
+            border-radius: 10px;
+
+            box-shadow:
+                0 2px 8px
+                rgba(0, 0, 0, 0.08);
+        }
+
+
+        h1 {
+
+            margin-top: 0;
+
+            color: #333;
+        }
+
+
+        /* =================================================
+           NÚT QUẢN LÝ TỒN KHO
+           ================================================= */
+
+        .btn-stock {
+
+            display: inline-block;
+
+            background: #ff9800;
+
+            color: white;
+
+            text-decoration: none;
+
+            padding: 10px 16px;
+
+            border-radius: 6px;
+
+            font-weight: bold;
+
+            margin-bottom: 20px;
+        }
+
+
+        .btn-stock:hover {
+
+            background: #f57c00;
+        }
+
+
+        /* =================================================
+           FORM TÌM KIẾM / LỌC
+           ================================================= */
+
+        .filter-form {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 10px;
+
+            align-items: center;
+
+            margin-bottom: 20px;
+        }
+
+
+        .filter-form input {
+
+            min-width: 280px;
+
+            padding: 10px;
+
+            border: 1px solid #ccc;
+
+            border-radius: 5px;
+
+            box-sizing: border-box;
+        }
+
+
+        .filter-form select {
+
+            min-width: 200px;
+
+            padding: 10px;
+
+            border: 1px solid #ccc;
+
+            border-radius: 5px;
+
+            background: white;
+        }
+
+
+        .filter-form button {
+
+            padding: 10px 16px;
+
+            border: none;
+
+            border-radius: 5px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+        }
+
+
+        .btn-filter {
+
+            background: #ff9800;
+
+            color: white;
+        }
+
+
+        .btn-filter:hover {
+
+            background: #f57c00;
+        }
+
+
+        .btn-clear {
+
+            background: #6c757d;
+
+            color: white;
+        }
+
+
+        .btn-clear:hover {
+
+            background: #5c636a;
+        }
+
+
+        .clear-link {
+
+            text-decoration: none;
+        }
+
+
+        /* =================================================
+           TABLE
+           ================================================= */
+
+        .table-wrapper {
+
+            width: 100%;
+
+            overflow-x: auto;
+        }
+
+
+        table {
+
+            width: 100%;
+
+            border-collapse: collapse;
+
+            min-width: 1000px;
+        }
+
+
+        th,
+        td {
+
+            border: 1px solid #ddd;
+
+            padding: 10px;
+
+            text-align: left;
+
+            vertical-align: middle;
+        }
+
+
+        /* =================================================
+           HEADER CAM
+           ================================================= */
+
+        th {
+
+            background: #ff9800;
+
+            color: white;
+
+            white-space: nowrap;
+        }
+
+
+        tr:nth-child(even) {
+
+            background: #fafafa;
+        }
+
+
+        tr:hover {
+
+            background: #fff3e0;
+        }
+
+
+        /* =================================================
+           TRẠNG THÁI
+           ================================================= */
+
+        .status {
+
+            display: inline-block;
+
+            padding: 5px 9px;
+
+            border-radius: 5px;
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+            white-space: nowrap;
+        }
+
+
+        .status-unpaid {
+
+            background: #fff3cd;
+
+            color: #856404;
+        }
+
+
+        .status-deposit {
+
+            background: #d1e7dd;
+
+            color: #0f5132;
+        }
+
+
+        .status-full {
+
+            background: #cfe2ff;
+
+            color: #084298;
+        }
+
+
+        .status-preparing {
+
+            background: #fff3e0;
+
+            color: #e65100;
+        }
+
+
+        .status-shipped {
+
+            background: #e2e3ff;
+
+            color: #41464b;
+        }
+
+
+        .status-complete {
+
+            background: #d1e7dd;
+
+            color: #0f5132;
+        }
+
+
+        .status-cancel {
+
+            background: #f8d7da;
+
+            color: #842029;
+        }
+
+
+        .status-expired {
+
+            background: #f8d7da;
+
+            color: #842029;
+        }
+
+
+        /* =================================================
+           THAO TÁC
+           ================================================= */
+
+        .detail-link {
+
+            color: #f57c00;
+
+            text-decoration: none;
+
+            font-weight: bold;
+        }
+
+
+        .detail-link:hover {
+
+            text-decoration: underline;
+        }
+
+
+        .delete-button {
+
+            margin-top: 8px;
+
+            background: #dc3545;
+
+            color: white;
+
+            border: none;
+
+            padding: 6px 10px;
+
+            border-radius: 5px;
+
+            cursor: pointer;
+        }
+
+
+        .delete-button:hover {
+
+            background: #bb2d3b;
+        }
+
+
+        /* =================================================
+           KHÔNG CÓ ĐƠN
+           ================================================= */
+
+        .empty {
+
+            text-align: center;
+
+            padding: 30px;
+
+            color: #777;
+        }
+
+
+    </style>
+
 </head>
 
 
 <body>
 
 
-<h1>Danh sách đơn Pre-order</h1>
+<div class="container">
 
 
-<p>
-    <a href="/logout">
-        Đăng xuất
-    </a>
-</p>
+    <!-- =================================================
+         TIÊU ĐỀ
+         ================================================= -->
+
+    <h1>
+        Quản lý đơn hàng
+    </h1>
+
+
+    <!-- =================================================
+         QUẢN LÝ TỒN KHO
+         ================================================= -->
 
     <a
-    href="/admin/stock"
-    class="btn-stock"
->
-    📦 QUẢN LÝ TỒN KHO
-</a>
-
-<hr>
-
-
-<!-- TÌM KIẾM -->
-
-<form method="GET" action="/admin">
-
-    <input
-        type="text"
-        name="keyword"
-        placeholder="Tìm mã đơn, tên khách hoặc SĐT"
-        value="{{ keyword }}"
+        href="/admin/stock"
+        class="btn-stock"
     >
 
-    <select name="status">
+        📦 QUẢN LÝ TỒN KHO
 
-    <option value=""
-    {% if status == "" %}selected{% endif %}>
-        Tất cả trạng thái
-    </option>
-
-    <option value="Chưa thanh toán"
-    {% if status == "Chưa thanh toán" %}selected{% endif %}>
-        Chưa thanh toán
-    </option>
-
-    <option value="Đã cọc"
-    {% if status == "Đã cọc" %}selected{% endif %}>
-        Đã cọc
-    </option>
-
-    <option value="Đã chuyển khoản full"
-    {% if status == "Đã chuyển khoản full" %}selected{% endif %}>
-        Đã chuyển khoản full
-    </option>
-
-    <option value="Đang chuẩn bị hàng"
-    {% if status == "Đang chuẩn bị hàng" %}selected{% endif %}>
-        Đang chuẩn bị hàng
-    </option>
-
-    <option value="Đã gửi hàng"
-    {% if status == "Đã gửi hàng" %}selected{% endif %}>
-        Đã gửi hàng
-    </option>
-
-    <option value="Hoàn thành"
-    {% if status == "Hoàn thành" %}selected{% endif %}>
-        Hoàn thành
-    </option>
-
-    <option value="Đã hủy"
-    {% if status == "Đã hủy" %}selected{% endif %}>
-        Đã hủy
-    </option>
-
-    <option value="Hết hạn thanh toán"
-    {% if status == "Hết hạn thanh toán" %}selected{% endif %}>
-        Hết hạn thanh toán
-    </option>
-
-</select>
-    <button type="submit">
-        🔍 Tìm kiếm
-    </button>
-    
-<a href="/admin/export">
-    <button type="button">
-        📥 Xuất Excel
-    </button>
-</a>
-
-    <a href="/admin">
-        <button type="button">
-            Xóa lọc
-        </button>
     </a>
 
-</form>
+
+    <!-- =================================================
+         TÌM KIẾM / LỌC
+         ================================================= -->
+
+    <form
+        method="GET"
+        action="/admin"
+        class="filter-form"
+    >
 
 
-<br>
+        <input
+            type="text"
+            name="keyword"
+            placeholder="Tìm mã đơn, tên khách hoặc SĐT"
+            value="{{ keyword or '' }}"
+        >
 
 
-
-<table border="1" cellpadding="8" cellspacing="0">
-
-
-<tr>
-
-    <th>Mã đơn</th>
-
-    <th>Thời gian</th>
-
-    <th>Khách hàng</th>
-
-    <th>SĐT</th>
-
-    <th>Sản phẩm</th>
-
-    <th>Số lượng</th>
-
-    <th>Tiền cọc</th>
-
-    <th>Trạng thái</th>
-
-    <th>Thao tác</th>
-
-</tr>
+        <select name="status">
 
 
+            <option
+                value=""
+                {% if status == "" %}selected{% endif %}
+            >
 
-{% for order in orders %}
+                Tất cả trạng thái
 
-
-<tr>
-
-
-    <td>
-        {{ order["order_code"] }}
-    </td>
+            </option>
 
 
-    <td>
-        {{ order["created_at"] }}
-    </td>
+            <option
+                value="Chưa thanh toán"
+                {% if status == "Chưa thanh toán" %}selected{% endif %}
+            >
+
+                Chưa thanh toán
+
+            </option>
 
 
-    <td>
-        {{ order["fullname"] }}
-    </td>
+            <option
+                value="Đã cọc"
+                {% if status == "Đã cọc" %}selected{% endif %}
+            >
+
+                Đã cọc
+
+            </option>
 
 
-    <td>
-        {{ order["phone"] }}
-    </td>
+            <option
+                value="Đã chuyển khoản full"
+                {% if status == "Đã chuyển khoản full" %}selected{% endif %}
+            >
+
+                Đã chuyển khoản full
+
+            </option>
 
 
-    <td>
-        {{ order["product_name"] }}
-    </td>
+            <option
+                value="Đang chuẩn bị hàng"
+                {% if status == "Đang chuẩn bị hàng" %}selected{% endif %}
+            >
+
+                Đang chuẩn bị hàng
+
+            </option>
 
 
-    <td>
-        {{ order["quantity"] }}
-    </td>
+            <option
+                value="Đã gửi hàng"
+                {% if status == "Đã gửi hàng" %}selected{% endif %}
+            >
+
+                Đã gửi hàng
+
+            </option>
 
 
-    <td>
-        {{ "{:,}".format(order["deposit"]) }} đ
-    </td>
+            <option
+                value="Hoàn thành"
+                {% if status == "Hoàn thành" %}selected{% endif %}
+            >
+
+                Hoàn thành
+
+            </option>
 
 
-    <td>
+            <option
+                value="Đã hủy"
+                {% if status == "Đã hủy" %}selected{% endif %}
+            >
 
-{% if order["status"] == "Chưa thanh toán" %}
-<span style="color:#ff9800;font-weight:bold;">
-    {{ order["status"] }}
-</span>
+                Đã hủy
 
-{% elif order["status"] == "Đã cọc" %}
-<span style="color:#2196F3;font-weight:bold;">
-    {{ order["status"] }}
-</span>
-
-{% elif order["status"] == "Đang chuẩn bị hàng" %}
-<span style="color:#9C27B0;font-weight:bold;">
-    {{ order["status"] }}
-</span>
-
-{% elif order["status"] == "Đã gửi hàng" %}
-<span style="color:#3F51B5;font-weight:bold;">
-    {{ order["status"] }}
-</span>
-
-{% elif order["status"] == "Hoàn thành" %}
-<span style="color:green;font-weight:bold;">
-    {{ order["status"] }}
-</span>
-
-{% elif order["status"] == "Đã hủy" %}
-<span style="color:red;font-weight:bold;">
-    {{ order["status"] }}
-</span>
-
-{% elif order["status"] == "Hết hạn thanh toán" %}
-<span style="color:#757575;font-weight:bold;">
-    {{ order["status"] }}
-</span>
-
-{% else %}
-{{ order["status"] }}
-{% endif %}
-
-</td>
+            </option>
 
 
-    <td>
+            <option
+                value="Hết hạn thanh toán"
+                {% if status == "Hết hạn thanh toán" %}selected{% endif %}
+            >
+
+                Hết hạn thanh toán
+
+            </option>
 
 
-        <!-- XEM CHI TIẾT -->
-
-        <a href="/admin/order/{{ order['id'] }}">
-            👁 Chi tiết
-        </a>
+        </select>
 
 
-        <br>
+        <button
+            type="submit"
+            class="btn-filter"
+        >
+
+            🔍 Tìm / Lọc
+
+        </button>
 
 
-        <!-- XÓA ĐƠN -->
-
-        <form
-            action="/admin/order/{{ order['id'] }}/delete"
-            method="POST"
-            style="display:inline;"
+        <a
+            href="/admin"
+            class="clear-link"
         >
 
             <button
-                type="submit"
-                onclick="return confirm('Bạn có chắc muốn xóa đơn {{ order['order_code'] }} không?');"
+                type="button"
+                class="btn-clear"
             >
-                🗑 Xóa
+
+                Xóa lọc
+
             </button>
 
-
-        </form>
-
-
-    </td>
+        </a>
 
 
-</tr>
+    </form>
 
 
-{% endfor %}
+    <!-- =================================================
+         BẢNG ĐƠN HÀNG
+         ================================================= -->
+
+    <div class="table-wrapper">
 
 
-</table>
+        <table>
+
+
+            <thead>
+
+
+                <tr>
+
+                    <th>
+                        Mã đơn
+                    </th>
+
+                    <th>
+                        Thời gian
+                    </th>
+
+                    <th>
+                        Khách hàng
+                    </th>
+
+                    <th>
+                        SĐT
+                    </th>
+
+                    <th>
+                        Sản phẩm
+                    </th>
+
+                    <th>
+                        Số lượng
+                    </th>
+
+                    <th>
+                        Tiền cọc
+                    </th>
+
+                    <th>
+                        Trạng thái
+                    </th>
+
+                    <th>
+                        Thao tác
+                    </th>
+
+                </tr>
+
+
+            </thead>
+
+
+            <tbody>
+
+
+                {% for order in orders %}
+
+
+                <tr>
+
+
+                    <!-- =====================================
+                         MÃ ĐƠN
+                         ===================================== -->
+
+                    <td>
+
+                        {{ order["order_code"] }}
+
+                    </td>
+
+
+                    <!-- =====================================
+                         THỜI GIAN
+                         ===================================== -->
+
+                    <td>
+
+                        {{ order["created_at"] }}
+
+                    </td>
+
+
+                    <!-- =====================================
+                         KHÁCH HÀNG
+                         ===================================== -->
+
+                    <td>
+
+                        {{ order["fullname"] }}
+
+                    </td>
+
+
+                    <!-- =====================================
+                         SĐT
+                         ===================================== -->
+
+                    <td>
+
+                        {{ order["phone"] }}
+
+                    </td>
+
+
+                    <!-- =====================================
+                         SẢN PHẨM
+                         ===================================== -->
+
+                    <td>
+
+                        {{ order["product_name"] }}
+
+                    </td>
+
+
+                    <!-- =====================================
+                         SỐ LƯỢNG
+                         ===================================== -->
+
+                    <td>
+
+                        {{ order["quantity"] }}
+
+                    </td>
+
+
+                    <!-- =====================================
+                         TIỀN CỌC
+                         ===================================== -->
+
+                    <td>
+
+                        {{ "{:,}".format(order["deposit"] or 0) }} đ
+
+                    </td>
+
+
+                    <!-- =====================================
+                         TRẠNG THÁI
+                         ===================================== -->
+
+                    <td>
+
+
+                        {% if order["status"] == "Chưa thanh toán" %}
+
+                            <span class="status status-unpaid">
+
+                                Chưa thanh toán
+
+                            </span>
+
+
+                        {% elif order["status"] == "Đã cọc" %}
+
+                            <span class="status status-deposit">
+
+                                Đã cọc
+
+                            </span>
+
+
+                        {% elif order["status"] == "Đã chuyển khoản full" %}
+
+                            <span class="status status-full">
+
+                                Đã chuyển khoản full
+
+                            </span>
+
+
+                        {% elif order["status"] == "Đang chuẩn bị hàng" %}
+
+                            <span class="status status-preparing">
+
+                                Đang chuẩn bị hàng
+
+                            </span>
+
+
+                        {% elif order["status"] == "Đã gửi hàng" %}
+
+                            <span class="status status-shipped">
+
+                                Đã gửi hàng
+
+                            </span>
+
+
+                        {% elif order["status"] == "Hoàn thành" %}
+
+                            <span class="status status-complete">
+
+                                Hoàn thành
+
+                            </span>
+
+
+                        {% elif order["status"] == "Đã hủy" %}
+
+                            <span class="status status-cancel">
+
+                                Đã hủy
+
+                            </span>
+
+
+                        {% elif order["status"] == "Hết hạn thanh toán" %}
+
+                            <span class="status status-expired">
+
+                                Hết hạn thanh toán
+
+                            </span>
+
+
+                        {% else %}
+
+                            <span class="status">
+
+                                {{ order["status"] }}
+
+                            </span>
+
+                        {% endif %}
+
+
+                    </td>
+
+
+                    <!-- =====================================
+                         THAO TÁC
+                         ===================================== -->
+
+                    <td>
+
+
+                        <a
+                            href="/admin/order/{{ order['id'] }}"
+                            class="detail-link"
+                        >
+
+                            👁 Chi tiết
+
+                        </a>
+
+
+                        <br>
+
+
+                        <form
+                            action="/admin/order/{{ order['id'] }}/delete"
+                            method="POST"
+                            style="display:inline;"
+                        >
+
+
+                            <button
+                                type="submit"
+                                class="delete-button"
+                                onclick="return confirm('Bạn có chắc muốn xóa đơn {{ order['order_code'] }} không?');"
+                            >
+
+                                🗑 Xóa
+
+                            </button>
+
+
+                        </form>
+
+
+                    </td>
+
+
+                </tr>
+
+
+                {% else %}
+
+
+                <tr>
+
+                    <td
+                        colspan="9"
+                        class="empty"
+                    >
+
+                        Không tìm thấy đơn hàng.
+
+                    </td>
+
+                </tr>
+
+
+                {% endfor %}
+
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+
+</div>
 
 
 </body>
