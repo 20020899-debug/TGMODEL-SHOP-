@@ -15,6 +15,7 @@ from routes.payment_success import payment_success_bp
 from routes.payment_cancel import payment_cancel_bp
 from routes.payment_webhook import payment_webhook_bp
 from routes.admin_stock import admin_stock_bp
+from routes.admin_products import admin_products_bp
 
 app.register_blueprint(home_bp)
 app.register_blueprint(auth_bp)
@@ -26,6 +27,7 @@ app.register_blueprint(payment_success_bp)
 app.register_blueprint(payment_cancel_bp)
 app.register_blueprint(payment_webhook_bp)
 app.register_blueprint(admin_stock_bp)
+app.register_blueprint(admin_products_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
