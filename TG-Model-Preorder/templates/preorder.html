@@ -10,8 +10,9 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Đặt Pre-order</title>
-
+    <title>
+        Đặt Pre-order
+    </title>
 
     <link
         rel="stylesheet"
@@ -24,23 +25,36 @@
 <body>
 
 
-{% include "components/product_info.html" %}
+<div class="container">
 
 
-{% include "components/customer_form.html" %}
+    <!-- =================================================
+         THÔNG TIN SẢN PHẨM
+         ================================================= -->
+
+    {% include "components/product_info.html" %}
 
 
-<a
-    href="/"
-    class="back-link"
->
-    ← Quay lại trang chủ
-</a>
+    <!-- =================================================
+         FORM KHÁCH HÀNG
+         ================================================= -->
+
+    {% include "components/customer_form.html" %}
 
 
-<script
-    src="{{ url_for('static', filename='js/address.js') }}"
-></script>
+    <!-- =================================================
+         QUAY LẠI
+         ================================================= -->
+
+    <a
+        href="/"
+        class="back-link"
+    >
+        ← Quay lại trang chủ
+    </a>
+
+
+</div>
 
 
 </body>
