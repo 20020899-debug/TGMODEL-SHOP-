@@ -1,3 +1,34 @@
+:root {
+
+    --orange:
+        #ff9800;
+
+    --orange-dark:
+        #f57c00;
+
+    --orange-light:
+        #fff3e0;
+
+    --green:
+        #198754;
+
+    --red:
+        #dc3545;
+
+    --gray:
+        #6c757d;
+
+    --text:
+        #333;
+
+    --border:
+        #ddd;
+
+    --background:
+        #f5f5f5;
+}
+
+
 /* =================================================
    BODY
    ================================================= */
@@ -6,11 +37,15 @@ body {
 
     font-family: Arial, sans-serif;
 
-    background: #f5f5f5;
+    background:
+        var(--background);
 
     margin: 0;
 
     padding: 30px;
+
+    color:
+        var(--text);
 }
 
 
@@ -36,46 +71,142 @@ body {
 }
 
 
-h1 {
+/* =================================================
+   CONTAINER NHỎ
+   ================================================= */
 
-    margin-top: 0;
+.container-small {
 
-    color: #333;
+    max-width: 850px;
+}
+
+
+.container-medium {
+
+    max-width: 1000px;
 }
 
 
 /* =================================================
-   NÚT QUẢN LÝ TỒN KHO
+   TITLE
    ================================================= */
 
-.btn-stock {
+.page-title {
+
+    margin-top: 0;
+
+    color:
+        var(--orange-dark);
+}
+
+
+.section-title {
+
+    margin-top: 30px;
+
+    padding-bottom: 8px;
+
+    border-bottom:
+        2px solid
+        var(--orange);
+
+    color: #444;
+}
+
+
+/* =================================================
+   BUTTON CHUNG
+   ================================================= */
+
+.btn {
 
     display: inline-block;
 
-    background: #ff9800;
-
-    color: white;
-
-    text-decoration: none;
+    border: none;
 
     padding: 10px 16px;
 
     border-radius: 6px;
 
+    cursor: pointer;
+
     font-weight: bold;
 
-    margin-bottom: 20px;
+    text-decoration: none;
+
+    box-sizing: border-box;
 }
 
 
-.btn-stock:hover {
+.btn-orange {
 
-    background: #f57c00;
+    background:
+        var(--orange);
+
+    color: white;
+}
+
+
+.btn-orange:hover {
+
+    background:
+        var(--orange-dark);
+}
+
+
+.btn-gray {
+
+    background:
+        var(--gray);
+
+    color: white;
+}
+
+
+.btn-gray:hover {
+
+    background: #5c636a;
+}
+
+
+.btn-red {
+
+    background:
+        var(--red);
+
+    color: white;
+}
+
+
+.btn-red:hover {
+
+    background: #bb2d3b;
 }
 
 
 /* =================================================
-   FORM TÌM KIẾM / LỌC
+   LINK
+   ================================================= */
+
+.link-orange {
+
+    color:
+        var(--orange-dark);
+
+    text-decoration: none;
+
+    font-weight: bold;
+}
+
+
+.link-orange:hover {
+
+    text-decoration: underline;
+}
+
+
+/* =================================================
+   FILTER / FORM
    ================================================= */
 
 .filter-form {
@@ -92,92 +223,52 @@ h1 {
 }
 
 
-.filter-form input {
+.form-row {
 
-    min-width: 280px;
+    margin-bottom: 14px;
+}
+
+
+.form-label {
+
+    display: inline-block;
+
+    min-width: 190px;
+
+    font-weight: bold;
+
+    color: #555;
+}
+
+
+.form-control {
 
     padding: 10px;
 
     border: 1px solid #ccc;
 
-    border-radius: 5px;
+    border-radius: 6px;
+
+    background: white;
 
     box-sizing: border-box;
 }
 
 
-.filter-form select {
+input.form-control {
+
+    min-width: 280px;
+}
+
+
+select.form-control {
 
     min-width: 220px;
-
-    padding: 10px;
-
-    border: 1px solid #ccc;
-
-    border-radius: 5px;
-
-    background: white;
 }
 
 
 /* =================================================
-   NÚT TÌM / LỌC
-   ================================================= */
-
-.btn-filter {
-
-    background: #ff9800;
-
-    color: white;
-
-    border: none;
-
-    padding: 10px 16px;
-
-    border-radius: 5px;
-
-    cursor: pointer;
-
-    font-weight: bold;
-}
-
-
-.btn-filter:hover {
-
-    background: #f57c00;
-}
-
-
-/* =================================================
-   NÚT XÓA LỌC
-   ================================================= */
-
-.btn-clear {
-
-    display: inline-block;
-
-    background: #6c757d;
-
-    color: white;
-
-    padding: 10px 16px;
-
-    border-radius: 5px;
-
-    text-decoration: none;
-
-    font-weight: bold;
-}
-
-
-.btn-clear:hover {
-
-    background: #5c636a;
-}
-
-
-/* =================================================
-   TABLE WRAPPER
+   TABLE
    ================================================= */
 
 .table-wrapper {
@@ -188,24 +279,22 @@ h1 {
 }
 
 
-/* =================================================
-   TABLE
-   ================================================= */
-
-table {
+.admin-table {
 
     width: 100%;
 
     border-collapse: collapse;
 
-    min-width: 1050px;
+    margin-top: 20px;
 }
 
 
-th,
-td {
+.admin-table th,
+.admin-table td {
 
-    border: 1px solid #ddd;
+    border:
+        1px solid
+        var(--border);
 
     padding: 10px;
 
@@ -215,13 +304,10 @@ td {
 }
 
 
-/* =================================================
-   HEADER CAM
-   ================================================= */
+.admin-table th {
 
-th {
-
-    background: #ff9800;
+    background:
+        var(--orange);
 
     color: white;
 
@@ -229,48 +315,21 @@ th {
 }
 
 
-tr:nth-child(even) {
+.admin-table tr:nth-child(even) {
 
     background: #fafafa;
 }
 
 
-tr:hover {
+.admin-table tr:hover {
 
-    background: #fff3e0;
+    background:
+        var(--orange-light);
 }
 
 
 /* =================================================
-   THANH TOÁN
-   ================================================= */
-
-.payment-amount {
-
-    font-weight: bold;
-
-    color: #333;
-}
-
-
-.payment-full {
-
-    color: #198754;
-
-    font-weight: bold;
-}
-
-
-.payment-deposit {
-
-    color: #f57c00;
-
-    font-weight: bold;
-}
-
-
-/* =================================================
-   TRẠNG THÁI
+   STATUS
    ================================================= */
 
 .status {
@@ -315,7 +374,8 @@ tr:hover {
 
 .status-preparing {
 
-    background: #fff3e0;
+    background:
+        var(--orange-light);
 
     color: #e65100;
 }
@@ -337,14 +397,7 @@ tr:hover {
 }
 
 
-.status-cancel {
-
-    background: #f8d7da;
-
-    color: #842029;
-}
-
-
+.status-cancel,
 .status-expired {
 
     background: #f8d7da;
@@ -354,65 +407,75 @@ tr:hover {
 
 
 /* =================================================
-   CHI TIẾT
+   PAYMENT
    ================================================= */
 
-.detail-link {
+.payment-amount {
 
-    color: #f57c00;
+    font-weight: bold;
 
-    text-decoration: none;
+    color: #333;
+}
+
+
+.payment-full {
+
+    color:
+        var(--green);
 
     font-weight: bold;
 }
 
 
-.detail-link:hover {
+.payment-deposit {
 
-    text-decoration: underline;
+    color:
+        var(--orange-dark);
+
+    font-weight: bold;
 }
 
 
 /* =================================================
-   FORM XÓA
+   STOCK
    ================================================= */
 
-.delete-form {
+.stock-form {
 
-    display: inline;
+    display: flex;
+
+    gap: 8px;
+
+    align-items: center;
+}
+
+
+.stock-input {
+
+    width: 90px;
+}
+
+
+.stock-zero {
+
+    color:
+        var(--red);
+
+    font-weight: bold;
+}
+
+
+.stock-available {
+
+    color:
+        var(--orange-dark);
+
+    font-weight: bold;
 }
 
 
 /* =================================================
-   NÚT XÓA
-   ================================================= */
-
-.delete-button {
-
-    margin-top: 8px;
-
-    background: #dc3545;
-
-    color: white;
-
-    border: none;
-
-    padding: 6px 10px;
-
-    border-radius: 5px;
-
-    cursor: pointer;
-}
-
-
-.delete-button:hover {
-
-    background: #bb2d3b;
-}
-
-
-/* =================================================
-   KHÔNG CÓ ĐƠN
+   EMPTY
    ================================================= */
 
 .empty {
