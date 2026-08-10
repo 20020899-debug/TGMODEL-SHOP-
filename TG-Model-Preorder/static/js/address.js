@@ -1,4 +1,4 @@
-let vietnamAddressData = null;
+let vietnamAddressData = [];
 
 
 // =========================================================
@@ -10,12 +10,10 @@ const provinceSelect =
         "province"
     );
 
-
 const districtSelect =
     document.getElementById(
         "district"
     );
-
 
 const wardSelect =
     document.getElementById(
@@ -36,10 +34,8 @@ function resetDistricts() {
         </option>
         `;
 
-
     districtSelect.disabled =
         true;
-
 }
 
 
@@ -56,10 +52,8 @@ function resetWards() {
         </option>
         `;
 
-
     wardSelect.disabled =
         true;
-
 }
 
 
@@ -68,8 +62,7 @@ function resetWards() {
 // =========================================================
 
 function createOption(
-    value,
-    text,
+    name,
     code
 ) {
 
@@ -78,30 +71,21 @@ function createOption(
             "option"
         );
 
-
     option.value =
-        value;
-
+        name;
 
     option.textContent =
-        text;
+        name;
 
-
-    if (code) {
-
-        option.dataset.code =
-            code;
-
-    }
-
+    option.dataset.code =
+        String(code);
 
     return option;
-
 }
 
 
 // =========================================================
-// TẢI FILE JSON LOCAL
+// TẢI DỮ LIỆU ĐỊA CHỈ
 // =========================================================
 
 async function loadVietnamAddressData() {
@@ -112,7 +96,7 @@ async function loadVietnamAddressData() {
             await fetch(
                 "/static/data/vietnam_address_63.json",
                 {
-                    cache: "force-cache"
+                    cache: "no-store"
                 }
             );
 
@@ -120,79 +104,55 @@ async function loadVietnamAddressData() {
         if (!response.ok) {
 
             throw new Error(
-                "Không tải được dữ liệu địa chỉ"
+                "HTTP " + response.status
             );
-
         }
 
 
-        const rawData =
+        const data =
             await response.json();
 
 
-        // =================================================
-        // FILE V2.2.0 CÓ THỂ LÀ MẢNG TRỰC TIẾP
-        // =================================================
-
-        if (
-            Array.isArray(rawData)
-        ) {
-
-            vietnamAddressData =
-                rawData;
-
-        }
-
-        else if (
-            Array.isArray(
-                rawData.data
-            )
-        ) {
-
-            vietnamAddressData =
-                rawData.data;
-
-        }
-
-        else {
+        // File v2.2.0 phải là mảng trực tiếp
+        if (!Array.isArray(data)) {
 
             throw new Error(
-                "Cấu trúc JSON không hợp lệ"
+                "File JSON không phải dạng mảng"
             );
-
         }
 
 
-        // =================================================
-        // ĐỔ TỈNH / THÀNH
-        // =================================================
+        vietnamAddressData =
+            data;
 
+
+        // XÓA OPTION CŨ
+        provinceSelect.innerHTML =
+            `
+            <option value="">
+                -- Chọn tỉnh / thành phố --
+            </option>
+            `;
+
+
+        // ĐỔ DANH SÁCH TỈNH
         vietnamAddressData.forEach(
             province => {
 
-                const provinceName =
-                    province.FullName
-                    || province.Name
-                    || "";
-
-
-                const provinceCode =
-                    province.Code
-                    || "";
-
-
-                if (!provinceName) {
+                if (
+                    !province.FullName
+                    ||
+                    !province.Code
+                ) {
 
                     return;
-
                 }
 
 
                 const option =
                     createOption(
-                        provinceName,
-                        provinceName,
-                        provinceCode
+                        province.FullName,
+                        province.Code
                     );
 
 
@@ -201,6 +161,16 @@ async function loadVietnamAddressData() {
                 );
 
             }
+        );
+
+
+        provinceSelect.disabled =
+            false;
+
+
+        console.log(
+            "Đã tải số tỉnh:",
+            vietnamAddressData.length
         );
 
     }
@@ -224,13 +194,9 @@ async function loadVietnamAddressData() {
         provinceSelect.disabled =
             true;
 
-
         resetDistricts();
-
         resetWards();
-
     }
-
 }
 
 
@@ -243,19 +209,7 @@ provinceSelect.addEventListener(
     function() {
 
         resetDistricts();
-
         resetWards();
-
-
-        if (
-            !Array.isArray(
-                vietnamAddressData
-            )
-        ) {
-
-            return;
-
-        }
 
 
         const provinceCode =
@@ -267,34 +221,26 @@ provinceSelect.addEventListener(
         if (!provinceCode) {
 
             return;
-
         }
 
 
         const province =
             vietnamAddressData.find(
                 item =>
-                    String(
-                        item.Code
-                    )
+                    String(item.Code)
                     ===
-                    String(
-                        provinceCode
-                    )
+                    String(provinceCode)
             );
 
 
         if (!province) {
 
             return;
-
         }
 
 
         const districts =
-            province.District
-            || province.Districts
-            || [];
+            province.District;
 
 
         if (
@@ -304,36 +250,26 @@ provinceSelect.addEventListener(
         ) {
 
             return;
-
         }
 
 
         districts.forEach(
             district => {
 
-                const districtName =
-                    district.FullName
-                    || district.Name
-                    || "";
-
-
-                const districtCode =
-                    district.Code
-                    || "";
-
-
-                if (!districtName) {
+                if (
+                    !district.FullName
+                    ||
+                    !district.Code
+                ) {
 
                     return;
-
                 }
 
 
                 const option =
                     createOption(
-                        districtName,
-                        districtName,
-                        districtCode
+                        district.FullName,
+                        district.Code
                     );
 
 
@@ -347,7 +283,6 @@ provinceSelect.addEventListener(
 
         districtSelect.disabled =
             false;
-
     }
 );
 
@@ -361,17 +296,6 @@ districtSelect.addEventListener(
     function() {
 
         resetWards();
-
-
-        if (
-            !Array.isArray(
-                vietnamAddressData
-            )
-        ) {
-
-            return;
-
-        }
 
 
         const provinceCode =
@@ -393,60 +317,55 @@ districtSelect.addEventListener(
         ) {
 
             return;
-
         }
 
 
         const province =
             vietnamAddressData.find(
                 item =>
-                    String(
-                        item.Code
-                    )
+                    String(item.Code)
                     ===
-                    String(
-                        provinceCode
-                    )
+                    String(provinceCode)
             );
 
 
         if (!province) {
 
             return;
-
         }
 
 
         const districts =
-            province.District
-            || province.Districts
-            || [];
+            province.District;
+
+
+        if (
+            !Array.isArray(
+                districts
+            )
+        ) {
+
+            return;
+        }
 
 
         const district =
             districts.find(
                 item =>
-                    String(
-                        item.Code
-                    )
+                    String(item.Code)
                     ===
-                    String(
-                        districtCode
-                    )
+                    String(districtCode)
             );
 
 
         if (!district) {
 
             return;
-
         }
 
 
         const wards =
-            district.Ward
-            || district.Wards
-            || [];
+            district.Ward;
 
 
         if (
@@ -456,36 +375,26 @@ districtSelect.addEventListener(
         ) {
 
             return;
-
         }
 
 
         wards.forEach(
             ward => {
 
-                const wardName =
-                    ward.FullName
-                    || ward.Name
-                    || "";
-
-
-                const wardCode =
-                    ward.Code
-                    || "";
-
-
-                if (!wardName) {
+                if (
+                    !ward.FullName
+                    ||
+                    !ward.Code
+                ) {
 
                     return;
-
                 }
 
 
                 const option =
                     createOption(
-                        wardName,
-                        wardName,
-                        wardCode
+                        ward.FullName,
+                        ward.Code
                     );
 
 
@@ -499,7 +408,6 @@ districtSelect.addEventListener(
 
         wardSelect.disabled =
             false;
-
     }
 );
 
@@ -513,10 +421,8 @@ document.addEventListener(
     function() {
 
         resetDistricts();
-
         resetWards();
 
         loadVietnamAddressData();
-
     }
 );
