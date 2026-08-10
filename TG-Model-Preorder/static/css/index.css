@@ -1,3 +1,7 @@
+/* =================================================
+   BODY
+   ================================================= */
+
 body {
 
     font-family: Arial, sans-serif;
@@ -10,15 +14,23 @@ body {
 }
 
 
+/* =================================================
+   CONTAINER
+   ================================================= */
+
 .container {
 
-    max-width: 900px;
+    max-width: 1000px;
 
     margin: 0 auto;
 
     padding: 30px 20px;
 }
 
+
+/* =================================================
+   TIÊU ĐỀ SHOP
+   ================================================= */
 
 .shop-title {
 
@@ -28,11 +40,37 @@ body {
 }
 
 
+.shop-title h1 {
+
+    margin-bottom: 8px;
+
+    color: #f57c00;
+}
+
+
+.shop-title p {
+
+    margin-top: 0;
+
+    color: #6c757d;
+}
+
+
 /* =================================================
-   SẢN PHẨM
+   DANH SÁCH SẢN PHẨM
    ================================================= */
 
-.product {
+.product-list {
+
+    width: 100%;
+}
+
+
+/* =================================================
+   CARD SẢN PHẨM
+   ================================================= */
+
+.product-card {
 
     background: white;
 
@@ -48,7 +86,47 @@ body {
 }
 
 
-.product h5 {
+/* =================================================
+   ẢNH SẢN PHẨM
+   ================================================= */
+
+.product-image-wrap {
+
+    width: 100%;
+
+    text-align: center;
+
+    margin-bottom: 20px;
+}
+
+
+.product-image {
+
+    display: block;
+
+    width: 100%;
+
+    max-width: 450px;
+
+    height: 350px;
+
+    margin: 0 auto;
+
+    object-fit: contain;
+
+    border-radius: 10px;
+
+    background: #f7f7f7;
+}
+
+
+/* =================================================
+   THƯƠNG HIỆU
+   ================================================= */
+
+.product-brand {
+
+    margin-top: 0;
 
     margin-bottom: 8px;
 
@@ -56,13 +134,25 @@ body {
 }
 
 
-.product h2 {
+/* =================================================
+   TÊN SẢN PHẨM
+   ================================================= */
+
+.product-name {
 
     margin-top: 0;
+
+    margin-bottom: 15px;
+
+    color: #333;
 }
 
 
-.product hr {
+/* =================================================
+   HR
+   ================================================= */
+
+.product-card hr {
 
     border: none;
 
@@ -74,7 +164,19 @@ body {
 
 
 /* =================================================
-   NÚT
+   THÔNG TIN SẢN PHẨM
+   ================================================= */
+
+.product-card p {
+
+    line-height: 1.6;
+
+    margin: 10px 0;
+}
+
+
+/* =================================================
+   NÚT CHUNG
    ================================================= */
 
 .btn {
@@ -90,6 +192,8 @@ body {
     font-weight: bold;
 
     color: white;
+
+    box-sizing: border-box;
 }
 
 
@@ -171,6 +275,8 @@ body {
 #pending-order-code {
 
     color: #dc3545;
+
+    font-weight: bold;
 }
 
 
@@ -271,4 +377,61 @@ body {
     cursor: not-allowed;
 
     opacity: 0.75;
+}
+
+
+/* =================================================
+   KHÔNG CÓ SẢN PHẨM
+   ================================================= */
+
+.empty-products {
+
+    background: white;
+
+    padding: 30px;
+
+    border-radius: 12px;
+
+    text-align: center;
+
+    color: #777;
+
+    box-shadow:
+        0 2px 8px
+        rgba(0, 0, 0, 0.08);
+}
+
+
+/* =================================================
+   RESPONSIVE
+   ================================================= */
+
+@media (
+    max-width: 600px
+) {
+
+    .container {
+
+        padding:
+            20px 12px;
+    }
+
+
+    .product-card {
+
+        padding: 18px;
+    }
+
+
+    .product-image {
+
+        height: 260px;
+    }
+
+
+    .shop-title h1 {
+
+        font-size: 26px;
+    }
+
 }
