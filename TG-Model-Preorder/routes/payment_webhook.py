@@ -44,15 +44,11 @@ def webhook():
 
     if not data:
 
-        print(
-            "KHONG CO DATA"
-        )
-
         return "NO DATA", 400
 
 
     # =====================================================
-    # KIỂM TRA THANH TOÁN THÀNH CÔNG
+    # PAYOS KHÔNG BÁO THÀNH CÔNG
     # =====================================================
 
     if data.get("code") != "00":
@@ -65,11 +61,10 @@ def webhook():
 
 
     # =====================================================
-    # LẤY MÃ ĐƠN TGMODEL
+    # LẤY ORDER CODE
     #
-    # submit_order.py tạo:
-    #
-    # description = TGM001
+    # submit_order.py đang gửi:
+    # description = TGMxxx
     # =====================================================
 
     order_code = (
@@ -82,14 +77,14 @@ def webhook():
     if not order_code:
 
         print(
-            "KHONG CO DESCRIPTION"
+            "KHONG CO ORDER CODE"
         )
 
         return "OK", 200
 
 
     print(
-        "ORDER:",
+        "ORDER CODE:",
         order_code
     )
 
@@ -112,7 +107,10 @@ def webhook():
             """
             SELECT
                 id,
-                status
+                status,
+                stock_reserved,
+                product_id,
+                quantity
 
             FROM orders
 
@@ -145,6 +143,9 @@ def webhook():
 
         order_id = order[0]
         current_status = order[1]
+        stock_reserved = order[2]
+        product_id = order[3]
+        quantity = order[4]
 
 
         print(
@@ -159,8 +160,14 @@ def webhook():
         )
 
 
+        print(
+            "STOCK RESERVED:",
+            stock_reserved
+        )
+
+
         # =================================================
-        # ĐÃ CỌC RỒI
+        # ĐÃ CỌC TRƯỚC ĐÓ
         # =================================================
 
         if current_status == "Đã cọc":
@@ -186,17 +193,54 @@ def webhook():
 
 
         # =================================================
+        # HẾT HẠN
+        # =================================================
+
+        if current_status == "Hết hạn thanh toán":
+
+            print(
+                "DON DA HET HAN"
+            )
+
+            return "OK", 200
+
+
+        # =================================================
+        # CHỈ XÁC NHẬN ĐƠN CHƯA THANH TOÁN
+        # =================================================
+
+        if current_status != "Chưa thanh toán":
+
+            print(
+                "TRANG THAI KHONG HOP LE:",
+                current_status
+            )
+
+            return "OK", 200
+
+
+        # =================================================
         # THANH TOÁN THÀNH CÔNG
         #
-        # Không kiểm tra expires_at ở webhook.
-        # PayOS báo code=00 thì xác nhận đã thanh toán.
+        # QUAN TRỌNG:
+        #
+        # Hàng đã được trừ ngay khi tạo đơn.
+        #
+        # Vì vậy:
+        #
+        # - KHÔNG trừ kho thêm
+        # - KHÔNG cộng kho lại
+        #
+        # Chỉ bỏ trạng thái "đang giữ hàng"
         # =================================================
 
         cursor.execute(
             """
             UPDATE orders
 
-            SET status=%s
+            SET
+                status=%s,
+                stock_reserved=FALSE
 
             WHERE id=%s
             AND status=%s
@@ -209,13 +253,18 @@ def webhook():
         )
 
 
-        print(
-            "PAYMENT UPDATED ROW:",
+        updated_rows = (
             cursor.rowcount
         )
 
 
         conn.commit()
+
+
+        print(
+            "PAYMENT UPDATED ROW:",
+            updated_rows
+        )
 
 
         print(
@@ -237,4 +286,5 @@ def webhook():
     finally:
 
         cursor.close()
+
         conn.close()
