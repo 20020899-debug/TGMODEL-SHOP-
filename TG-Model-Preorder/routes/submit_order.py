@@ -172,16 +172,55 @@ def submit():
 
     except (TypeError, ValueError):
 
-        quantity = 1
-
-
-    if quantity < 1:
-
-        quantity = 1
+        return (
+            "Số lượng không hợp lệ",
+            400
+        )
 
 
     # =====================================================
-    # TÍNH SỐ TIỀN PAYOS
+    # GIỚI HẠN SỐ LƯỢNG 1 - 2
+    # =====================================================
+
+    if quantity < 1 or quantity > 2:
+
+        return """
+        <!DOCTYPE html>
+
+        <html lang="vi">
+
+        <head>
+
+            <meta charset="UTF-8">
+
+            <title>
+                Số lượng không hợp lệ
+            </title>
+
+        </head>
+
+        <body>
+
+            <h2>
+                Mỗi đơn chỉ được đặt tối đa 2 sản phẩm
+            </h2>
+
+            <p>
+                Vui lòng quay lại và chọn số lượng từ 1 đến 2.
+            </p>
+
+            <a href="/">
+                Quay lại trang chủ
+            </a>
+
+        </body>
+
+        </html>
+        """, 400
+
+
+    # =====================================================
+    # TÍNH SỐ TIỀN THANH TOÁN
     # =====================================================
 
     if payment_type == "full":
@@ -264,10 +303,6 @@ def submit():
                 )
 
 
-                # =========================================
-                # ĐƠN ĐÃ HẾT HẠN
-                # =========================================
-
                 if is_order_expired(
                     candidate_expires_at
                 ):
@@ -277,11 +312,6 @@ def submit():
                         conn,
                         candidate[0]
                     )
-
-
-                # =========================================
-                # ĐƠN VẪN CÒN HẠN
-                # =========================================
 
                 else:
 
@@ -334,10 +364,6 @@ def submit():
                 )
 
 
-                # =========================================
-                # ĐƠN ĐÃ HẾT HẠN
-                # =========================================
-
                 if is_order_expired(
                     candidate_expires_at
                 ):
@@ -347,11 +373,6 @@ def submit():
                         conn,
                         candidate[0]
                     )
-
-
-                # =========================================
-                # ĐƠN VẪN CÒN HẠN
-                # =========================================
 
                 else:
 
@@ -378,10 +399,6 @@ def submit():
                 existing_order[4]
             )
 
-
-            # =============================================
-            # ĐÃ CÓ LINK PAYOS
-            # =============================================
 
             if old_payment_url:
 
@@ -414,10 +431,6 @@ def submit():
 
                 return response
 
-
-            # =============================================
-            # CÓ ĐƠN NHƯNG CHƯA CÓ LINK PAYOS
-            # =============================================
 
             return f"""
             <!DOCTYPE html>
@@ -571,19 +584,21 @@ def submit():
 
 
         # =================================================
-        # HẠN THANH TOÁN 15 PHÚT
+        # HẠN THANH TOÁN
+        #
+        # Muốn đổi thời gian chỉ cần sửa minutes=15
         # =================================================
 
         expires_time = (
             created_time
             + timedelta(
-                minutes=5
+                minutes=15
             )
         )
 
 
         # =================================================
-        # DATABASE LƯU GIỜ VN KHÔNG TIMEZONE
+        # DB LƯU GIỜ VIỆT NAM KHÔNG TIMEZONE
         # =================================================
 
         expires_at_db = (
@@ -807,20 +822,12 @@ def submit():
         return response
 
 
-    # =====================================================
-    # LỖI
-    # =====================================================
-
     except Exception:
 
         conn.rollback()
 
         raise
 
-
-    # =====================================================
-    # ĐÓNG DATABASE
-    # =====================================================
 
     finally:
 
