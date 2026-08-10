@@ -2,7 +2,12 @@ from database import get_db
 from config import products
 
 
+# =========================================================
+# KẾT NỐI DATABASE
+# =========================================================
+
 conn = get_db()
+
 cursor = conn.cursor()
 
 
@@ -59,7 +64,7 @@ try:
 
 
     # =====================================================
-    # EXPIRES_AT
+    # BỔ SUNG CỘT CHO DATABASE CŨ
     # =====================================================
 
     cursor.execute(
@@ -72,10 +77,6 @@ try:
     )
 
 
-    # =====================================================
-    # PAYMENT TYPE
-    # =====================================================
-
     cursor.execute(
         """
         ALTER TABLE orders
@@ -85,10 +86,6 @@ try:
         """
     )
 
-
-    # =====================================================
-    # PAYMENT URL
-    # =====================================================
 
     cursor.execute(
         """
@@ -100,10 +97,6 @@ try:
     )
 
 
-    # =====================================================
-    # ORDER TOKEN
-    # =====================================================
-
     cursor.execute(
         """
         ALTER TABLE orders
@@ -113,10 +106,6 @@ try:
         """
     )
 
-
-    # =====================================================
-    # PRODUCT ID
-    # =====================================================
 
     cursor.execute(
         """
@@ -128,10 +117,6 @@ try:
     )
 
 
-    # =====================================================
-    # STOCK RESERVED
-    # =====================================================
-
     cursor.execute(
         """
         ALTER TABLE orders
@@ -140,6 +125,42 @@ try:
             stock_reserved BOOLEAN
             NOT NULL
             DEFAULT FALSE
+        """
+    )
+
+
+    # =====================================================
+    # TẠO BẢNG PRODUCTS
+    #
+    # Từ đây sản phẩm sẽ dần được quản lý bằng PostgreSQL
+    # thay vì phải sửa config.py mỗi lần.
+    # =====================================================
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS products
+        (
+            id SERIAL PRIMARY KEY,
+
+            name TEXT
+                NOT NULL,
+
+            brand TEXT,
+
+            price INTEGER
+                NOT NULL
+                DEFAULT 0,
+
+            deposit INTEGER
+                NOT NULL
+                DEFAULT 0,
+
+            eta TEXT,
+
+            active BOOLEAN
+                NOT NULL
+                DEFAULT TRUE
+        )
         """
     )
 
@@ -166,7 +187,12 @@ try:
 
 
     # =====================================================
-    # ĐỒNG BỘ PRODUCT ID TỪ CONFIG
+    # MIGRATE SẢN PHẨM TỪ CONFIG.PY
+    #
+    # Chỉ thêm sản phẩm nếu ID chưa tồn tại.
+    #
+    # Nếu sau này sửa sản phẩm trong Admin,
+    # chạy lại init_db.py cũng KHÔNG ghi đè dữ liệu.
     # =====================================================
 
     for product in products:
@@ -180,6 +206,74 @@ try:
 
             continue
 
+
+        # =================================================
+        # THÊM VÀO PRODUCTS
+        # =================================================
+
+        cursor.execute(
+            """
+            INSERT INTO products
+            (
+                id,
+                name,
+                brand,
+                price,
+                deposit,
+                eta,
+                active
+            )
+
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                TRUE
+            )
+
+            ON CONFLICT (id)
+            DO NOTHING
+            """,
+            (
+                product_id,
+
+                product.get(
+                    "name",
+                    ""
+                ),
+
+                product.get(
+                    "brand",
+                    ""
+                ),
+
+                product.get(
+                    "price",
+                    0
+                ),
+
+                product.get(
+                    "deposit",
+                    0
+                ),
+
+                product.get(
+                    "eta",
+                    ""
+                )
+            )
+        )
+
+
+        # =================================================
+        # TẠO TỒN KHO CHO PRODUCT
+        #
+        # Nếu đã có stock thì giữ nguyên.
+        # =================================================
 
         cursor.execute(
             """
@@ -205,7 +299,43 @@ try:
 
 
     # =====================================================
-    # INDEX
+    # ĐỒNG BỘ SEQUENCE PRODUCTS.ID
+    #
+    # Ví dụ config hiện có:
+    #
+    # 1
+    # 2
+    # 3
+    #
+    # thì khi Admin thêm sản phẩm tiếp theo,
+    # PostgreSQL sẽ sinh ID 4.
+    # =====================================================
+
+    cursor.execute(
+        """
+        SELECT setval(
+            pg_get_serial_sequence(
+                'products',
+                'id'
+            ),
+            GREATEST(
+                COALESCE(
+                    (
+                        SELECT MAX(id)
+                        FROM products
+                    ),
+                    1
+                ),
+                1
+            ),
+            TRUE
+        )
+        """
+    )
+
+
+    # =====================================================
+    # INDEX ORDERS - PRODUCT ID
     # =====================================================
 
     cursor.execute(
@@ -218,6 +348,10 @@ try:
     )
 
 
+    # =====================================================
+    # INDEX ORDERS - ORDER TOKEN
+    # =====================================================
+
     cursor.execute(
         """
         CREATE INDEX IF NOT EXISTS
@@ -228,12 +362,30 @@ try:
     )
 
 
+    # =====================================================
+    # INDEX ORDERS - STATUS
+    # =====================================================
+
     cursor.execute(
         """
         CREATE INDEX IF NOT EXISTS
             idx_orders_status
 
         ON orders(status)
+        """
+    )
+
+
+    # =====================================================
+    # INDEX PRODUCTS - ACTIVE
+    # =====================================================
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+            idx_products_active
+
+        ON products(active)
         """
     )
 
@@ -258,6 +410,10 @@ try:
     )
 
     print(
+        "products: OK"
+    )
+
+    print(
         "payment_type: OK"
     )
 
@@ -274,13 +430,21 @@ try:
     )
 
     print(
-        "Đồng bộ sản phẩm: OK"
+        "Migrate sản phẩm từ config.py: OK"
+    )
+
+    print(
+        "Product ID sequence: OK"
     )
 
     print(
         "======================================"
     )
 
+
+# =========================================================
+# LỖI
+# =========================================================
 
 except Exception as error:
 
@@ -306,6 +470,10 @@ except Exception as error:
 
     raise
 
+
+# =========================================================
+# ĐÓNG DATABASE
+# =========================================================
 
 finally:
 
