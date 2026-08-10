@@ -1,8 +1,8 @@
 from flask import (
-Blueprint,
-request,
-redirect,
-make_response
+    Blueprint,
+    request,
+    redirect,
+    make_response
 )
 
 from datetime import timedelta
@@ -15,19 +15,20 @@ from config import products
 from payos_service import payos
 
 from services.order_service import (
-get_now_vn,
-normalize_expires_at,
-is_order_expired,
-mark_order_expired
+    get_now_vn,
+    normalize_expires_at,
+    is_order_expired,
+    mark_order_expired
 )
 
 from services.stock_service import (
-reserve_stock
+    reserve_stock
 )
 
+
 submit_order_bp = Blueprint(
-"submit_order",
-**name**
+    "submit_order",
+    __name__
 )
 
 # =========================================================
