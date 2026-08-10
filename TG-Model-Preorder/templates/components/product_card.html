@@ -47,15 +47,65 @@
     </p>
 
 
-    <a
-        href="/preorder/{{ product.id }}"
-        class="btn btn-preorder"
-        data-original-text="ĐẶT PRE-ORDER"
-    >
+    <!-- =================================================
+         TỒN KHO
+         ================================================= -->
 
-        ĐẶT PRE-ORDER
+    <p>
 
-    </a>
+        <strong>
+            📊 Tồn kho:
+        </strong>
+
+
+        {% if product.stock > 0 %}
+
+            <span class="stock-available">
+
+                {{ product.stock }} sản phẩm
+
+            </span>
+
+        {% else %}
+
+            <span class="stock-out">
+
+                Hết hàng
+
+            </span>
+
+        {% endif %}
+
+    </p>
+
+
+    <!-- =================================================
+         NÚT ĐẶT HÀNG
+         ================================================= -->
+
+    {% if product.stock > 0 %}
+
+        <a
+            href="/preorder/{{ product.id }}"
+            class="btn btn-preorder"
+            data-original-text="ĐẶT PRE-ORDER"
+        >
+
+            ĐẶT PRE-ORDER
+
+        </a>
+
+    {% else %}
+
+        <span
+            class="btn btn-out-of-stock"
+        >
+
+            HẾT HÀNG
+
+        </span>
+
+    {% endif %}
 
 
 </div>
