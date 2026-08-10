@@ -127,7 +127,7 @@
 
         .filter-form select {
 
-            min-width: 200px;
+            min-width: 220px;
 
             padding: 10px;
 
@@ -139,11 +139,19 @@
         }
 
 
-        .filter-form button {
+        /* =================================================
+           NÚT TÌM / LỌC
+           ================================================= */
 
-            padding: 10px 16px;
+        .btn-filter {
+
+            background: #ff9800;
+
+            color: white;
 
             border: none;
+
+            padding: 10px 16px;
 
             border-radius: 5px;
 
@@ -153,25 +161,31 @@
         }
 
 
-        .btn-filter {
-
-            background: #ff9800;
-
-            color: white;
-        }
-
-
         .btn-filter:hover {
 
             background: #f57c00;
         }
 
 
+        /* =================================================
+           NÚT XÓA LỌC
+           ================================================= */
+
         .btn-clear {
+
+            display: inline-block;
 
             background: #6c757d;
 
             color: white;
+
+            padding: 10px 16px;
+
+            border-radius: 5px;
+
+            text-decoration: none;
+
+            font-weight: bold;
         }
 
 
@@ -181,14 +195,8 @@
         }
 
 
-        .clear-link {
-
-            text-decoration: none;
-        }
-
-
         /* =================================================
-           TABLE
+           TABLE WRAPPER
            ================================================= */
 
         .table-wrapper {
@@ -199,13 +207,17 @@
         }
 
 
+        /* =================================================
+           TABLE
+           ================================================= */
+
         table {
 
             width: 100%;
 
             border-collapse: collapse;
 
-            min-width: 1000px;
+            min-width: 1050px;
         }
 
 
@@ -245,6 +257,34 @@
         tr:hover {
 
             background: #fff3e0;
+        }
+
+
+        /* =================================================
+           THANH TOÁN
+           ================================================= */
+
+        .payment-amount {
+
+            font-weight: bold;
+
+            color: #333;
+        }
+
+
+        .payment-full {
+
+            color: #198754;
+
+            font-weight: bold;
+        }
+
+
+        .payment-deposit {
+
+            color: #f57c00;
+
+            font-weight: bold;
         }
 
 
@@ -389,7 +429,6 @@
             color: #777;
         }
 
-
     </style>
 
 </head>
@@ -418,9 +457,7 @@
         href="/admin/stock"
         class="btn-stock"
     >
-
         📦 QUẢN LÝ TỒN KHO
-
     </a>
 
 
@@ -443,16 +480,16 @@
         >
 
 
-        <select name="status">
+        <select
+            name="status"
+        >
 
 
             <option
                 value=""
                 {% if status == "" %}selected{% endif %}
             >
-
                 Tất cả trạng thái
-
             </option>
 
 
@@ -460,9 +497,7 @@
                 value="Chưa thanh toán"
                 {% if status == "Chưa thanh toán" %}selected{% endif %}
             >
-
                 Chưa thanh toán
-
             </option>
 
 
@@ -470,9 +505,7 @@
                 value="Đã cọc"
                 {% if status == "Đã cọc" %}selected{% endif %}
             >
-
                 Đã cọc
-
             </option>
 
 
@@ -480,9 +513,7 @@
                 value="Đã chuyển khoản full"
                 {% if status == "Đã chuyển khoản full" %}selected{% endif %}
             >
-
                 Đã chuyển khoản full
-
             </option>
 
 
@@ -490,9 +521,7 @@
                 value="Đang chuẩn bị hàng"
                 {% if status == "Đang chuẩn bị hàng" %}selected{% endif %}
             >
-
                 Đang chuẩn bị hàng
-
             </option>
 
 
@@ -500,9 +529,7 @@
                 value="Đã gửi hàng"
                 {% if status == "Đã gửi hàng" %}selected{% endif %}
             >
-
                 Đã gửi hàng
-
             </option>
 
 
@@ -510,9 +537,7 @@
                 value="Hoàn thành"
                 {% if status == "Hoàn thành" %}selected{% endif %}
             >
-
                 Hoàn thành
-
             </option>
 
 
@@ -520,9 +545,7 @@
                 value="Đã hủy"
                 {% if status == "Đã hủy" %}selected{% endif %}
             >
-
                 Đã hủy
-
             </option>
 
 
@@ -530,9 +553,7 @@
                 value="Hết hạn thanh toán"
                 {% if status == "Hết hạn thanh toán" %}selected{% endif %}
             >
-
                 Hết hạn thanh toán
-
             </option>
 
 
@@ -543,26 +564,15 @@
             type="submit"
             class="btn-filter"
         >
-
             🔍 Tìm / Lọc
-
         </button>
 
 
         <a
             href="/admin"
-            class="clear-link"
+            class="btn-clear"
         >
-
-            <button
-                type="button"
-                class="btn-clear"
-            >
-
-                Xóa lọc
-
-            </button>
-
+            Xóa lọc
         </a>
 
 
@@ -669,7 +679,7 @@
 
 
                     <!-- =====================================
-                         SĐT
+                         SỐ ĐIỆN THOẠI
                          ===================================== -->
 
                     <td>
@@ -702,40 +712,62 @@
 
 
                     <!-- =====================================
-                         TIỀN CỌC
+                         THANH TOÁN
                          ===================================== -->
 
                     <td>
 
-    {% if order["payment_type"] == "full" %}
 
-        {{ "{:,}".format(
-            (order["price"] or 0)
-            * (order["quantity"] or 1)
-        ) }} đ
+                        {% if order["payment_type"] == "full" %}
 
-        <br>
 
-        <small style="color:#198754;">
-            Full
-        </small>
+                            <span class="payment-amount">
 
-    {% else %}
+                                {{ "{:,}".format(
+                                    (order["price"] or 0)
+                                    * (order["quantity"] or 1)
+                                ) }} đ
 
-        {{ "{:,}".format(
-            (order["deposit"] or 0)
-            * (order["quantity"] or 1)
-        ) }} đ
+                            </span>
 
-        <br>
 
-        <small style="color:#f57c00;">
-            Cọc
-        </small>
+                            <br>
 
-    {% endif %}
 
-</td>
+                            <small class="payment-full">
+
+                                Full
+
+                            </small>
+
+
+                        {% else %}
+
+
+                            <span class="payment-amount">
+
+                                {{ "{:,}".format(
+                                    (order["deposit"] or 0)
+                                    * (order["quantity"] or 1)
+                                ) }} đ
+
+                            </span>
+
+
+                            <br>
+
+
+                            <small class="payment-deposit">
+
+                                Cọc
+
+                            </small>
+
+
+                        {% endif %}
+
+
+                    </td>
 
 
                     <!-- =====================================
@@ -747,6 +779,7 @@
 
                         {% if order["status"] == "Chưa thanh toán" %}
 
+
                             <span class="status status-unpaid">
 
                                 Chưa thanh toán
@@ -755,6 +788,7 @@
 
 
                         {% elif order["status"] == "Đã cọc" %}
+
 
                             <span class="status status-deposit">
 
@@ -765,6 +799,7 @@
 
                         {% elif order["status"] == "Đã chuyển khoản full" %}
 
+
                             <span class="status status-full">
 
                                 Đã chuyển khoản full
@@ -773,6 +808,7 @@
 
 
                         {% elif order["status"] == "Đang chuẩn bị hàng" %}
+
 
                             <span class="status status-preparing">
 
@@ -783,6 +819,7 @@
 
                         {% elif order["status"] == "Đã gửi hàng" %}
 
+
                             <span class="status status-shipped">
 
                                 Đã gửi hàng
@@ -791,6 +828,7 @@
 
 
                         {% elif order["status"] == "Hoàn thành" %}
+
 
                             <span class="status status-complete">
 
@@ -801,6 +839,7 @@
 
                         {% elif order["status"] == "Đã hủy" %}
 
+
                             <span class="status status-cancel">
 
                                 Đã hủy
@@ -809,6 +848,7 @@
 
 
                         {% elif order["status"] == "Hết hạn thanh toán" %}
+
 
                             <span class="status status-expired">
 
@@ -819,11 +859,13 @@
 
                         {% else %}
 
+
                             <span class="status">
 
                                 {{ order["status"] }}
 
                             </span>
+
 
                         {% endif %}
 
@@ -842,9 +884,7 @@
                             href="/admin/order/{{ order['id'] }}"
                             class="detail-link"
                         >
-
                             👁 Chi tiết
-
                         </a>
 
 
@@ -863,9 +903,7 @@
                                 class="delete-button"
                                 onclick="return confirm('Bạn có chắc muốn xóa đơn {{ order['order_code'] }} không?');"
                             >
-
                                 🗑 Xóa
-
                             </button>
 
 
@@ -883,14 +921,14 @@
 
                 <tr>
 
+
                     <td
                         colspan="9"
                         class="empty"
                     >
-
                         Không tìm thấy đơn hàng.
-
                     </td>
+
 
                 </tr>
 
