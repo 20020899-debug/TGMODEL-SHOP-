@@ -10,7 +10,9 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>TG MODEL SHOP</title>
+    <title>
+        TG MODEL SHOP
+    </title>
 
     <link
         rel="stylesheet"
@@ -23,50 +25,56 @@
 <body>
 
 
-<div class="container">
+<!-- =====================================================
+     TIÊU ĐỀ SHOP
+     ===================================================== -->
+
+<div class="shop-title">
+
+    <h1>
+        TG MODEL SHOP HẢI PHÒNG
+    </h1>
+
+    <p>
+        Model Kit & Metal Build
+    </p>
+
+</div>
 
 
-    <!-- =================================================
-         TIÊU ĐỀ
-         ================================================= -->
+<!-- =====================================================
+     ĐƠN ĐANG CHỜ THANH TOÁN
+     ===================================================== -->
 
-    <div class="shop-title">
-
-        <h1>
-            TG MODEL SHOP HẢI PHÒNG
-        </h1>
-
-        <p>
-            Model Kit & Metal Build
-        </p>
-
-    </div>
+{% include "components/pending_order.html" %}
 
 
-    <!-- =================================================
-         ĐƠN CHỜ THANH TOÁN
-         ================================================= -->
+<!-- =====================================================
+     DANH SÁCH SẢN PHẨM
+     ===================================================== -->
 
-    {% include "components/pending_order.html" %}
+<div class="product-list">
 
-
-    <!-- =================================================
-         DANH SÁCH SẢN PHẨM
-         ================================================= -->
 
     {% for product in products %}
 
         {% include "components/product_card.html" %}
 
+
+    {% else %}
+
+
+        <div class="empty-products">
+
+            Hiện chưa có sản phẩm.
+
+        </div>
+
+
     {% endfor %}
 
 
 </div>
-
-
-<script
-    src="{{ url_for('static', filename='js/pending_order.js') }}"
-></script>
 
 
 </body>
