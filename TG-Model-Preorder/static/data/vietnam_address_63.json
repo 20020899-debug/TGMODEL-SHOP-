@@ -1,10 +1,4 @@
-{
-  "snapshot_date": "2025-01-04",
-  "administrative_model": "63 tỉnh/thành → quận/huyện → phường/xã",
-  "province_count": 63,
-  "district_count": 696,
-  "ward_count": 10056,
-  "provinces": [
+ [
   {
    "Code": "01",
    "FullName": "Thành phố Hà Nội",
@@ -57667,4 +57661,3 @@
    ]
   }
  ]
-}  
