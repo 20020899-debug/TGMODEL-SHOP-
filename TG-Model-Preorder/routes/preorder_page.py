@@ -45,6 +45,8 @@ def preorder(product_id):
 
         # =================================================
         # TÌM SẢN PHẨM TRỰC TIẾP TỪ DATABASE
+        # + ẢNH
+        # + TỒN KHO
         # =================================================
 
         cursor.execute(
@@ -56,6 +58,7 @@ def preorder(product_id):
                 p.price,
                 p.deposit,
                 p.eta,
+                p.image_url,
                 p.active,
 
                 COALESCE(
