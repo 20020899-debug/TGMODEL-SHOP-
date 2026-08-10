@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Quản lý sản phẩm
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/admin.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <!-- =================================================
+         TIÊU ĐỀ
+         ================================================= -->
+
+    <h1 class="page-title">
+        Quản lý sản phẩm
+    </h1>
+
+
+    <!-- =================================================
+         NÚT QUAY LẠI
+         ================================================= -->
+
+    <a
+        href="/admin"
+        class="btn btn-gray"
+    >
+        ← Quản lý đơn hàng
+    </a>
+
+
+
+    <!-- =================================================
+         THÊM SẢN PHẨM
+         ================================================= -->
+
+    <h2 class="section-title">
+        Thêm sản phẩm mới
+    </h2>
+
+
+    <form
+        method="POST"
+        action="/admin/products/add"
+    >
+
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Tên sản phẩm
+            </label>
+
+            <input
+                type="text"
+                name="name"
+                class="form-control"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Thương hiệu
+            </label>
+
+            <input
+                type="text"
+                name="brand"
+                class="form-control"
+            >
+
+        </div>
+
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Giá bán
+            </label>
+
+            <input
+                type="number"
+                name="price"
+                class="form-control"
+                min="0"
+                value="0"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Tiền cọc
+            </label>
+
+            <input
+                type="number"
+                name="deposit"
+                class="form-control"
+                min="0"
+                value="0"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-row">
+
+            <label class="form-label">
+                ETA
+            </label>
+
+            <input
+                type="text"
+                name="eta"
+                class="form-control"
+                placeholder="Ví dụ: Tháng 10/2026"
+            >
+
+        </div>
+
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Tồn kho ban đầu
+            </label>
+
+            <input
+                type="number"
+                name="stock"
+                class="form-control stock-input"
+                min="0"
+                value="0"
+                required
+            >
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn btn-orange"
+        >
+            ➕ THÊM SẢN PHẨM
+        </button>
+
+
+    </form>
+
+
+    <!-- =================================================
+         DANH SÁCH SẢN PHẨM
+         ================================================= -->
+
+    <h2 class="section-title">
+        Danh sách sản phẩm
+    </h2>
+
+
+    <div class="table-wrapper">
+
+
+        <table class="admin-table">
+
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        ID
+                    </th>
+
+                    <th>
+                        Sản phẩm
+                    </th>
+
+                    <th>
+                        Thương hiệu
+                    </th>
+
+                    <th>
+                        Giá
+                    </th>
+
+                    <th>
+                        Tiền cọc
+                    </th>
+
+                    <th>
+                        ETA
+                    </th>
+
+                    <th>
+                        Tồn kho
+                    </th>
+
+                    <th>
+                        Hiển thị
+                    </th>
+
+                    <th>
+                        Thao tác
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+
+                {% for product in products %}
+
+
+                <tr>
+
+
+                    <td>
+                        {{ product["id"] }}
+                    </td>
+
+
+                    <td>
+                        {{ product["name"] }}
+                    </td>
+
+
+                    <td>
+                        {{ product["brand"] or "--" }}
+                    </td>
+
+
+                    <td>
+
+                        {{ "{:,}".format(
+                            product["price"] or 0
+                        ) }} đ
+
+                    </td>
+
+
+                    <td>
+
+                        {{ "{:,}".format(
+                            product["deposit"] or 0
+                        ) }} đ
+
+                    </td>
+
+
+                    <td>
+                        {{ product["eta"] or "--" }}
+                    </td>
+
+
+                    <td>
+
+                        {% if product["stock"] > 0 %}
+
+                            <span class="stock-available">
+
+                                {{ product["stock"] }}
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="stock-zero">
+
+                                0
+
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+
+                        {% if product["active"] %}
+
+                            <span class="status status-complete">
+
+                                Đang hiện
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="status status-cancel">
+
+                                Đang ẩn
+
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+
+                        <a
+                            href="/admin/products/{{ product['id'] }}/edit"
+                            class="btn btn-orange"
+                        >
+                            ✏ Sửa
+                        </a>
+
+                    </td>
+
+
+                </tr>
+
+
+                {% else %}
+
+
+                <tr>
+
+                    <td
+                        colspan="9"
+                        class="empty"
+                    >
+                        Chưa có sản phẩm.
+                    </td>
+
+                </tr>
+
+
+                {% endfor %}
+
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>
