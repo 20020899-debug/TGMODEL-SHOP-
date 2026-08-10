@@ -14,7 +14,7 @@ cursor = conn.cursor()
 try:
 
     # =====================================================
-    # TẠO BẢNG ORDERS NẾU CHƯA TỒN TẠI
+    # TẠO BẢNG ORDERS
     # =====================================================
 
     cursor.execute(
@@ -60,53 +60,10 @@ try:
         )
         """
     )
-# =====================================================
-# ĐỒNG BỘ SẢN PHẨM TỪ CONFIG.PY
-#
-# Sản phẩm mới sẽ được tạo với tồn kho = 0.
-#
-# ON CONFLICT DO NOTHING:
-# không làm thay đổi tồn kho sản phẩm đã tồn tại.
-# =====================================================
 
-for product in products:
-
-    product_id = product.get(
-        "id"
-    )
-
-
-    if product_id is None:
-
-        continue
-
-
-    cursor.execute(
-        """
-        INSERT INTO product_stock
-        (
-            product_id,
-            stock
-        )
-
-        VALUES
-        (
-            %s,
-            0
-        )
-
-        ON CONFLICT (product_id)
-        DO NOTHING
-        """,
-        (
-            product_id,
-        )
-    )
 
     # =====================================================
-    # CÁC CỘT CŨ
-    #
-    # Giữ lại để database cũ tự bổ sung nếu thiếu
+    # CỘT EXPIRES_AT
     # =====================================================
 
     cursor.execute(
@@ -119,6 +76,10 @@ for product in products:
     )
 
 
+    # =====================================================
+    # CỘT PAYMENT_URL
+    # =====================================================
+
     cursor.execute(
         """
         ALTER TABLE orders
@@ -128,6 +89,10 @@ for product in products:
         """
     )
 
+
+    # =====================================================
+    # CỘT ORDER_TOKEN
+    # =====================================================
 
     cursor.execute(
         """
@@ -141,9 +106,6 @@ for product in products:
 
     # =====================================================
     # PRODUCT ID
-    #
-    # Dùng để biết đơn hàng thuộc sản phẩm nào.
-    # Cần thiết khi trừ hoặc hoàn lại tồn kho.
     # =====================================================
 
     cursor.execute(
@@ -158,12 +120,6 @@ for product in products:
 
     # =====================================================
     # STOCK RESERVED
-    #
-    # TRUE:
-    # đơn hàng đang giữ hàng trong kho
-    #
-    # FALSE:
-    # đơn không giữ hàng / hàng đã được trả lại kho
     # =====================================================
 
     cursor.execute(
@@ -197,6 +153,48 @@ for product in products:
         )
         """
     )
+
+
+    # =====================================================
+    # ĐỒNG BỘ SẢN PHẨM TỪ CONFIG.PY
+    #
+    # Chỉ thêm sản phẩm chưa tồn tại.
+    # Không ghi đè tồn kho cũ.
+    # =====================================================
+
+    for product in products:
+
+        product_id = product.get(
+            "id"
+        )
+
+
+        if product_id is None:
+
+            continue
+
+
+        cursor.execute(
+            """
+            INSERT INTO product_stock
+            (
+                product_id,
+                stock
+            )
+
+            VALUES
+            (
+                %s,
+                0
+            )
+
+            ON CONFLICT (product_id)
+            DO NOTHING
+            """,
+            (
+                product_id,
+            )
+        )
 
 
     # =====================================================
@@ -242,7 +240,7 @@ for product in products:
 
 
     # =====================================================
-    # LƯU THAY ĐỔI
+    # LƯU DATABASE
     # =====================================================
 
     conn.commit()
@@ -273,15 +271,15 @@ for product in products:
     )
 
     print(
+        "Đồng bộ sản phẩm: OK"
+    )
+
+    print(
         "======================================"
     )
 
 
 except Exception as error:
-
-    # =====================================================
-    # CÓ LỖI → HOÀN TÁC
-    # =====================================================
 
     conn.rollback()
 
@@ -291,7 +289,7 @@ except Exception as error:
     )
 
     print(
-        "LỖI KHỞI TẠO DATABASE"
+        "LỖI KHỞI TẠO DATABASE:"
     )
 
     print(
@@ -307,10 +305,6 @@ except Exception as error:
 
 
 finally:
-
-    # =====================================================
-    # ĐÓNG KẾT NỐI
-    # =====================================================
 
     cursor.close()
 
