@@ -86,6 +86,10 @@ def add_product():
         )
 
 
+    # =====================================================
+    # DỮ LIỆU TEXT
+    # =====================================================
+
     name = request.form.get(
         "name",
         ""
@@ -104,6 +108,16 @@ def add_product():
     ).strip()
 
 
+    image_url = request.form.get(
+        "image_url",
+        ""
+    ).strip()
+
+
+    # =====================================================
+    # DỮ LIỆU SỐ
+    # =====================================================
+
     try:
 
         price = int(
@@ -113,6 +127,7 @@ def add_product():
             )
         )
 
+
         deposit = int(
             request.form.get(
                 "deposit",
@@ -120,12 +135,14 @@ def add_product():
             )
         )
 
+
         stock = int(
             request.form.get(
                 "stock",
                 0
             )
         )
+
 
     except (TypeError, ValueError):
 
@@ -135,6 +152,10 @@ def add_product():
         )
 
 
+    # =====================================================
+    # KIỂM TRA TÊN
+    # =====================================================
+
     if not name:
 
         return (
@@ -143,21 +164,42 @@ def add_product():
         )
 
 
-    if price < 0:
-        price = 0
+    # =====================================================
+    # KHÔNG CHO GIÁ TRỊ ÂM
+    # =====================================================
 
-    if deposit < 0:
-        deposit = 0
+    price = max(
+        price,
+        0
+    )
 
-    if stock < 0:
-        stock = 0
 
+    deposit = max(
+        deposit,
+        0
+    )
+
+
+    stock = max(
+        stock,
+        0
+    )
+
+
+    # =====================================================
+    # DATABASE
+    # =====================================================
 
     conn = get_db()
+
     cursor = conn.cursor()
 
 
     try:
+
+        # =================================================
+        # THÊM PRODUCT
+        # =================================================
 
         cursor.execute(
             """
@@ -168,11 +210,13 @@ def add_product():
                 price,
                 deposit,
                 eta,
+                image_url,
                 active
             )
 
             VALUES
             (
+                %s,
                 %s,
                 %s,
                 %s,
@@ -188,7 +232,8 @@ def add_product():
                 brand,
                 price,
                 deposit,
-                eta
+                eta,
+                image_url
             )
         )
 
@@ -197,6 +242,10 @@ def add_product():
             cursor.fetchone()[0]
         )
 
+
+        # =================================================
+        # TẠO TỒN KHO
+        # =================================================
 
         cursor.execute(
             """
@@ -272,7 +321,15 @@ def edit_product(
 
     try:
 
+        # =================================================
+        # POST - LƯU SỬA
+        # =================================================
+
         if request.method == "POST":
+
+            # =============================================
+            # TEXT
+            # =============================================
 
             name = request.form.get(
                 "name",
@@ -292,6 +349,16 @@ def edit_product(
             ).strip()
 
 
+            image_url = request.form.get(
+                "image_url",
+                ""
+            ).strip()
+
+
+            # =============================================
+            # ACTIVE
+            # =============================================
+
             active = (
                 request.form.get(
                     "active"
@@ -299,6 +366,10 @@ def edit_product(
                 == "1"
             )
 
+
+            # =============================================
+            # NUMBER
+            # =============================================
 
             try:
 
@@ -309,6 +380,7 @@ def edit_product(
                     )
                 )
 
+
                 deposit = int(
                     request.form.get(
                         "deposit",
@@ -316,12 +388,14 @@ def edit_product(
                     )
                 )
 
+
                 stock = int(
                     request.form.get(
                         "stock",
                         0
                     )
                 )
+
 
             except (TypeError, ValueError):
 
@@ -331,6 +405,10 @@ def edit_product(
                 )
 
 
+            # =============================================
+            # KIỂM TRA TÊN
+            # =============================================
+
             if not name:
 
                 return (
@@ -339,21 +417,31 @@ def edit_product(
                 )
 
 
+            # =============================================
+            # KHÔNG CHO GIÁ TRỊ ÂM
+            # =============================================
+
             price = max(
                 price,
                 0
             )
+
 
             deposit = max(
                 deposit,
                 0
             )
 
+
             stock = max(
                 stock,
                 0
             )
 
+
+            # =============================================
+            # UPDATE PRODUCT
+            # =============================================
 
             cursor.execute(
                 """
@@ -365,6 +453,7 @@ def edit_product(
                     price=%s,
                     deposit=%s,
                     eta=%s,
+                    image_url=%s,
                     active=%s
 
                 WHERE id=%s
@@ -375,11 +464,16 @@ def edit_product(
                     price,
                     deposit,
                     eta,
+                    image_url,
                     active,
                     product_id
                 )
             )
 
+
+            # =============================================
+            # UPDATE STOCK
+            # =============================================
 
             cursor.execute(
                 """
@@ -417,6 +511,10 @@ def edit_product(
             )
 
 
+        # =================================================
+        # GET - LẤY PRODUCT
+        # =================================================
+
         product = get_product(
             cursor,
             product_id
@@ -448,3 +546,174 @@ def edit_product(
 
         cursor.close()
         conn.close()
+
+
+# =========================================================
+# XÓA SẢN PHẨM
+# =========================================================
+
+@admin_products_bp.route(
+    "/admin/products/<int:product_id>/delete",
+    methods=["POST"]
+)
+def delete_product(
+    product_id
+):
+
+    if not session.get("admin"):
+
+        return redirect(
+            url_for(
+                "auth.login"
+            )
+        )
+
+
+    conn = get_db()
+
+    cursor = conn.cursor()
+
+
+    try:
+
+        # =================================================
+        # KIỂM TRA PRODUCT
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT id
+
+            FROM products
+
+            WHERE id=%s
+
+            LIMIT 1
+            """,
+            (
+                product_id,
+            )
+        )
+
+
+        product = cursor.fetchone()
+
+
+        if product is None:
+
+            return (
+                "Không tìm thấy sản phẩm",
+                404
+            )
+
+
+        # =================================================
+        # KIỂM TRA ĐÃ TỪNG CÓ ĐƠN CHƯA
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT COUNT(*)
+
+            FROM orders
+
+            WHERE product_id=%s
+            """,
+            (
+                product_id,
+            )
+        )
+
+
+        order_count = (
+            cursor.fetchone()[0]
+        )
+
+
+        # =================================================
+        # ĐÃ TỪNG CÓ ĐƠN
+        #
+        # Không xóa cứng để giữ lịch sử.
+        # Chỉ ẩn sản phẩm.
+        # =================================================
+
+        if order_count > 0:
+
+            cursor.execute(
+                """
+                UPDATE products
+
+                SET active=FALSE
+
+                WHERE id=%s
+                """,
+                (
+                    product_id,
+                )
+            )
+
+
+            conn.commit()
+
+
+            return redirect(
+                url_for(
+                    "admin_products.products"
+                )
+            )
+
+
+        # =================================================
+        # CHƯA TỪNG CÓ ĐƠN
+        # XÓA STOCK
+        # =================================================
+
+        cursor.execute(
+            """
+            DELETE FROM product_stock
+
+            WHERE product_id=%s
+            """,
+            (
+                product_id,
+            )
+        )
+
+
+        # =================================================
+        # XÓA PRODUCT
+        # =================================================
+
+        cursor.execute(
+            """
+            DELETE FROM products
+
+            WHERE id=%s
+            """,
+            (
+                product_id,
+            )
+        )
+
+
+        conn.commit()
+
+
+    except Exception:
+
+        conn.rollback()
+
+        raise
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+    return redirect(
+        url_for(
+            "admin_products.products"
+        )
+    )
