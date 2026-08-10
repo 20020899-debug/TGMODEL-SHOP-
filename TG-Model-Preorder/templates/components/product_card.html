@@ -1,18 +1,54 @@
-<div class="product">
+<div class="product-card">
 
 
-    <h5>
-        {{ product.brand }}
+    <!-- =================================================
+         ẢNH SẢN PHẨM
+         ================================================= -->
+
+    {% if product.image_url %}
+
+        <div class="product-image-wrap">
+
+            <img
+                src="{{ product.image_url }}"
+                alt="{{ product.name }}"
+                class="product-image"
+                loading="lazy"
+            >
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- =================================================
+         THƯƠNG HIỆU
+         ================================================= -->
+
+    <h5 class="product-brand">
+
+        {{ product.brand or "--" }}
+
     </h5>
 
 
-    <h2>
+    <!-- =================================================
+         TÊN SẢN PHẨM
+         ================================================= -->
+
+    <h2 class="product-name">
+
         {{ product.name }}
+
     </h2>
 
 
     <hr>
 
+
+    <!-- =================================================
+         GIÁ
+         ================================================= -->
 
     <p>
 
@@ -20,10 +56,14 @@
             💰 Giá chính thức:
         </strong>
 
-        {{ "{:,}".format(product.price) }} đ
+        {{ "{:,}".format(product.price or 0) }} đ
 
     </p>
 
+
+    <!-- =================================================
+         TIỀN CỌC
+         ================================================= -->
 
     <p>
 
@@ -31,10 +71,14 @@
             💵 Tiền cọc:
         </strong>
 
-        {{ "{:,}".format(product.deposit) }} đ
+        {{ "{:,}".format(product.deposit or 0) }} đ
 
     </p>
 
+
+    <!-- =================================================
+         ETA
+         ================================================= -->
 
     <p>
 
@@ -42,7 +86,7 @@
             📦 Dự kiến trả hàng:
         </strong>
 
-        {{ product.eta }}
+        {{ product.eta or "Chưa xác định" }}
 
     </p>
 
@@ -90,9 +134,7 @@
             class="btn btn-preorder"
             data-original-text="ĐẶT PRE-ORDER"
         >
-
             ĐẶT PRE-ORDER
-
         </a>
 
     {% else %}
@@ -100,9 +142,7 @@
         <span
             class="btn btn-out-of-stock"
         >
-
             HẾT HÀNG
-
         </span>
 
     {% endif %}
