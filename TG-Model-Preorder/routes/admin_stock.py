@@ -3,11 +3,13 @@ from flask import (
     render_template,
     request,
     redirect,
-    url_for
+    url_for,
+    session
 )
 
+from psycopg2.extras import RealDictCursor
+
 from database import get_db
-from config import products
 
 from services.stock_service import (
     set_stock
@@ -30,8 +32,24 @@ admin_stock_bp = Blueprint(
 )
 def admin_stock():
 
+    # =====================================================
+    # KIỂM TRA ĐĂNG NHẬP ADMIN
+    # =====================================================
+
+    if not session.get("admin"):
+
+        return redirect(
+            url_for(
+                "auth.login"
+            )
+        )
+
+
     conn = get_db()
-    cursor = conn.cursor()
+
+    cursor = conn.cursor(
+        cursor_factory=RealDictCursor
+    )
 
 
     try:
@@ -66,6 +84,10 @@ def admin_stock():
                 )
 
 
+            # =============================================
+            # KHÔNG CHO STOCK ÂM
+            # =============================================
+
             if stock < 0:
 
                 stock = 0
@@ -75,13 +97,26 @@ def admin_stock():
             # KIỂM TRA PRODUCT CÓ TỒN TẠI
             # =============================================
 
-            product_exists = any(
-                p["id"] == product_id
-                for p in products
+            cursor.execute(
+                """
+                SELECT id
+
+                FROM products
+
+                WHERE id=%s
+
+                LIMIT 1
+                """,
+                (
+                    product_id,
+                )
             )
 
 
-            if not product_exists:
+            product = cursor.fetchone()
+
+
+            if product is None:
 
                 return (
                     "Không tìm thấy sản phẩm",
@@ -90,7 +125,7 @@ def admin_stock():
 
 
             # =============================================
-            # CẬP NHẬT
+            # CẬP NHẬT TỒN KHO
             # =============================================
 
             set_stock(
@@ -111,54 +146,38 @@ def admin_stock():
 
 
         # =================================================
-        # GET - LẤY DANH SÁCH TỒN KHO
+        # GET - LẤY SẢN PHẨM + TỒN KHO
         # =================================================
 
         cursor.execute(
             """
             SELECT
-                product_id,
-                stock
+                p.id,
+                p.name,
+                p.brand,
+                p.price,
+                p.deposit,
+                p.eta,
+                p.active,
 
-            FROM product_stock
+                COALESCE(
+                    ps.stock,
+                    0
+                ) AS stock
+
+            FROM products p
+
+            LEFT JOIN product_stock ps
+                ON ps.product_id = p.id
+
+            ORDER BY
+                p.active DESC,
+                p.id ASC
             """
         )
 
 
-        stock_rows = cursor.fetchall()
-
-
-        stock_map = {
-
-            row[0]: row[1]
-
-            for row in stock_rows
-        }
-
-
-        # =================================================
-        # GHÉP CONFIG + DATABASE
-        # =================================================
-
-        product_list = []
-
-
-        for product in products:
-
-            item = product.copy()
-
-
-            item["stock"] = (
-                stock_map.get(
-                    product["id"],
-                    0
-                )
-            )
-
-
-            product_list.append(
-                item
-            )
+        product_list = cursor.fetchall()
 
 
         # =================================================
