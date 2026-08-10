@@ -1,3 +1,10 @@
+let vietnamAddressData = null;
+
+
+// =========================================================
+// ELEMENT
+// =========================================================
+
 const provinceSelect =
     document.getElementById(
         "province"
@@ -17,39 +24,136 @@ const wardSelect =
 
 
 // =========================================================
-// TẢI TỈNH
+// RESET QUẬN / HUYỆN
 // =========================================================
 
-fetch(
-    "https://provinces.open-api.vn/api/v1/p/"
-)
+function resetDistricts() {
 
-.then(
-    response => response.json()
-)
+    districtSelect.innerHTML =
+        `
+        <option value="">
+            -- Chọn quận / huyện --
+        </option>
+        `;
 
-.then(
-    provinces => {
+
+    districtSelect.disabled =
+        true;
+
+}
+
+
+// =========================================================
+// RESET PHƯỜNG / XÃ
+// =========================================================
+
+function resetWards() {
+
+    wardSelect.innerHTML =
+        `
+        <option value="">
+            -- Chọn phường / xã --
+        </option>
+        `;
+
+
+    wardSelect.disabled =
+        true;
+
+}
+
+
+// =========================================================
+// TẠO OPTION
+// =========================================================
+
+function createOption(
+    value,
+    text,
+    code
+) {
+
+    const option =
+        document.createElement(
+            "option"
+        );
+
+
+    option.value =
+        value;
+
+
+    option.textContent =
+        text;
+
+
+    if (code) {
+
+        option.dataset.code =
+            code;
+
+    }
+
+
+    return option;
+
+}
+
+
+// =========================================================
+// TẢI DỮ LIỆU ĐỊA CHỈ LOCAL
+// =========================================================
+
+async function loadVietnamAddressData() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/static/data/vietnam_address_63.json",
+                {
+                    cache: "force-cache"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Không tải được dữ liệu địa chỉ"
+            );
+
+        }
+
+
+        vietnamAddressData =
+            await response.json();
+
+
+        const provinces =
+            vietnamAddressData.provinces;
+
+
+        if (
+            !Array.isArray(provinces)
+        ) {
+
+            throw new Error(
+                "Dữ liệu tỉnh/thành không hợp lệ"
+            );
+
+        }
+
 
         provinces.forEach(
             province => {
 
                 const option =
-                    document.createElement(
-                        "option"
+                    createOption(
+                        province.name,
+                        province.name,
+                        province.code
                     );
-
-
-                option.value =
-                    province.name;
-
-
-                option.textContent =
-                    province.name;
-
-
-                option.dataset.id =
-                    province.code;
 
 
                 provinceSelect.appendChild(
@@ -60,219 +164,229 @@ fetch(
         );
 
     }
-)
 
-.catch(
-    error => {
+    catch (error) {
 
         console.error(
-            "Không tải được tỉnh:",
+            "Lỗi tải dữ liệu địa chỉ:",
             error
         );
 
+
+        provinceSelect.innerHTML =
+            `
+            <option value="">
+                Không tải được danh sách tỉnh
+            </option>
+            `;
+
+
+        provinceSelect.disabled =
+            true;
+
+
+        resetDistricts();
+
+        resetWards();
+
     }
-);
+
+}
 
 
 // =========================================================
-// TỈNH → QUẬN
+// CHỌN TỈNH → QUẬN / HUYỆN
 // =========================================================
 
 provinceSelect.addEventListener(
     "change",
     function() {
 
-        const selected =
-            this.options[
-                this.selectedIndex
-            ];
+        resetDistricts();
+
+        resetWards();
 
 
-        const provinceId =
-            selected.dataset.id;
-
-
-        districtSelect.innerHTML =
-            `
-            <option value="">
-                -- Chọn quận / huyện --
-            </option>
-            `;
-
-
-        wardSelect.innerHTML =
-            `
-            <option value="">
-                -- Chọn phường / xã --
-            </option>
-            `;
-
-
-        wardSelect.disabled =
-            true;
-
-
-        if (!provinceId) {
-
-            districtSelect.disabled =
-                true;
+        if (!vietnamAddressData) {
 
             return;
+
         }
 
 
-        districtSelect.disabled =
-            false;
+        const provinceCode =
+            this.options[
+                this.selectedIndex
+            ].dataset.code;
 
 
-        fetch(
-            "https://provinces.open-api.vn/api/v1/p/"
-            + provinceId
-            + "?depth=2"
-        )
+        if (!provinceCode) {
 
-        .then(
-            response => response.json()
-        )
+            return;
 
-        .then(
-            data => {
-
-                data.districts.forEach(
-                    district => {
-
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
+        }
 
 
-                        option.value =
-                            district.name;
+        const province =
+            vietnamAddressData.provinces.find(
+                item =>
+                    item.code === provinceCode
+            );
 
 
-                        option.textContent =
-                            district.name;
+        if (
+            !province
+            ||
+            !Array.isArray(
+                province.districts
+            )
+        ) {
+
+            return;
+
+        }
 
 
-                        option.dataset.id =
-                            district.code;
+        province.districts.forEach(
+            district => {
+
+                const option =
+                    createOption(
+                        district.name,
+                        district.name,
+                        district.code
+                    );
 
 
-                        districtSelect.appendChild(
-                            option
-                        );
-
-                    }
-                );
-
-            }
-        )
-
-        .catch(
-            error => {
-
-                console.error(
-                    "Không tải được quận/huyện:",
-                    error
+                districtSelect.appendChild(
+                    option
                 );
 
             }
         );
+
+
+        districtSelect.disabled =
+            false;
 
     }
 );
 
 
 // =========================================================
-// QUẬN → XÃ
+// CHỌN QUẬN / HUYỆN → PHƯỜNG / XÃ
 // =========================================================
 
 districtSelect.addEventListener(
     "change",
     function() {
 
-        const selected =
-            this.options[
-                this.selectedIndex
-            ];
+        resetWards();
 
 
-        const districtId =
-            selected.dataset.id;
-
-
-        wardSelect.innerHTML =
-            `
-            <option value="">
-                -- Chọn phường / xã --
-            </option>
-            `;
-
-
-        if (!districtId) {
-
-            wardSelect.disabled =
-                true;
+        if (!vietnamAddressData) {
 
             return;
+
         }
+
+
+        const provinceCode =
+            provinceSelect.options[
+                provinceSelect.selectedIndex
+            ].dataset.code;
+
+
+        const districtCode =
+            this.options[
+                this.selectedIndex
+            ].dataset.code;
+
+
+        if (
+            !provinceCode
+            ||
+            !districtCode
+        ) {
+
+            return;
+
+        }
+
+
+        const province =
+            vietnamAddressData.provinces.find(
+                item =>
+                    item.code === provinceCode
+            );
+
+
+        if (!province) {
+
+            return;
+
+        }
+
+
+        const district =
+            province.districts.find(
+                item =>
+                    item.code === districtCode
+            );
+
+
+        if (
+            !district
+            ||
+            !Array.isArray(
+                district.wards
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        district.wards.forEach(
+            ward => {
+
+                const option =
+                    createOption(
+                        ward.name,
+                        ward.name,
+                        ward.code
+                    );
+
+
+                wardSelect.appendChild(
+                    option
+                );
+
+            }
+        );
 
 
         wardSelect.disabled =
             false;
 
-
-        fetch(
-            "https://provinces.open-api.vn/api/v1/d/"
-            + districtId
-            + "?depth=2"
-        )
-
-        .then(
-            response => response.json()
-        )
-
-        .then(
-            data => {
-
-                data.wards.forEach(
-                    ward => {
-
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
+    }
+);
 
 
-                        option.value =
-                            ward.name;
+// =========================================================
+// KHỞI ĐỘNG
+// =========================================================
 
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
 
-                        option.textContent =
-                            ward.name;
+        resetDistricts();
 
+        resetWards();
 
-                        wardSelect.appendChild(
-                            option
-                        );
-
-                    }
-                );
-
-            }
-        )
-
-        .catch(
-            error => {
-
-                console.error(
-                    "Không tải được phường/xã:",
-                    error
-                );
-
-            }
-        );
+        loadVietnamAddressData();
 
     }
 );
