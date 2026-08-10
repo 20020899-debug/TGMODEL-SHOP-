@@ -63,7 +63,8 @@ def webhook():
     # =====================================================
     # LẤY ORDER CODE
     #
-    # submit_order.py đang gửi:
+    # submit_order.py gửi:
+    #
     # description = TGMxxx
     # =====================================================
 
@@ -94,6 +95,7 @@ def webhook():
     # =====================================================
 
     conn = get_db()
+
     cursor = conn.cursor()
 
 
@@ -108,6 +110,7 @@ def webhook():
             SELECT
                 id,
                 status,
+                payment_type,
                 stock_reserved,
                 product_id,
                 quantity
@@ -128,7 +131,7 @@ def webhook():
 
 
         # =================================================
-        # KHÔNG TÌM THẤY
+        # KHÔNG TÌM THẤY ĐƠN
         # =================================================
 
         if order is None:
@@ -142,10 +145,16 @@ def webhook():
 
 
         order_id = order[0]
+
         current_status = order[1]
-        stock_reserved = order[2]
-        product_id = order[3]
-        quantity = order[4]
+
+        payment_type = order[2]
+
+        stock_reserved = order[3]
+
+        product_id = order[4]
+
+        quantity = order[5]
 
 
         print(
@@ -161,26 +170,35 @@ def webhook():
 
 
         print(
+            "PAYMENT TYPE:",
+            payment_type
+        )
+
+
+        print(
             "STOCK RESERVED:",
             stock_reserved
         )
 
 
         # =================================================
-        # ĐÃ CỌC TRƯỚC ĐÓ
+        # ĐƠN ĐÃ ĐƯỢC THANH TOÁN TRƯỚC ĐÓ
         # =================================================
 
-        if current_status == "Đã cọc":
+        if current_status in (
+            "Đã cọc",
+            "Đã chuyển khoản full"
+        ):
 
             print(
-                "DON DA COC TRUOC DO"
+                "DON DA THANH TOAN TRUOC DO"
             )
 
             return "OK", 200
 
 
         # =================================================
-        # ĐÃ HỦY
+        # ĐƠN ĐÃ HỦY
         # =================================================
 
         if current_status == "Đã hủy":
@@ -193,7 +211,7 @@ def webhook():
 
 
         # =================================================
-        # HẾT HẠN
+        # ĐƠN ĐÃ HẾT HẠN
         # =================================================
 
         if current_status == "Hết hạn thanh toán":
@@ -206,7 +224,7 @@ def webhook():
 
 
         # =================================================
-        # CHỈ XÁC NHẬN ĐƠN CHƯA THANH TOÁN
+        # CHỈ XỬ LÝ ĐƠN CHƯA THANH TOÁN
         # =================================================
 
         if current_status != "Chưa thanh toán":
@@ -220,18 +238,42 @@ def webhook():
 
 
         # =================================================
+        # XÁC ĐỊNH TRẠNG THÁI SAU THANH TOÁN
+        # =================================================
+
+        if payment_type == "full":
+
+            new_status = (
+                "Đã chuyển khoản full"
+            )
+
+        else:
+
+            new_status = (
+                "Đã cọc"
+            )
+
+
+        print(
+            "NEW STATUS:",
+            new_status
+        )
+
+
+        # =================================================
         # THANH TOÁN THÀNH CÔNG
         #
-        # QUAN TRỌNG:
-        #
-        # Hàng đã được trừ ngay khi tạo đơn.
+        # Hàng đã được trừ khi tạo đơn.
         #
         # Vì vậy:
         #
         # - KHÔNG trừ kho thêm
         # - KHÔNG cộng kho lại
         #
-        # Chỉ bỏ trạng thái "đang giữ hàng"
+        # Chỉ:
+        #
+        # - đổi trạng thái
+        # - stock_reserved = FALSE
         # =================================================
 
         cursor.execute(
@@ -246,7 +288,7 @@ def webhook():
             AND status=%s
             """,
             (
-                "Đã cọc",
+                new_status,
                 order_id,
                 "Chưa thanh toán"
             )
@@ -270,6 +312,12 @@ def webhook():
         print(
             "PAYMENT SUCCESS:",
             order_code
+        )
+
+
+        print(
+            "FINAL STATUS:",
+            new_status
         )
 
 
