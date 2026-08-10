@@ -1,0 +1,61 @@
+<div class="product">
+
+
+    <h5>
+        {{ product.brand }}
+    </h5>
+
+
+    <h2>
+        {{ product.name }}
+    </h2>
+
+
+    <hr>
+
+
+    <p>
+
+        <strong>
+            💰 Giá chính thức:
+        </strong>
+
+        {{ "{:,}".format(product.price) }} đ
+
+    </p>
+
+
+    <p>
+
+        <strong>
+            💵 Tiền cọc:
+        </strong>
+
+        {{ "{:,}".format(product.deposit) }} đ
+
+    </p>
+
+
+    <p>
+
+        <strong>
+            📦 Dự kiến trả hàng:
+        </strong>
+
+        {{ product.eta }}
+
+    </p>
+
+
+    <a
+        href="/preorder/{{ product.id }}"
+        class="btn btn-preorder"
+        data-original-text="ĐẶT PRE-ORDER"
+    >
+
+        ĐẶT PRE-ORDER
+
+    </a>
+
+
+</div>

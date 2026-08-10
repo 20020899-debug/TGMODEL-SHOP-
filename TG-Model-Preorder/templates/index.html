@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>TG MODEL SHOP</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/index.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <!-- =================================================
+         TIÊU ĐỀ
+         ================================================= -->
+
+    <div class="shop-title">
+
+        <h1>
+            TG MODEL SHOP
+        </h1>
+
+        <p>
+            Model Kit & Figure
+        </p>
+
+    </div>
+
+
+    <!-- =================================================
+         ĐƠN CHỜ THANH TOÁN
+         ================================================= -->
+
+    {% include "components/pending_order.html" %}
+
+
+    <!-- =================================================
+         DANH SÁCH SẢN PHẨM
+         ================================================= -->
+
+    {% for product in products %}
+
+        {% include "components/product_card.html" %}
+
+    {% endfor %}
+
+
+</div>
+
+
+<script
+    src="{{ url_for('static', filename='js/pending_order.js') }}"
+></script>
+
+
+</body>
+
+</html>
