@@ -32,6 +32,7 @@ def home():
 
         # =================================================
         # LẤY SẢN PHẨM ĐANG HOẠT ĐỘNG
+        # + ẢNH
         # + TỒN KHO
         # =================================================
 
@@ -44,6 +45,7 @@ def home():
                 p.price,
                 p.deposit,
                 p.eta,
+                p.image_url,
                 p.active,
 
                 COALESCE(
