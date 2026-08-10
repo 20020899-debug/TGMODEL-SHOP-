@@ -1,0 +1,151 @@
+<div class="product-card">
+
+
+    <!-- =================================================
+         ẢNH SẢN PHẨM
+         ================================================= -->
+
+    {% if product.image_url %}
+
+        <div class="product-image-wrap">
+
+            <img
+                src="{{ product.image_url }}"
+                alt="{{ product.name }}"
+                class="product-image"
+                loading="lazy"
+            >
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- =================================================
+         THƯƠNG HIỆU
+         ================================================= -->
+
+    <h5 class="product-brand">
+
+        {{ product.brand or "--" }}
+
+    </h5>
+
+
+    <!-- =================================================
+         TÊN SẢN PHẨM
+         ================================================= -->
+
+    <h2 class="product-name">
+
+        {{ product.name }}
+
+    </h2>
+
+
+    <hr>
+
+
+    <!-- =================================================
+         GIÁ
+         ================================================= -->
+
+    <p>
+
+        <strong>
+            💰 Giá chính thức:
+        </strong>
+
+        {{ "{:,}".format(product.price or 0) }} đ
+
+    </p>
+
+
+    <!-- =================================================
+         TIỀN CỌC
+         ================================================= -->
+
+    <p>
+
+        <strong>
+            💵 Tiền cọc:
+        </strong>
+
+        {{ "{:,}".format(product.deposit or 0) }} đ
+
+    </p>
+
+
+    <!-- =================================================
+         ETA
+         ================================================= -->
+
+    <p>
+
+        <strong>
+            📦 Dự kiến trả hàng:
+        </strong>
+
+        {{ product.eta or "Chưa xác định" }}
+
+    </p>
+
+
+    <!-- =================================================
+         TỒN KHO
+         ================================================= -->
+
+    <p>
+
+        <strong>
+            📊 Tồn kho:
+        </strong>
+
+
+        {% if product.stock > 0 %}
+
+            <span class="stock-available">
+
+                {{ product.stock }} sản phẩm
+
+            </span>
+
+        {% else %}
+
+            <span class="stock-out">
+
+                Hết hàng
+
+            </span>
+
+        {% endif %}
+
+    </p>
+
+
+    <!-- =================================================
+         NÚT ĐẶT HÀNG
+         ================================================= -->
+
+    {% if product.stock > 0 %}
+
+        <a
+            href="/preorder/{{ product.id }}"
+            class="btn btn-preorder"
+            data-original-text="ĐẶT PRE-ORDER"
+        >
+            ĐẶT PRE-ORDER
+        </a>
+
+    {% else %}
+
+        <span
+            class="btn btn-out-of-stock"
+        >
+            HẾT HÀNG
+        </span>
+
+    {% endif %}
+
+
+</div>

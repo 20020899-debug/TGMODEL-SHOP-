@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Quản lý tồn kho
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/admin.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<div class="container container-medium">
+
+
+    <h1 class="page-title">
+        Quản lý tồn kho
+    </h1>
+
+
+    <div class="table-wrapper">
+
+
+        <table class="admin-table">
+
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Sản phẩm</th>
+
+                    <th>Thương hiệu</th>
+
+                    <th>Tồn kho hiện tại</th>
+
+                    <th>Tồn kho mới</th>
+
+                    <th>Cập nhật</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+
+                {% for product in products %}
+
+
+                <tr>
+
+
+                    <td>
+                        {{ product.id }}
+                    </td>
+
+
+                    <td>
+                        {{ product.name }}
+                    </td>
+
+
+                    <td>
+                        {{ product.brand }}
+                    </td>
+
+
+                    <td>
+
+                        {% if product.stock > 0 %}
+
+                            <span class="stock-available">
+                                {{ product.stock }}
+                            </span>
+
+                        {% else %}
+
+                            <span class="stock-zero">
+                                0
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td colspan="2">
+
+                        <form
+                            method="POST"
+                            action="/admin/stock"
+                            class="stock-form"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="product_id"
+                                value="{{ product.id }}"
+                            >
+
+
+                            <input
+                                type="number"
+                                name="stock"
+                                class="form-control stock-input"
+                                value="{{ product.stock }}"
+                                min="0"
+                                required
+                            >
+
+
+                            <button
+                                type="submit"
+                                class="btn btn-orange"
+                            >
+                                Lưu
+                            </button>
+
+                        </form>
+
+                    </td>
+
+
+                </tr>
+
+
+                {% endfor %}
+
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+
+    <a
+        href="/admin"
+        class="link-orange"
+    >
+        ← Quay lại quản lý đơn
+    </a>
+
+
+</div>
+
+
+</body>
+
+</html>

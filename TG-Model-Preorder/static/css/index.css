@@ -1,0 +1,437 @@
+/* =================================================
+   BODY
+   ================================================= */
+
+body {
+
+    font-family: Arial, sans-serif;
+
+    background: #f5f5f5;
+
+    margin: 0;
+
+    padding: 0;
+}
+
+
+/* =================================================
+   CONTAINER
+   ================================================= */
+
+.container {
+
+    max-width: 1000px;
+
+    margin: 0 auto;
+
+    padding: 30px 20px;
+}
+
+
+/* =================================================
+   TIÊU ĐỀ SHOP
+   ================================================= */
+
+.shop-title {
+
+    text-align: center;
+
+    margin-bottom: 30px;
+}
+
+
+.shop-title h1 {
+
+    margin-bottom: 8px;
+
+    color: #f57c00;
+}
+
+
+.shop-title p {
+
+    margin-top: 0;
+
+    color: #6c757d;
+}
+
+
+/* =================================================
+   DANH SÁCH SẢN PHẨM
+   ================================================= */
+
+.product-list {
+
+    width: 100%;
+}
+
+
+/* =================================================
+   CARD SẢN PHẨM
+   ================================================= */
+
+.product-card {
+
+    background: white;
+
+    padding: 25px;
+
+    margin-bottom: 25px;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 2px 8px
+        rgba(0, 0, 0, 0.08);
+}
+
+
+/* =================================================
+   ẢNH SẢN PHẨM
+   ================================================= */
+
+.product-image-wrap {
+
+    width: 100%;
+
+    text-align: center;
+
+    margin-bottom: 20px;
+}
+
+
+.product-image {
+
+    display: block;
+
+    width: 100%;
+
+    max-width: 450px;
+
+    height: 350px;
+
+    margin: 0 auto;
+
+    object-fit: contain;
+
+    border-radius: 10px;
+
+    background: #f7f7f7;
+}
+
+
+/* =================================================
+   THƯƠNG HIỆU
+   ================================================= */
+
+.product-brand {
+
+    margin-top: 0;
+
+    margin-bottom: 8px;
+
+    color: #6c757d;
+}
+
+
+/* =================================================
+   TÊN SẢN PHẨM
+   ================================================= */
+
+.product-name {
+
+    margin-top: 0;
+
+    margin-bottom: 15px;
+
+    color: #333;
+}
+
+
+/* =================================================
+   HR
+   ================================================= */
+
+.product-card hr {
+
+    border: none;
+
+    border-top:
+        1px solid #ddd;
+
+    margin: 15px 0;
+}
+
+
+/* =================================================
+   THÔNG TIN SẢN PHẨM
+   ================================================= */
+
+.product-card p {
+
+    line-height: 1.6;
+
+    margin: 10px 0;
+}
+
+
+/* =================================================
+   NÚT CHUNG
+   ================================================= */
+
+.btn {
+
+    display: inline-block;
+
+    text-decoration: none;
+
+    padding: 12px 20px;
+
+    border-radius: 7px;
+
+    font-weight: bold;
+
+    color: white;
+
+    box-sizing: border-box;
+}
+
+
+/* =================================================
+   PRE-ORDER
+   ================================================= */
+
+.btn-preorder {
+
+    background: #ff9800;
+
+    color: white;
+
+    border: none;
+
+    transition:
+        background 0.2s ease,
+        opacity 0.2s ease;
+}
+
+
+.btn-preorder:hover {
+
+    background: #f57c00;
+}
+
+
+/* =================================================
+   PRE-ORDER BỊ KHÓA
+   ================================================= */
+
+.btn-preorder.disabled {
+
+    background: #999;
+
+    color: #eee;
+
+    pointer-events: none;
+
+    cursor: not-allowed;
+
+    opacity: 0.7;
+}
+
+
+/* =================================================
+   ĐƠN CHƯA THANH TOÁN
+   ================================================= */
+
+#pending-order-box {
+
+    display: none;
+
+    background: #fff3cd;
+
+    border:
+        1px solid #ffc107;
+
+    border-radius: 12px;
+
+    padding: 20px;
+
+    margin-bottom: 30px;
+
+    box-shadow:
+        0 2px 8px
+        rgba(0, 0, 0, 0.08);
+}
+
+
+#pending-order-box h3 {
+
+    margin-top: 0;
+
+    color: #856404;
+}
+
+
+#pending-order-code {
+
+    color: #dc3545;
+
+    font-weight: bold;
+}
+
+
+/* =================================================
+   COUNTDOWN
+   ================================================= */
+
+#pending-order-status {
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    color: #198754;
+}
+
+
+#pending-order-status.expired {
+
+    color: #dc3545;
+}
+
+
+/* =================================================
+   TIẾP TỤC THANH TOÁN
+   ================================================= */
+
+#continue-payment-button {
+
+    background: #198754;
+
+    color: white;
+
+    border: none;
+
+    padding: 12px 20px;
+
+    border-radius: 7px;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+
+#continue-payment-button:hover {
+
+    background: #157347;
+}
+
+
+/* =================================================
+   HẾT HẠN
+   ================================================= */
+
+#expired-message {
+
+    display: none;
+
+    color: #dc3545;
+
+    font-weight: bold;
+}
+
+
+/* =================================================
+   TỒN KHO
+   ================================================= */
+
+.stock-available {
+
+    color: #198754;
+
+    font-weight: bold;
+}
+
+
+.stock-out {
+
+    color: #dc3545;
+
+    font-weight: bold;
+}
+
+
+/* =================================================
+   NÚT HẾT HÀNG
+   ================================================= */
+
+.btn-out-of-stock {
+
+    background: #999;
+
+    color: white;
+
+    cursor: not-allowed;
+
+    opacity: 0.75;
+}
+
+
+/* =================================================
+   KHÔNG CÓ SẢN PHẨM
+   ================================================= */
+
+.empty-products {
+
+    background: white;
+
+    padding: 30px;
+
+    border-radius: 12px;
+
+    text-align: center;
+
+    color: #777;
+
+    box-shadow:
+        0 2px 8px
+        rgba(0, 0, 0, 0.08);
+}
+
+
+/* =================================================
+   RESPONSIVE
+   ================================================= */
+
+@media (
+    max-width: 600px
+) {
+
+    .container {
+
+        padding:
+            20px 12px;
+    }
+
+
+    .product-card {
+
+        padding: 18px;
+    }
+
+
+    .product-image {
+
+        height: 260px;
+    }
+
+
+    .shop-title h1 {
+
+        font-size: 26px;
+    }
+
+}

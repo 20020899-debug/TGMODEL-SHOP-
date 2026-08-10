@@ -1,0 +1,259 @@
+<form
+    method="POST"
+    action="/submit"
+    id="preorder-form"
+>
+
+    <!-- =================================================
+         PRODUCT ID
+         ================================================= -->
+
+    <input
+        type="hidden"
+        name="product_id"
+        value="{{ product.id }}"
+    >
+
+
+    <!-- =================================================
+         HỌ VÀ TÊN
+         ================================================= -->
+
+    <label>
+        Họ và tên
+    </label>
+
+    <br>
+
+    <input
+        type="text"
+        name="fullname"
+        required
+    >
+
+    <br><br>
+
+
+    <!-- =================================================
+         SỐ ĐIỆN THOẠI
+         ================================================= -->
+
+    <label>
+        Số điện thoại
+    </label>
+
+    <br>
+
+    <input
+        type="text"
+        name="phone"
+        required
+    >
+
+    <br><br>
+
+
+    <!-- =================================================
+         FACEBOOK / ZALO
+         ================================================= -->
+
+    <label>
+        Facebook hoặc Zalo
+    </label>
+
+    <br>
+
+    <input
+        type="text"
+        name="contact"
+    >
+
+    <br><br>
+
+
+    <!-- =================================================
+         SỐ LƯỢNG
+         ================================================= -->
+
+    <label>
+        Số lượng
+    </label>
+
+    <br>
+
+    <input
+        type="number"
+        name="quantity"
+        value="1"
+        min="1"
+        max="2"
+        required
+    >
+
+    <br><br>
+
+
+    <!-- =================================================
+         TỈNH / THÀNH PHỐ
+         ================================================= -->
+
+    <label>
+        Tỉnh / Thành phố
+    </label>
+
+    <br>
+
+    <select
+        id="province"
+        name="province"
+        required
+    >
+
+        <option value="">
+            -- Chọn tỉnh --
+        </option>
+
+    </select>
+
+    <br><br>
+
+
+    <!-- =================================================
+         QUẬN / HUYỆN
+         ================================================= -->
+
+    <label>
+        Quận / Huyện
+    </label>
+
+    <br>
+
+    <select
+        id="district"
+        name="district"
+        disabled
+        required
+    >
+
+        <option value="">
+            -- Chọn quận / huyện --
+        </option>
+
+    </select>
+
+    <br><br>
+
+
+    <!-- =================================================
+         PHƯỜNG / XÃ
+         ================================================= -->
+
+    <label>
+        Phường / Xã
+    </label>
+
+    <br>
+
+    <select
+        id="ward"
+        name="ward"
+        disabled
+        required
+    >
+
+        <option value="">
+            -- Chọn phường / xã --
+        </option>
+
+    </select>
+
+    <br><br>
+
+
+    <!-- =================================================
+         ĐỊA CHỈ CHI TIẾT
+         ================================================= -->
+
+    <label>
+        Địa chỉ chi tiết
+    </label>
+
+    <br>
+
+    <input
+        type="text"
+        name="address_detail"
+        placeholder="Ví dụ: Số 123 Nguyễn Trãi"
+        required
+    >
+
+    <br><br>
+
+
+    <!-- =================================================
+         GHI CHÚ
+         ================================================= -->
+
+    <label>
+        Ghi chú
+    </label>
+
+    <br>
+
+    <textarea
+        name="note"
+        placeholder="Ghi chú thêm (nếu có)"
+    ></textarea>
+
+    <br><br>
+
+
+    <!-- =================================================
+         HÌNH THỨC THANH TOÁN
+         ================================================= -->
+
+    <label>
+        Hình thức thanh toán
+    </label>
+
+    <br>
+
+    <select
+        name="payment_type"
+        required
+    >
+
+        <option value="deposit">
+            Cọc một phần
+        </option>
+
+        <option value="full">
+            Chuyển khoản full
+        </option>
+
+    </select>
+
+    <br><br>
+
+
+    <!-- =================================================
+         SUBMIT
+         ================================================= -->
+
+    <button
+        type="submit"
+        class="submit-button"
+    >
+        Gửi đơn
+    </button>
+
+</form>
+
+
+<!-- =====================================================
+     ADDRESS DATA
+     ===================================================== -->
+
+<script
+    src="{{ url_for('static', filename='js/address.js') }}"
+></script>
