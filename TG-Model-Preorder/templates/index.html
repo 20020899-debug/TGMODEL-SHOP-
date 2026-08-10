@@ -24,6 +24,7 @@
 
 <body>
 
+
 <div class="container">
 
 
@@ -57,20 +58,28 @@
 
     <div class="product-grid">
 
+
         {% for product in products %}
 
-            <div class="product">
+            {% include "components/product_card.html" %}
 
-                {% include "components/product_card.html" %}
+
+        {% else %}
+
+            <div class="empty-products">
+
+                Hiện chưa có sản phẩm.
 
             </div>
 
         {% endfor %}
 
+
     </div>
 
 
 </div>
+
 
 </body>
 
