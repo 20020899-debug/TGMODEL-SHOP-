@@ -47,6 +47,12 @@
     </option>
 
     <option
+    value="Đã chuyển khoản full"
+    {% if order["status"]=="Đã chuyển khoản full" %}selected{% endif %}>
+    Đã chuyển khoản full
+    </option>
+
+    <option
     value="Đang chuẩn bị hàng"
     {% if order["status"]=="Đang chuẩn bị hàng" %}selected{% endif %}>
     Đang chuẩn bị hàng
