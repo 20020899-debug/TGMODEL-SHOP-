@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Quản lý tồn kho
+    </title>
+
+
+    <style>
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            background: #f5f5f5;
+
+            margin: 0;
+
+            padding: 30px;
+        }
+
+
+        .container {
+
+            max-width: 1000px;
+
+            margin: 0 auto;
+
+            background: white;
+
+            padding: 25px;
+
+            border-radius: 10px;
+
+            box-shadow:
+                0 2px 8px
+                rgba(0,0,0,0.08);
+        }
+
+
+        h1 {
+
+            margin-top: 0;
+        }
+
+
+        table {
+
+            width: 100%;
+
+            border-collapse: collapse;
+
+            margin-top: 20px;
+        }
+
+
+        th,
+        td {
+
+            border: 1px solid #ddd;
+
+            padding: 12px;
+
+            text-align: left;
+        }
+
+
+        th {
+
+            background: #198754;
+
+            color: white;
+        }
+
+
+        input[type="number"] {
+
+            width: 90px;
+
+            padding: 8px;
+
+            box-sizing: border-box;
+        }
+
+
+        button {
+
+            background: #0d6efd;
+
+            color: white;
+
+            border: none;
+
+            padding: 8px 14px;
+
+            border-radius: 5px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+        }
+
+
+        button:hover {
+
+            background: #0b5ed7;
+        }
+
+
+        .stock-zero {
+
+            color: #dc3545;
+
+            font-weight: bold;
+        }
+
+
+        .stock-available {
+
+            color: #198754;
+
+            font-weight: bold;
+        }
+
+
+        .back-link {
+
+            display: inline-block;
+
+            margin-top: 20px;
+
+            text-decoration: none;
+
+            color: #0d6efd;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <h1>
+        Quản lý tồn kho
+    </h1>
+
+
+    <table>
+
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    ID
+                </th>
+
+                <th>
+                    Sản phẩm
+                </th>
+
+                <th>
+                    Thương hiệu
+                </th>
+
+                <th>
+                    Tồn kho hiện tại
+                </th>
+
+                <th>
+                    Tồn kho mới
+                </th>
+
+                <th>
+                    Cập nhật
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+
+        {% for product in products %}
+
+
+            <tr>
+
+
+                <td>
+
+                    {{ product.id }}
+
+                </td>
+
+
+                <td>
+
+                    {{ product.name }}
+
+                </td>
+
+
+                <td>
+
+                    {{ product.brand }}
+
+                </td>
+
+
+                <td>
+
+                    {% if product.stock > 0 %}
+
+                        <span class="stock-available">
+
+                            {{ product.stock }}
+
+                        </span>
+
+                    {% else %}
+
+                        <span class="stock-zero">
+
+                            0
+
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+
+                <td colspan="2">
+
+
+                    <form
+                        method="POST"
+                        action="/admin/stock"
+                    >
+
+
+                        <input
+                            type="hidden"
+                            name="product_id"
+                            value="{{ product.id }}"
+                        >
+
+
+                        <input
+                            type="number"
+                            name="stock"
+                            value="{{ product.stock }}"
+                            min="0"
+                            required
+                        >
+
+
+                        <button
+                            type="submit"
+                        >
+
+                            Lưu
+
+                        </button>
+
+
+                    </form>
+
+
+                </td>
+
+
+            </tr>
+
+
+        {% endfor %}
+
+
+        </tbody>
+
+
+    </table>
+
+
+    <a
+        href="/admin"
+        class="back-link"
+    >
+
+        ← Quay lại quản lý đơn
+
+    </a>
+
+
+</div>
+
+
+</body>
+
+</html>
