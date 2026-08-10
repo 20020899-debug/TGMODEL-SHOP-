@@ -12,6 +12,7 @@ from routes.admin import admin_bp
 from routes.payment import payment_bp
 from routes.pending_order import pending_order_bp
 from routes.preorder_page import preorder_page_bp
+from routes.submit_order import submit_order_bp
 
 app.register_blueprint(home_bp)
 app.register_blueprint(auth_bp)
@@ -20,6 +21,7 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(payment_bp)
 app.register_blueprint(pending_order_bp)
 app.register_blueprint(preorder_page_bp)
+app.register_blueprint(submit_order_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)
