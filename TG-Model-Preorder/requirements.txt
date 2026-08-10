@@ -1,0 +1,6 @@
+Flask
+gunicorn
+openpyxl
+requests
+payos==1.1.0
+psycopg2-binary
