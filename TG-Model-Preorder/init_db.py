@@ -63,7 +63,7 @@ try:
 
 
     # =====================================================
-    # BỔ SUNG CỘT CHO DATABASE CŨ
+    # BỔ SUNG CỘT CHO DATABASE ORDERS CŨ
     # =====================================================
 
     cursor.execute(
@@ -153,6 +153,8 @@ try:
 
             eta TEXT,
 
+            image_url TEXT,
+
             active BOOLEAN
                 NOT NULL
                 DEFAULT TRUE
@@ -219,6 +221,20 @@ try:
     )
 
 
+    # =====================================================
+    # IMAGE URL
+    # =====================================================
+
+    cursor.execute(
+        """
+        ALTER TABLE products
+
+        ADD COLUMN IF NOT EXISTS
+            image_url TEXT
+        """
+    )
+
+
     cursor.execute(
         """
         ALTER TABLE products
@@ -270,9 +286,6 @@ try:
 
     # =====================================================
     # ĐẢM BẢO MỌI PRODUCT ĐỀU CÓ DÒNG STOCK
-    #
-    # Sản phẩm tạo từ Admin về sau đã có stock.
-    # Đoạn này chỉ dùng để vá nếu có product nào bị thiếu.
     # =====================================================
 
     cursor.execute(
@@ -433,6 +446,10 @@ try:
 
     print(
         "stock_reserved: OK"
+    )
+
+    print(
+        "image_url: OK"
     )
 
     print(
