@@ -101,7 +101,7 @@ function createOption(
 
 
 // =========================================================
-// TẢI DỮ LIỆU ĐỊA CHỈ LOCAL
+// TẢI FILE JSON LOCAL
 // =========================================================
 
 async function loadVietnamAddressData() {
@@ -126,33 +126,73 @@ async function loadVietnamAddressData() {
         }
 
 
-        vietnamAddressData =
+        const rawData =
             await response.json();
 
 
-        const provinces =
-            vietnamAddressData.provinces;
-
+        // =================================================
+        // FILE V2.2.0 CÓ THỂ LÀ MẢNG TRỰC TIẾP
+        // =================================================
 
         if (
-            !Array.isArray(provinces)
+            Array.isArray(rawData)
         ) {
 
+            vietnamAddressData =
+                rawData;
+
+        }
+
+        else if (
+            Array.isArray(
+                rawData.data
+            )
+        ) {
+
+            vietnamAddressData =
+                rawData.data;
+
+        }
+
+        else {
+
             throw new Error(
-                "Dữ liệu tỉnh/thành không hợp lệ"
+                "Cấu trúc JSON không hợp lệ"
             );
 
         }
 
 
-        provinces.forEach(
+        // =================================================
+        // ĐỔ TỈNH / THÀNH
+        // =================================================
+
+        vietnamAddressData.forEach(
             province => {
+
+                const provinceName =
+                    province.FullName
+                    || province.Name
+                    || "";
+
+
+                const provinceCode =
+                    province.Code
+                    || "";
+
+
+                if (!provinceName) {
+
+                    return;
+
+                }
+
 
                 const option =
                     createOption(
-                        province.name,
-                        province.name,
-                        province.code
+                        provinceName,
+                        provinceName,
+                        provinceCode
                     );
 
 
@@ -207,7 +247,11 @@ provinceSelect.addEventListener(
         resetWards();
 
 
-        if (!vietnamAddressData) {
+        if (
+            !Array.isArray(
+                vietnamAddressData
+            )
+        ) {
 
             return;
 
@@ -228,17 +272,34 @@ provinceSelect.addEventListener(
 
 
         const province =
-            vietnamAddressData.provinces.find(
+            vietnamAddressData.find(
                 item =>
-                    item.code === provinceCode
+                    String(
+                        item.Code
+                    )
+                    ===
+                    String(
+                        provinceCode
+                    )
             );
 
 
+        if (!province) {
+
+            return;
+
+        }
+
+
+        const districts =
+            province.District
+            || province.Districts
+            || [];
+
+
         if (
-            !province
-            ||
             !Array.isArray(
-                province.districts
+                districts
             )
         ) {
 
@@ -247,14 +308,32 @@ provinceSelect.addEventListener(
         }
 
 
-        province.districts.forEach(
+        districts.forEach(
             district => {
+
+                const districtName =
+                    district.FullName
+                    || district.Name
+                    || "";
+
+
+                const districtCode =
+                    district.Code
+                    || "";
+
+
+                if (!districtName) {
+
+                    return;
+
+                }
+
 
                 const option =
                     createOption(
-                        district.name,
-                        district.name,
-                        district.code
+                        districtName,
+                        districtName,
+                        districtCode
                     );
 
 
@@ -284,7 +363,11 @@ districtSelect.addEventListener(
         resetWards();
 
 
-        if (!vietnamAddressData) {
+        if (
+            !Array.isArray(
+                vietnamAddressData
+            )
+        ) {
 
             return;
 
@@ -315,9 +398,15 @@ districtSelect.addEventListener(
 
 
         const province =
-            vietnamAddressData.provinces.find(
+            vietnamAddressData.find(
                 item =>
-                    item.code === provinceCode
+                    String(
+                        item.Code
+                    )
+                    ===
+                    String(
+                        provinceCode
+                    )
             );
 
 
@@ -328,18 +417,41 @@ districtSelect.addEventListener(
         }
 
 
+        const districts =
+            province.District
+            || province.Districts
+            || [];
+
+
         const district =
-            province.districts.find(
+            districts.find(
                 item =>
-                    item.code === districtCode
+                    String(
+                        item.Code
+                    )
+                    ===
+                    String(
+                        districtCode
+                    )
             );
 
 
+        if (!district) {
+
+            return;
+
+        }
+
+
+        const wards =
+            district.Ward
+            || district.Wards
+            || [];
+
+
         if (
-            !district
-            ||
             !Array.isArray(
-                district.wards
+                wards
             )
         ) {
 
@@ -348,14 +460,32 @@ districtSelect.addEventListener(
         }
 
 
-        district.wards.forEach(
+        wards.forEach(
             ward => {
+
+                const wardName =
+                    ward.FullName
+                    || ward.Name
+                    || "";
+
+
+                const wardCode =
+                    ward.Code
+                    || "";
+
+
+                if (!wardName) {
+
+                    return;
+
+                }
+
 
                 const option =
                     createOption(
-                        ward.name,
-                        ward.name,
-                        ward.code
+                        wardName,
+                        wardName,
+                        wardCode
                     );
 
 
