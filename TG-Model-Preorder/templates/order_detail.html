@@ -28,10 +28,18 @@
 <div class="container container-small">
 
 
+    <!-- =================================================
+         TIÊU ĐỀ
+         ================================================= -->
+
     <h1 class="page-title">
         Chi tiết đơn hàng
     </h1>
 
+
+    <!-- =================================================
+         THÔNG TIN KHÁCH HÀNG
+         ================================================= -->
 
     <div class="form-row">
 
@@ -90,6 +98,10 @@
     </div>
 
 
+    <!-- =================================================
+         ĐỊA CHỈ
+         ================================================= -->
+
     <h2 class="section-title">
         Địa chỉ giao hàng
     </h2>
@@ -138,6 +150,10 @@
 
     </div>
 
+
+    <!-- =================================================
+         SẢN PHẨM
+         ================================================= -->
 
     <h2 class="section-title">
         Thông tin sản phẩm
@@ -198,6 +214,10 @@
 
     </div>
 
+
+    <!-- =================================================
+         THANH TOÁN
+         ================================================= -->
 
     <h2 class="section-title">
         Thanh toán
@@ -262,6 +282,10 @@
     </div>
 
 
+    <!-- =================================================
+         GHI CHÚ
+         ================================================= -->
+
     <h2 class="section-title">
         Ghi chú
     </h2>
@@ -274,102 +298,194 @@
     </div>
 
 
+    <!-- =================================================
+         VẬN CHUYỂN
+         ================================================= -->
+
+    <h2 class="section-title">
+        Vận chuyển
+    </h2>
+
+
+    <div class="form-row">
+
+        <span class="form-label">
+            Mã vận đơn hiện tại:
+        </span>
+
+
+        {% if order["tracking_code"] %}
+
+            <strong class="tracking-code">
+
+                {{ order["tracking_code"] }}
+
+            </strong>
+
+        {% else %}
+
+            <span class="tracking-empty">
+
+                Chưa có mã vận đơn
+
+            </span>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =================================================
+         CẬP NHẬT ĐƠN
+         ================================================= -->
+
     <h2 class="section-title">
         Trạng thái đơn hàng
     </h2>
 
 
     <form
-       method="POST"
-       action="/admin/order/{{ order['id'] }}/update"
+        method="POST"
+        action="/admin/order/{{ order['id'] }}/update"
     >
 
 
-        <select
-            name="status"
-            class="form-control"
-            required
+        <!-- =============================================
+             TRẠNG THÁI
+             ============================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Trạng thái:
+            </label>
+
+
+            <select
+                name="status"
+                id="order-status"
+                class="form-control"
+                required
+            >
+
+
+                <option
+                    value="Chưa thanh toán"
+                    {% if order["status"] == "Chưa thanh toán" %}selected{% endif %}
+                >
+                    Chưa thanh toán
+                </option>
+
+
+                <option
+                    value="Đã cọc"
+                    {% if order["status"] == "Đã cọc" %}selected{% endif %}
+                >
+                    Đã cọc
+                </option>
+
+
+                <option
+                    value="Đã chuyển khoản full"
+                    {% if order["status"] == "Đã chuyển khoản full" %}selected{% endif %}
+                >
+                    Đã chuyển khoản full
+                </option>
+
+
+                <option
+                    value="Đang chuẩn bị hàng"
+                    {% if order["status"] == "Đang chuẩn bị hàng" %}selected{% endif %}
+                >
+                    Đang chuẩn bị hàng
+                </option>
+
+
+                <option
+                    value="Đã gửi hàng"
+                    {% if order["status"] == "Đã gửi hàng" %}selected{% endif %}
+                >
+                    Đã gửi hàng
+                </option>
+
+
+                <option
+                    value="Hoàn thành"
+                    {% if order["status"] == "Hoàn thành" %}selected{% endif %}
+                >
+                    Hoàn thành
+                </option>
+
+
+                <option
+                    value="Đã hủy"
+                    {% if order["status"] == "Đã hủy" %}selected{% endif %}
+                >
+                    Đã hủy
+                </option>
+
+
+                <option
+                    value="Hết hạn thanh toán"
+                    {% if order["status"] == "Hết hạn thanh toán" %}selected{% endif %}
+                >
+                    Hết hạn thanh toán
+                </option>
+
+
+            </select>
+
+        </div>
+
+
+        <!-- =============================================
+             MÃ VẬN ĐƠN
+             ============================================= -->
+
+        <div
+            class="form-row"
+            id="tracking-code-row"
         >
 
-            <option
-                value="Chưa thanh toán"
-                {% if order["status"] == "Chưa thanh toán" %}selected{% endif %}
+            <label
+                class="form-label"
+                for="tracking-code"
             >
-                Chưa thanh toán
-            </option>
+                Mã vận đơn:
+            </label>
 
 
-            <option
-                value="Đã cọc"
-                {% if order["status"] == "Đã cọc" %}selected{% endif %}
+            <input
+                type="text"
+                id="tracking-code"
+                name="tracking_code"
+                class="form-control"
+                value="{{ order['tracking_code'] or '' }}"
+                placeholder="Ví dụ: SPXVN123456789"
+                autocomplete="off"
             >
-                Đã cọc
-            </option>
+
+        </div>
 
 
-            <option
-                value="Đã chuyển khoản full"
-                {% if order["status"] == "Đã chuyển khoản full" %}selected{% endif %}
-            >
-                Đã chuyển khoản full
-            </option>
-
-
-            <option
-                value="Đang chuẩn bị hàng"
-                {% if order["status"] == "Đang chuẩn bị hàng" %}selected{% endif %}
-            >
-                Đang chuẩn bị hàng
-            </option>
-
-
-            <option
-                value="Đã gửi hàng"
-                {% if order["status"] == "Đã gửi hàng" %}selected{% endif %}
-            >
-                Đã gửi hàng
-            </option>
-
-
-            <option
-                value="Hoàn thành"
-                {% if order["status"] == "Hoàn thành" %}selected{% endif %}
-            >
-                Hoàn thành
-            </option>
-
-
-            <option
-                value="Đã hủy"
-                {% if order["status"] == "Đã hủy" %}selected{% endif %}
-            >
-                Đã hủy
-            </option>
-
-
-            <option
-                value="Hết hạn thanh toán"
-                {% if order["status"] == "Hết hạn thanh toán" %}selected{% endif %}
-            >
-                Hết hạn thanh toán
-            </option>
-
-        </select>
-
-
-        <br><br>
-
+        <!-- =============================================
+             LƯU
+             ============================================= -->
 
         <button
             type="submit"
             class="btn btn-orange"
         >
-            💾 LƯU TRẠNG THÁI
+            💾 LƯU THAY ĐỔI
         </button>
 
 
     </form>
 
+
+    <!-- =================================================
+         QUAY LẠI
+         ================================================= -->
 
     <br>
 
@@ -383,6 +499,97 @@
 
 
 </div>
+
+
+<!-- =====================================================
+     HIỆN / ẨN Ô MÃ VẬN ĐƠN
+     ===================================================== -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        const statusSelect =
+            document.getElementById(
+                "order-status"
+            );
+
+
+        const trackingRow =
+            document.getElementById(
+                "tracking-code-row"
+            );
+
+
+        const trackingInput =
+            document.getElementById(
+                "tracking-code"
+            );
+
+
+        // =================================================
+        // TRẠNG THÁI NÊN HIỆN MÃ VẬN ĐƠN
+        // =================================================
+
+        const trackingStatuses = [
+            "Đang chuẩn bị hàng",
+            "Đã gửi hàng",
+            "Hoàn thành"
+        ];
+
+
+        function updateTrackingVisibility() {
+
+            const status =
+                statusSelect.value;
+
+
+            // =============================================
+            // Nếu đã có mã vận đơn thì luôn hiển thị
+            // để Admin có thể sửa.
+            // =============================================
+
+            const hasTrackingCode =
+                trackingInput.value
+                    .trim()
+                    .length > 0;
+
+
+            if (
+                trackingStatuses.includes(
+                    status
+                )
+                ||
+                hasTrackingCode
+            ) {
+
+                trackingRow.style.display =
+                    "block";
+
+            } else {
+
+                trackingRow.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+        statusSelect.addEventListener(
+            "change",
+            updateTrackingVisibility
+        );
+
+
+        updateTrackingVisibility();
+
+    }
+);
+
+</script>
 
 
 </body>
