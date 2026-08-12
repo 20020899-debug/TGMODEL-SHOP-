@@ -627,3 +627,40 @@ body {
     outline: none;
     border-color: var(--orange);
 }
+.top-tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.product-search {
+    flex: 1;
+    margin: 0;
+}
+
+.track-order-button {
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--orange);
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.track-order-button:hover {
+    background: var(--orange-dark);
+}
+
+@media (max-width: 600px) {
+    .top-tools {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .track-order-button {
+        text-align: center;
+    }
+}
