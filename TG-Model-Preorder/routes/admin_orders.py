@@ -45,6 +45,33 @@ ALLOWED_STATUSES = (
 
 
 # =========================================================
+# TRẠNG THÁI ĐÃ XÁC NHẬN ĐƠN
+#
+# Khi chuyển sang các trạng thái này:
+# - hàng đã được giữ/trừ từ lúc tạo đơn
+# - không được hoàn kho khi xóa đơn về sau
+# =========================================================
+
+CONFIRMED_STATUSES = (
+    "Đã cọc",
+    "Đã chuyển khoản full",
+    "Đang chuẩn bị hàng",
+    "Đã gửi hàng",
+    "Hoàn thành"
+)
+
+
+# =========================================================
+# TRẠNG THÁI PHẢI HOÀN KHO
+# =========================================================
+
+CANCEL_STATUSES = (
+    "Đã hủy",
+    "Hết hạn thanh toán"
+)
+
+
+# =========================================================
 # CHI TIẾT ĐƠN HÀNG
 # =========================================================
 
@@ -52,10 +79,6 @@ ALLOWED_STATUSES = (
     "/admin/order/<int:id>"
 )
 def order_detail(id):
-
-    # =====================================================
-    # KIỂM TRA ĐĂNG NHẬP
-    # =====================================================
 
     if not session.get("admin"):
 
@@ -103,7 +126,7 @@ def order_detail(id):
 
 
         # =================================================
-        # KIỂM TRA HẾT HẠN
+        # KIỂM TRA ĐƠN CHƯA THANH TOÁN ĐÃ HẾT HẠN CHƯA
         # =================================================
 
         if order["status"] == "Chưa thanh toán":
@@ -174,10 +197,6 @@ def order_detail(id):
 )
 def update_order(id):
 
-    # =====================================================
-    # KIỂM TRA ADMIN
-    # =====================================================
-
     if not session.get("admin"):
 
         return redirect(
@@ -188,7 +207,7 @@ def update_order(id):
 
 
     # =====================================================
-    # TRẠNG THÁI
+    # TRẠNG THÁI MỚI
     # =====================================================
 
     new_status = request.form.get(
@@ -230,7 +249,7 @@ def update_order(id):
     try:
 
         # =================================================
-        # KHÓA DÒNG ĐƠN TRONG LÚC UPDATE
+        # KHÓA DÒNG TRƯỚC KHI UPDATE
         # =================================================
 
         cursor.execute(
@@ -269,24 +288,13 @@ def update_order(id):
             )
 
 
-        old_status = (
-            order["status"]
-        )
+        old_status = order["status"]
 
+        product_id = order["product_id"]
 
-        product_id = (
-            order["product_id"]
-        )
+        quantity = order["quantity"]
 
-
-        quantity = (
-            order["quantity"]
-        )
-
-
-        stock_reserved = (
-            order["stock_reserved"]
-        )
+        stock_reserved = order["stock_reserved"]
 
 
         # =================================================
@@ -294,16 +302,13 @@ def update_order(id):
         # →
         # HỦY / HẾT HẠN
         #
-        # HOÀN TỒN KHO
+        # PHẢI HOÀN KHO
         # =================================================
 
         if (
             old_status == "Chưa thanh toán"
             and
-            new_status in (
-                "Đã hủy",
-                "Hết hạn thanh toán"
-            )
+            new_status in CANCEL_STATUSES
         ):
 
             if (
@@ -355,19 +360,45 @@ def update_order(id):
         # =================================================
         # CHƯA THANH TOÁN
         # →
-        # ĐÃ CỌC / ĐÃ CHUYỂN KHOẢN FULL
+        # ĐƠN ĐÃ ĐƯỢC XÁC NHẬN
         #
         # HÀNG ĐÃ TRỪ TỪ LÚC TẠO ĐƠN
+        # KHÔNG TRỪ THÊM
+        # CHỈ BỎ CỜ GIỮ HÀNG
         # =================================================
 
         elif (
             old_status == "Chưa thanh toán"
             and
-            new_status in (
-                "Đã cọc",
-                "Đã chuyển khoản full"
-            )
+            new_status in CONFIRMED_STATUSES
         ):
+
+            cursor.execute(
+                """
+                UPDATE orders
+
+                SET
+                    status=%s,
+                    tracking_code=%s,
+                    stock_reserved=FALSE
+
+                WHERE id=%s
+                """,
+                (
+                    new_status,
+                    tracking_code,
+                    id
+                )
+            )
+
+
+        # =================================================
+        # ĐANG Ở TRẠNG THÁI ĐÃ XÁC NHẬN
+        #
+        # ĐẢM BẢO stock_reserved LUÔN FALSE
+        # =================================================
+
+        elif new_status in CONFIRMED_STATUSES:
 
             cursor.execute(
                 """
@@ -391,11 +422,9 @@ def update_order(id):
         # =================================================
         # CÁC TRƯỜNG HỢP KHÁC
         #
-        # Bao gồm:
-        # - giữ nguyên status nhưng nhập mã vận đơn
-        # - Đã cọc → Đang chuẩn bị hàng
-        # - Đang chuẩn bị hàng → Đã gửi hàng
-        # - ...
+        # Ví dụ:
+        # - chỉ sửa mã vận đơn
+        # - đổi giữa trạng thái hủy/hết hạn
         # =================================================
 
         else:
@@ -452,10 +481,6 @@ def update_order(id):
 )
 def delete_order(id):
 
-    # =====================================================
-    # KIỂM TRA ADMIN
-    # =====================================================
-
     if not session.get("admin"):
 
         return redirect(
@@ -475,7 +500,7 @@ def delete_order(id):
     try:
 
         # =================================================
-        # LẤY ĐƠN
+        # KHÓA ĐƠN TRƯỚC KHI XÓA
         # =================================================
 
         cursor.execute(
@@ -503,8 +528,7 @@ def delete_order(id):
 
 
         # =================================================
-        # ĐƠN VẪN GIỮ HÀNG
-        # → HOÀN KHO TRƯỚC KHI XÓA
+        # CHỈ HOÀN KHO NẾU ĐƠN VẪN ĐANG GIỮ HÀNG
         # =================================================
 
         if (
@@ -534,7 +558,7 @@ def delete_order(id):
 
 
         # =================================================
-        # XÓA
+        # XÓA ĐƠN
         # =================================================
 
         cursor.execute(
