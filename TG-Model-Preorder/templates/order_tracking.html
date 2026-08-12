@@ -1,227 +1,448 @@
-from flask import (
-    Blueprint,
-    render_template,
-    request
-)
+<!DOCTYPE html>
+<html lang="vi">
 
-from psycopg2.extras import RealDictCursor
+<head>
 
-from database import get_db
+    <meta charset="UTF-8">
 
-from services.order_service import (
-    normalize_expires_at,
-    is_order_expired,
-    mark_order_expired
-)
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
+    <title>
+        Theo dõi đơn hàng - TG MODEL SHOP
+    </title>
 
-order_tracking_bp = Blueprint(
-    "order_tracking",
-    __name__
-)
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/order_tracking.css') }}"
+    >
 
+</head>
 
-# =========================================================
-# TRANG THEO DÕI ĐƠN HÀNG
-# =========================================================
 
-@order_tracking_bp.route(
-    "/order-status",
-    methods=["GET", "POST"]
-)
-def order_status():
+<body>
 
-    # =====================================================
-    # COOKIE CỦA KHÁCH
-    # =====================================================
 
-    order_token = request.cookies.get(
-        "order_token"
-    )
+<div class="tracking-container">
 
 
-    order = None
+    <!-- =================================================
+         TIÊU ĐỀ
+         ================================================= -->
 
-    error = None
+    <div class="tracking-header">
 
+        <h1>
+            Theo dõi đơn hàng
+        </h1>
 
-    # =====================================================
-    # DATABASE
-    # =====================================================
+        <p>
+            TG MODEL SHOP HẢI PHÒNG
+        </p>
 
-    conn = get_db()
+    </div>
 
-    cursor = conn.cursor(
-        cursor_factory=RealDictCursor
-    )
 
+    <!-- =================================================
+         FORM TRA CỨU
+         ================================================= -->
 
-    try:
+    <div class="lookup-box">
 
-        # =================================================
-        # POST
-        #
-        # KHÁCH NHẬP:
-        # - MÃ ĐƠN
-        # - SỐ ĐIỆN THOẠI
-        # =================================================
+        <h2>
+            Tra cứu đơn hàng
+        </h2>
 
-        if request.method == "POST":
+        <p class="lookup-description">
+            Nhập mã đơn hàng và số điện thoại đã dùng khi đặt hàng.
+        </p>
 
-            order_code = request.form.get(
-                "order_code",
-                ""
-            ).strip()
 
+        <form
+            method="POST"
+            action="/order-status"
+        >
 
-            phone = request.form.get(
-                "phone",
-                ""
-            ).strip()
+            <div class="form-group">
 
+                <label for="order-code">
+                    Mã đơn hàng
+                </label>
 
-            # =============================================
-            # THIẾU DỮ LIỆU
-            # =============================================
+                <input
+                    type="text"
+                    id="order-code"
+                    name="order_code"
+                    placeholder="Ví dụ: TG000001"
+                    autocomplete="off"
+                    required
+                >
 
-            if (
-                not order_code
-                or
-                not phone
-            ):
+            </div>
 
-                error = (
-                    "Vui lòng nhập mã đơn "
-                    "và số điện thoại."
-                )
 
+            <div class="form-group">
 
-            else:
+                <label for="phone">
+                    Số điện thoại
+                </label>
 
-                cursor.execute(
-                    """
-                    SELECT *
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="Số điện thoại đặt hàng"
+                    autocomplete="tel"
+                    required
+                >
 
-                    FROM orders
+            </div>
 
-                    WHERE order_code=%s
-                    AND phone=%s
 
-                    LIMIT 1
-                    """,
-                    (
-                        order_code,
-                        phone
-                    )
-                )
+            <button
+                type="submit"
+                class="lookup-button"
+            >
+                TRA CỨU ĐƠN HÀNG
+            </button>
 
+        </form>
 
-                order = cursor.fetchone()
 
+        <!-- =============================================
+             LỖI TRA CỨU
+             ============================================= -->
 
-                if order is None:
+        {% if error %}
 
-                    error = (
-                        "Không tìm thấy đơn hàng "
-                        "phù hợp."
-                    )
+            <div class="error-message">
 
+                {{ error }}
 
-        # =================================================
-        # GET
-        #
-        # NẾU KHÁCH ĐANG DÙNG ĐÚNG THIẾT BỊ ĐÃ ĐẶT
-        # → TỰ TÌM ĐƠN THEO COOKIE
-        # =================================================
+            </div>
 
-        elif order_token:
+        {% endif %}
 
-            cursor.execute(
-                """
-                SELECT *
+    </div>
 
-                FROM orders
 
-                WHERE order_token=%s
+    <!-- =================================================
+         THÔNG TIN ĐƠN
+         ================================================= -->
 
-                ORDER BY id DESC
+    {% if order %}
 
-                LIMIT 1
-                """,
-                (
-                    order_token,
-                )
-            )
+        <div class="order-box">
 
 
-            order = cursor.fetchone()
+            <div class="order-title">
 
+                <div>
 
-        # =================================================
-        # KIỂM TRA ĐƠN HẾT HẠN
-        # =================================================
+                    <span class="order-label">
+                        Mã đơn hàng
+                    </span>
 
-        if (
-            order
-            and
-            order["status"]
-            ==
-            "Chưa thanh toán"
-        ):
+                    <h2>
+                        {{ order["order_code"] }}
+                    </h2>
 
-            expires_at = (
-                normalize_expires_at(
-                    order["expires_at"]
-                )
-            )
+                </div>
 
 
-            if is_order_expired(
-                expires_at
-            ):
+                <div class="current-status">
 
-                mark_order_expired(
-                    cursor,
-                    conn,
-                    order["order_code"]
-                )
+                    {{ order["status"] }}
 
+                </div>
 
-                # =========================================
-                # ĐỌC LẠI ĐƠN SAU KHI UPDATE
-                # =========================================
+            </div>
 
-                cursor.execute(
-                    """
-                    SELECT *
 
-                    FROM orders
+            <!-- =========================================
+                 SẢN PHẨM
+                 ========================================= -->
 
-                    WHERE id=%s
+            <div class="section">
 
-                    LIMIT 1
-                    """,
-                    (
-                        order["id"],
-                    )
-                )
+                <h3>
+                    Sản phẩm
+                </h3>
 
 
-                order = cursor.fetchone()
+                <div class="info-row">
 
+                    <span>
+                        Sản phẩm
+                    </span>
 
-        # =================================================
-        # RENDER
-        # =================================================
+                    <strong>
+                        {{ order["product_name"] }}
+                    </strong>
 
-        return render_template(
-            "order_tracking.html",
-            order=order,
-            error=error
-        )
+                </div>
 
 
-    finally:
+                <div class="info-row">
 
-        cursor.close()
-        conn.close()
+                    <span>
+                        Thương hiệu
+                    </span>
+
+                    <strong>
+                        {{ order["product_brand"] or "--" }}
+                    </strong>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span>
+                        Số lượng
+                    </span>
+
+                    <strong>
+                        {{ order["quantity"] or 1 }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 THANH TOÁN
+                 ========================================= -->
+
+            <div class="section">
+
+                <h3>
+                    Thanh toán
+                </h3>
+
+
+                <div class="info-row">
+
+                    <span>
+                        Hình thức
+                    </span>
+
+
+                    <strong>
+
+                        {% if order["payment_type"] == "full" %}
+
+                            Chuyển khoản full
+
+                        {% elif order["payment_type"] == "deposit" %}
+
+                            Cọc một phần
+
+                        {% else %}
+
+                            --
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span>
+                        Số tiền
+                    </span>
+
+
+                    <strong class="money">
+
+                        {% if order["payment_type"] == "full" %}
+
+                            {{ "{:,}".format(
+                                (order["price"] or 0)
+                                * (order["quantity"] or 1)
+                            ) }} đ
+
+                        {% else %}
+
+                            {{ "{:,}".format(
+                                (order["deposit"] or 0)
+                                * (order["quantity"] or 1)
+                            ) }} đ
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 TRẠNG THÁI
+                 ========================================= -->
+
+            <div class="section">
+
+                <h3>
+                    Trạng thái đơn hàng
+                </h3>
+
+
+                <div class="status-box">
+
+                    <span class="status-dot"></span>
+
+                    <div>
+
+                        <strong>
+                            {{ order["status"] }}
+                        </strong>
+
+
+                        {% if order["status"] == "Chưa thanh toán" %}
+
+                            <p>
+                                Đơn hàng đang chờ thanh toán.
+                            </p>
+
+
+                        {% elif order["status"] == "Đã cọc" %}
+
+                            <p>
+                                Shop đã nhận được tiền cọc của bạn.
+                            </p>
+
+
+                        {% elif order["status"] == "Đã chuyển khoản full" %}
+
+                            <p>
+                                Shop đã nhận đủ tiền thanh toán.
+                            </p>
+
+
+                        {% elif order["status"] == "Đang chuẩn bị hàng" %}
+
+                            <p>
+                                Shop đang chuẩn bị hàng để gửi cho bạn.
+                            </p>
+
+
+                        {% elif order["status"] == "Đã gửi hàng" %}
+
+                            <p>
+                                Đơn hàng đã được bàn giao cho đơn vị vận chuyển.
+                            </p>
+
+
+                        {% elif order["status"] == "Hoàn thành" %}
+
+                            <p>
+                                Đơn hàng đã hoàn thành.
+                            </p>
+
+
+                        {% elif order["status"] == "Đã hủy" %}
+
+                            <p>
+                                Đơn hàng này đã được hủy.
+                            </p>
+
+
+                        {% elif order["status"] == "Hết hạn thanh toán" %}
+
+                            <p>
+                                Đơn hàng đã hết thời gian thanh toán.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 MÃ VẬN ĐƠN
+                 ========================================= -->
+
+            {% if order["tracking_code"] %}
+
+                <div class="section shipping-section">
+
+                    <h3>
+                        Vận chuyển
+                    </h3>
+
+
+                    <div class="info-row">
+
+                        <span>
+                            Mã vận đơn
+                        </span>
+
+                        <strong class="tracking-code">
+
+                            {{ order["tracking_code"] }}
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =========================================
+                 NGÀY ĐẶT
+                 ========================================= -->
+
+            <div class="section">
+
+                <div class="info-row">
+
+                    <span>
+                        Thời gian đặt hàng
+                    </span>
+
+                    <strong>
+                        {{ order["created_at"] or "--" }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- =================================================
+         QUAY LẠI
+         ================================================= -->
+
+    <a
+        href="/"
+        class="back-link"
+    >
+        ← Quay lại trang chủ
+    </a>
+
+
+</div>
+
+
+</body>
+
+</html>
