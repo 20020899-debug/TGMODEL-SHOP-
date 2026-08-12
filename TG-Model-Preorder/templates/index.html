@@ -93,7 +93,80 @@
 
 </div>
 
+<script>
 
+const searchInput =
+    document.getElementById(
+        "product-search-input"
+    );
+
+
+searchInput.addEventListener(
+    "input",
+    function() {
+
+        const keyword =
+            this.value
+                .toLowerCase()
+                .trim();
+
+
+        const products =
+            document.querySelectorAll(
+                ".product-card"
+            );
+
+
+        products.forEach(
+            function(product) {
+
+                const name =
+                    product
+                        .querySelector(
+                            ".product-name"
+                        )
+                        .textContent
+                        .toLowerCase();
+
+
+                const brandElement =
+                    product.querySelector(
+                        ".product-brand"
+                    );
+
+
+                const brand =
+                    brandElement
+                        ? brandElement
+                            .textContent
+                            .toLowerCase()
+                        : "";
+
+
+                if (
+                    name.includes(keyword)
+                    ||
+                    brand.includes(keyword)
+                ) {
+
+                    product.style.display =
+                        "";
+
+                } else {
+
+                    product.style.display =
+                        "none";
+
+                }
+
+            }
+        );
+
+    }
+);
+
+</script>
+    
 </body>
 
 </html>
