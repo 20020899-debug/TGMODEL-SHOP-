@@ -46,6 +46,8 @@ try:
             payment_type TEXT,
             status TEXT,
 
+            tracking_code TEXT,
+
             created_at TEXT,
             expires_at TIMESTAMP,
 
@@ -124,6 +126,20 @@ try:
             stock_reserved BOOLEAN
             NOT NULL
             DEFAULT FALSE
+        """
+    )
+
+
+    # =====================================================
+    # MÃ VẬN ĐƠN
+    # =====================================================
+
+    cursor.execute(
+        """
+        ALTER TABLE orders
+
+        ADD COLUMN IF NOT EXISTS
+            tracking_code TEXT
         """
     )
 
@@ -382,6 +398,20 @@ try:
 
 
     # =====================================================
+    # INDEX ORDERS - TRACKING CODE
+    # =====================================================
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+            idx_orders_tracking_code
+
+        ON orders(tracking_code)
+        """
+    )
+
+
+    # =====================================================
     # INDEX PRODUCTS - ACTIVE
     # =====================================================
 
@@ -446,6 +476,10 @@ try:
 
     print(
         "stock_reserved: OK"
+    )
+
+    print(
+        "tracking_code: OK"
     )
 
     print(
