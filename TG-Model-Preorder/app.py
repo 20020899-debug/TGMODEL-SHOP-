@@ -13,6 +13,8 @@ from routes.payment_cancel import payment_cancel_bp
 from routes.payment_webhook import payment_webhook_bp
 from routes.admin_products import admin_products_bp
 from routes.admin_orders import admin_orders_bp
+from routes.order_tracking import order_tracking_bp
+
 
 # =========================================================
 # KHỞI TẠO FLASK
@@ -25,10 +27,6 @@ app = Flask(
 
 # =========================================================
 # SECRET KEY
-#
-# Render:
-# Environment
-# → SECRET_KEY
 # =========================================================
 
 app.secret_key = os.environ.get(
@@ -45,54 +43,50 @@ app.register_blueprint(
     home_bp
 )
 
-
 app.register_blueprint(
     auth_bp
 )
-
 
 app.register_blueprint(
     admin_bp
 )
 
-
 app.register_blueprint(
-    pending_order_bp
+    admin_orders_bp
 )
-
-
-app.register_blueprint(
-    preorder_page_bp
-)
-
-
-app.register_blueprint(
-    submit_order_bp
-)
-
-
-app.register_blueprint(
-    payment_success_bp
-)
-
-
-app.register_blueprint(
-    payment_cancel_bp
-)
-
-
-app.register_blueprint(
-    payment_webhook_bp
-)
-
 
 app.register_blueprint(
     admin_products_bp
 )
 
 app.register_blueprint(
-    admin_orders_bp
+    pending_order_bp
 )
+
+app.register_blueprint(
+    preorder_page_bp
+)
+
+app.register_blueprint(
+    submit_order_bp
+)
+
+app.register_blueprint(
+    order_tracking_bp
+)
+
+app.register_blueprint(
+    payment_success_bp
+)
+
+app.register_blueprint(
+    payment_cancel_bp
+)
+
+app.register_blueprint(
+    payment_webhook_bp
+)
+
 
 # =========================================================
 # CHẠY LOCAL
