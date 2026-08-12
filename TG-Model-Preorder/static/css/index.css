@@ -598,3 +598,47 @@ body {
     }
 
 }
+/* =================================================
+   TÌM KIẾM SẢN PHẨM
+   ================================================= */
+
+.product-search {
+
+    display: flex;
+
+    justify-content: flex-start;
+
+    margin-bottom: 20px;
+}
+
+
+#product-search-input {
+
+    width: 100%;
+
+    max-width: 320px;
+
+    padding: 11px 14px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 8px;
+
+    background: white;
+
+    font-size: 15px;
+
+    box-sizing: border-box;
+}
+
+
+#product-search-input:focus {
+
+    outline: none;
+
+    border-color: var(--orange);
+
+    box-shadow:
+        0 0 0 2px
+        rgba(255, 152, 0, 0.15);
+}
