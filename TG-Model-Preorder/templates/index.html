@@ -44,20 +44,45 @@
 
     </div>
 
-<!-- =================================================
-     TÌM KIẾM SẢN PHẨM
-     ================================================= -->
 
-<div class="product-search">
+    <!-- =================================================
+         THANH CÔNG CỤ
+         ================================================= -->
 
-    <input
-        type="text"
-        id="product-search-input"
-        placeholder="🔍 Tìm kiếm sản phẩm..."
-        autocomplete="off"
-    >
+    <div class="top-tools">
 
-</div>
+
+        <!-- =============================================
+             TÌM KIẾM
+             ============================================= -->
+
+        <div class="product-search">
+
+            <input
+                type="text"
+                id="product-search-input"
+                placeholder="🔍 Tìm kiếm sản phẩm..."
+                autocomplete="off"
+            >
+
+        </div>
+
+
+        <!-- =============================================
+             THEO DÕI ĐƠN HÀNG
+             ============================================= -->
+
+        <a
+            href="{{ url_for('order_tracking.order_status') }}"
+            class="track-order-button"
+        >
+            📦 Theo dõi đơn hàng
+        </a>
+
+
+    </div>
+
+
     <!-- =================================================
          ĐƠN CHỜ THANH TOÁN
          ================================================= -->
@@ -93,6 +118,11 @@
 
 </div>
 
+
+<!-- =====================================================
+     TÌM KIẾM SẢN PHẨM
+     ===================================================== -->
+
 <script>
 
 const searchInput =
@@ -120,19 +150,24 @@ searchInput.addEventListener(
         products.forEach(
             function(product) {
 
-                const name =
-                    product
-                        .querySelector(
-                            ".product-name"
-                        )
-                        .textContent
-                        .toLowerCase();
+                const nameElement =
+                    product.querySelector(
+                        ".product-name"
+                    );
 
 
                 const brandElement =
                     product.querySelector(
                         ".product-brand"
                     );
+
+
+                const name =
+                    nameElement
+                        ? nameElement
+                            .textContent
+                            .toLowerCase()
+                        : "";
 
 
                 const brand =
@@ -166,7 +201,8 @@ searchInput.addEventListener(
 );
 
 </script>
-    
+
+
 </body>
 
 </html>
