@@ -12,7 +12,7 @@ from routes.payment_success import payment_success_bp
 from routes.payment_cancel import payment_cancel_bp
 from routes.payment_webhook import payment_webhook_bp
 from routes.admin_products import admin_products_bp
-
+from routes.admin_orders import admin_orders_bp
 
 # =========================================================
 # KHỞI TẠO FLASK
@@ -90,6 +90,9 @@ app.register_blueprint(
     admin_products_bp
 )
 
+app.register_blueprint(
+    admin_orders_bp
+)
 
 # =========================================================
 # CHẠY LOCAL
