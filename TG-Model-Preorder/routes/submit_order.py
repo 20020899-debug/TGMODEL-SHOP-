@@ -270,7 +270,7 @@ def submit():
 
 
         # =================================================
-        # CÓ CẦN PAYOS KHÔNG?
+        # CÓ CẦN PAYOS KHÔNG
         # =================================================
 
         requires_payment = (
@@ -279,13 +279,11 @@ def submit():
 
 
         # =================================================
-        # COOKIE CHỐNG SPAM
+        # CHỐNG SPAM
         #
-        # QUAN TRỌNG:
+        # CHỈ "CHƯA THANH TOÁN" MỚI KHÓA 15 PHÚT
         #
-        # Chỉ "Chưa thanh toán" mới khóa khách 15 phút.
-        #
-        # "Chờ xác nhận" của đơn 0đ KHÔNG khóa.
+        # "CHỜ XÁC NHẬN" CỌC 0Đ KHÔNG KHÓA
         # =================================================
 
         order_token = request.cookies.get(
@@ -296,7 +294,7 @@ def submit():
 
 
         # =================================================
-        # KIỂM TRA ĐƠN CHƯA THANH TOÁN THEO COOKIE
+        # KIỂM TRA THEO COOKIE
         # =================================================
 
         if order_token:
@@ -331,10 +329,8 @@ def submit():
 
             if candidate:
 
-                expires_at = (
-                    normalize_expires_at(
-                        candidate[2]
-                    )
+                expires_at = normalize_expires_at(
+                    candidate[2]
                 )
 
 
@@ -350,15 +346,11 @@ def submit():
 
                 else:
 
-                    existing_order = (
-                        candidate
-                    )
+                    existing_order = candidate
 
 
         # =================================================
-        # KIỂM TRA ĐƠN CHƯA THANH TOÁN THEO SĐT
-        #
-        # Đơn "Chờ xác nhận" KHÔNG được tính ở đây.
+        # KIỂM TRA THEO SĐT
         # =================================================
 
         if (
@@ -397,10 +389,8 @@ def submit():
 
             if candidate:
 
-                expires_at = (
-                    normalize_expires_at(
-                        candidate[2]
-                    )
+                expires_at = normalize_expires_at(
+                    candidate[2]
                 )
 
 
@@ -416,9 +406,7 @@ def submit():
 
                 else:
 
-                    existing_order = (
-                        candidate
-                    )
+                    existing_order = candidate
 
 
         # =================================================
@@ -439,11 +427,6 @@ def submit():
                 existing_order[4]
             )
 
-
-            # =============================================
-            # ĐÃ CÓ LINK PAYOS
-            # → QUAY LẠI LINK CŨ
-            # =============================================
 
             if old_payment_url:
 
@@ -468,10 +451,6 @@ def submit():
 
                 return response
 
-
-            # =============================================
-            # CÓ ĐƠN NHƯNG CHƯA CÓ LINK
-            # =============================================
 
             return f"""
             <!DOCTYPE html>
@@ -580,7 +559,7 @@ def submit():
 
 
         # =================================================
-        # TOKEN ĐƠN
+        # TOKEN
         # =================================================
 
         new_order_token = (
@@ -594,30 +573,19 @@ def submit():
         # THỜI GIAN
         # =================================================
 
-        created_time = (
-            get_now_vn()
-        )
+        created_time = get_now_vn()
 
 
-        created_at = (
-            created_time.strftime(
-                "%d/%m/%Y %H:%M:%S"
-            )
+        created_at = created_time.strftime(
+            "%d/%m/%Y %H:%M:%S"
         )
 
 
         # =================================================
-        # TRẠNG THÁI + HẠN THANH TOÁN
+        # TRẠNG THÁI + HẾT HẠN
         # =================================================
 
         if requires_payment:
-
-            # =============================================
-            # CÓ TIỀN CỌC / THANH TOÁN
-            #
-            # → PayOS
-            # → 15 phút
-            # =============================================
 
             expires_time = (
                 created_time
@@ -639,13 +607,6 @@ def submit():
             )
 
         else:
-
-            # =============================================
-            # 0Đ
-            #
-            # → Không PayOS
-            # → Không hết hạn 15 phút
-            # =============================================
 
             expires_time = None
 
@@ -761,39 +722,28 @@ def submit():
 
 
         # =================================================
-        # TELEGRAM
+        # CỌC / THANH TOÁN = 0Đ
         #
-        # GỬI NGAY KHI KHÁCH TẠO ĐƠN
-        #
-        # Không chờ:
-        # - tạo link PayOS
-        # - khách thanh toán
-        #
-        # Vì notification_service tự bắt lỗi nên Telegram
-        # lỗi cũng không làm hỏng đơn.
-        # =================================================
-
-        send_new_order_notification(
-            order_code=order_code,
-            fullname=fullname,
-            phone=phone,
-            product_name=product_name,
-            quantity=quantity,
-            payment_type=payment_type,
-            payment_amount=payment_amount,
-            status=order_status
-        )
-
-
-        # =================================================
-        # ĐƠN 0Đ
-        #
-        # KHÔNG GỌI PAYOS
+        # KHÔNG PAYOS
+        # → COMMIT
+        # → TELEGRAM NGAY
         # =================================================
 
         if not requires_payment:
 
             conn.commit()
+
+
+            send_new_order_notification(
+                order_code=order_code,
+                fullname=fullname,
+                phone=phone,
+                product_name=product_name,
+                quantity=quantity,
+                payment_type=payment_type,
+                payment_amount=0,
+                status="Chờ xác nhận"
+            )
 
 
             response = make_response(
@@ -802,13 +752,6 @@ def submit():
                 )
             )
 
-
-            # =============================================
-            # COOKIE CHỈ DÙNG ĐỂ TỰ HIỆN ĐƠN MỚI NHẤT
-            #
-            # Cookie này KHÔNG còn làm đơn "Chờ xác nhận"
-            # khóa lần đặt tiếp theo.
-            # =============================================
 
             response.set_cookie(
                 "order_token",
@@ -824,7 +767,9 @@ def submit():
 
 
         # =================================================
-        # PAYOS
+        # CÓ TIỀN THANH TOÁN
+        #
+        # CHƯA GỬI TELEGRAM
         # =================================================
 
         payos_order_code = int(
@@ -904,16 +849,15 @@ def submit():
         )
 
 
-        # =================================================
-        # COMMIT
-        # =================================================
-
         conn.commit()
 
 
         # =================================================
-        # REDIRECT PAYOS
+        # KHÔNG GỬI TELEGRAM Ở ĐÂY
+        #
+        # Đợi webhook PayOS xác nhận tiền vào.
         # =================================================
+
 
         response = make_response(
             redirect(
