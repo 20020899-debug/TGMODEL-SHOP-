@@ -26,7 +26,9 @@
          ================================================= -->
 
     <h5 class="product-brand">
+
         {{ product.brand or "--" }}
+
     </h5>
 
 
@@ -35,7 +37,9 @@
          ================================================= -->
 
     <h2 class="product-name">
+
         {{ product.name }}
+
     </h2>
 
 
@@ -52,36 +56,37 @@
             💰 Giá chính thức:
         </strong>
 
-        {{ "{:,}".format(product.price or 0) }} đ
+        {{ "{:,}".format(
+            product.price or 0
+        ) }} đ
 
     </p>
 
 
     <!-- =================================================
-         CHỈ HÀNG PRE-ORDER
+         TIỀN CỌC
+         LUÔN HIỆN KỂ CẢ = 0
+         ================================================= -->
+
+    <p>
+
+        <strong>
+            💵 Tiền cọc:
+        </strong>
+
+        {{ "{:,}".format(
+            product.deposit or 0
+        ) }} đ
+
+    </p>
+
+
+    <!-- =================================================
+         DỰ KIẾN TRẢ HÀNG
+         CHỈ PRE-ORDER
          ================================================= -->
 
     {% if product.product_type == "preorder" %}
-
-
-        <!-- =============================================
-             TIỀN CỌC
-             ============================================= -->
-
-        <p>
-
-            <strong>
-                💵 Tiền cọc:
-            </strong>
-
-            {{ "{:,}".format(product.deposit or 0) }} đ
-
-        </p>
-
-
-        <!-- =============================================
-             DỰ KIẾN TRẢ HÀNG
-             ============================================= -->
 
         <p>
 
@@ -92,7 +97,6 @@
             {{ product.eta or "Chưa xác định" }}
 
         </p>
-
 
     {% endif %}
 
@@ -111,13 +115,17 @@
         {% if product.stock > 0 %}
 
             <span class="stock-available">
+
                 {{ product.stock }} sản phẩm
+
             </span>
 
         {% else %}
 
             <span class="stock-out">
+
                 Hết hàng
+
             </span>
 
         {% endif %}
@@ -144,7 +152,9 @@
 
         {% else %}
 
-            <span class="btn btn-out-of-stock">
+            <span
+                class="btn btn-out-of-stock"
+            >
                 HẾT HÀNG
             </span>
 
