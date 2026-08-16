@@ -28,18 +28,10 @@
 <div class="container container-small">
 
 
-    <!-- =================================================
-         TIÊU ĐỀ
-         ================================================= -->
-
     <h1 class="page-title">
         Chi tiết đơn hàng
     </h1>
 
-
-    <!-- =================================================
-         THÔNG TIN KHÁCH HÀNG
-         ================================================= -->
 
     <div class="form-row">
 
@@ -98,10 +90,6 @@
     </div>
 
 
-    <!-- =================================================
-         ĐỊA CHỈ
-         ================================================= -->
-
     <h2 class="section-title">
         Địa chỉ giao hàng
     </h2>
@@ -151,10 +139,6 @@
     </div>
 
 
-    <!-- =================================================
-         SẢN PHẨM
-         ================================================= -->
-
     <h2 class="section-title">
         Thông tin sản phẩm
     </h2>
@@ -177,7 +161,7 @@
             Người bán:
         </span>
 
-        {{ order["product_brand"] }}
+        {{ order["product_brand"] or "--" }}
 
     </div>
 
@@ -214,10 +198,6 @@
 
     </div>
 
-
-    <!-- =================================================
-         THANH TOÁN
-         ================================================= -->
 
     <h2 class="section-title">
         Thanh toán
@@ -282,10 +262,6 @@
     </div>
 
 
-    <!-- =================================================
-         GHI CHÚ
-         ================================================= -->
-
     <h2 class="section-title">
         Ghi chú
     </h2>
@@ -297,10 +273,6 @@
 
     </div>
 
-
-    <!-- =================================================
-         VẬN CHUYỂN
-         ================================================= -->
 
     <h2 class="section-title">
         Vận chuyển
@@ -335,10 +307,6 @@
     </div>
 
 
-    <!-- =================================================
-         CẬP NHẬT ĐƠN
-         ================================================= -->
-
     <h2 class="section-title">
         Trạng thái đơn hàng
     </h2>
@@ -349,10 +317,6 @@
         action="/admin/order/{{ order['id'] }}/update"
     >
 
-
-        <!-- =============================================
-             TRẠNG THÁI
-             ============================================= -->
 
         <div class="form-row">
 
@@ -367,6 +331,14 @@
                 class="form-control"
                 required
             >
+
+
+                <option
+                    value="Chờ xác nhận"
+                    {% if order["status"] == "Chờ xác nhận" %}selected{% endif %}
+                >
+                    Chờ xác nhận
+                </option>
 
 
                 <option
@@ -438,10 +410,6 @@
         </div>
 
 
-        <!-- =============================================
-             MÃ VẬN ĐƠN
-             ============================================= -->
-
         <div
             class="form-row"
             id="tracking-code-row"
@@ -468,10 +436,6 @@
         </div>
 
 
-        <!-- =============================================
-             LƯU
-             ============================================= -->
-
         <button
             type="submit"
             class="btn btn-orange"
@@ -482,10 +446,6 @@
 
     </form>
 
-
-    <!-- =================================================
-         QUAY LẠI
-         ================================================= -->
 
     <br>
 
@@ -501,10 +461,6 @@
 </div>
 
 
-<!-- =====================================================
-     HIỆN / ẨN Ô MÃ VẬN ĐƠN
-     ===================================================== -->
-
 <script>
 
 document.addEventListener(
@@ -516,22 +472,16 @@ document.addEventListener(
                 "order-status"
             );
 
-
         const trackingRow =
             document.getElementById(
                 "tracking-code-row"
             );
-
 
         const trackingInput =
             document.getElementById(
                 "tracking-code"
             );
 
-
-        // =================================================
-        // TRẠNG THÁI NÊN HIỆN MÃ VẬN ĐƠN
-        // =================================================
 
         const trackingStatuses = [
             "Đang chuẩn bị hàng",
@@ -544,12 +494,6 @@ document.addEventListener(
 
             const status =
                 statusSelect.value;
-
-
-            // =============================================
-            // Nếu đã có mã vận đơn thì luôn hiển thị
-            // để Admin có thể sửa.
-            // =============================================
 
             const hasTrackingCode =
                 trackingInput.value
@@ -566,7 +510,7 @@ document.addEventListener(
             ) {
 
                 trackingRow.style.display =
-                    "block";
+                    "";
 
             } else {
 
