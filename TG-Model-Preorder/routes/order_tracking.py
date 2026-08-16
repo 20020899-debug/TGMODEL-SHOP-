@@ -22,7 +22,7 @@ order_tracking_bp = Blueprint(
 
 
 # =========================================================
-# TRANG THEO DÕI ĐƠN HÀNG
+# THEO DÕI ĐƠN HÀNG
 # =========================================================
 
 @order_tracking_bp.route(
@@ -31,23 +31,13 @@ order_tracking_bp = Blueprint(
 )
 def order_status():
 
-    # =====================================================
-    # COOKIE CỦA KHÁCH
-    # =====================================================
-
     order_token = request.cookies.get(
         "order_token"
     )
 
-
     order = None
-
     error = None
 
-
-    # =====================================================
-    # DATABASE
-    # =====================================================
 
     conn = get_db()
 
@@ -59,11 +49,7 @@ def order_status():
     try:
 
         # =================================================
-        # POST
-        #
-        # KHÁCH NHẬP:
-        # - MÃ ĐƠN
-        # - SỐ ĐIỆN THOẠI
+        # TRA CỨU BẰNG MÃ ĐƠN + SĐT
         # =================================================
 
         if request.method == "POST":
@@ -73,28 +59,18 @@ def order_status():
                 ""
             ).strip()
 
-
             phone = request.form.get(
                 "phone",
                 ""
             ).strip()
 
 
-            # =============================================
-            # THIẾU DỮ LIỆU
-            # =============================================
-
-            if (
-                not order_code
-                or
-                not phone
-            ):
+            if not order_code or not phone:
 
                 error = (
                     "Vui lòng nhập mã đơn "
                     "và số điện thoại."
                 )
-
 
             else:
 
@@ -122,16 +98,12 @@ def order_status():
                 if order is None:
 
                     error = (
-                        "Không tìm thấy đơn hàng "
-                        "phù hợp."
+                        "Không tìm thấy đơn hàng phù hợp."
                     )
 
 
         # =================================================
-        # GET
-        #
-        # NẾU KHÁCH ĐANG DÙNG ĐÚNG THIẾT BỊ ĐÃ ĐẶT
-        # → TỰ TÌM ĐƠN THEO COOKIE
+        # TỰ TÌM THEO COOKIE
         # =================================================
 
         elif order_token:
@@ -158,21 +130,20 @@ def order_status():
 
 
         # =================================================
-        # KIỂM TRA ĐƠN HẾT HẠN
+        # CHỈ ĐƠN "CHƯA THANH TOÁN"
+        # MỚI CÓ HẠN 15 PHÚT
+        #
+        # "CHỜ XÁC NHẬN" KHÔNG TỰ HẾT HẠN
         # =================================================
 
         if (
             order
             and
-            order["status"]
-            ==
-            "Chưa thanh toán"
+            order["status"] == "Chưa thanh toán"
         ):
 
-            expires_at = (
-                normalize_expires_at(
-                    order["expires_at"]
-                )
+            expires_at = normalize_expires_at(
+                order["expires_at"]
             )
 
 
@@ -188,7 +159,7 @@ def order_status():
 
 
                 # =========================================
-                # ĐỌC LẠI ĐƠN SAU KHI UPDATE
+                # ĐỌC LẠI SAU KHI UPDATE
                 # =========================================
 
                 cursor.execute(
@@ -209,10 +180,6 @@ def order_status():
 
                 order = cursor.fetchone()
 
-
-        # =================================================
-        # RENDER
-        # =================================================
 
         return render_template(
             "order_tracking.html",
