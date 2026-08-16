@@ -24,6 +24,16 @@ admin_products_bp = Blueprint(
 
 
 # =========================================================
+# LOẠI SẢN PHẨM HỢP LỆ
+# =========================================================
+
+ALLOWED_PRODUCT_TYPES = (
+    "preorder",
+    "instock"
+)
+
+
+# =========================================================
 # DANH SÁCH SẢN PHẨM
 # =========================================================
 
@@ -87,7 +97,7 @@ def add_product():
 
 
     # =====================================================
-    # DỮ LIỆU TEXT
+    # TEXT
     # =====================================================
 
     name = request.form.get(
@@ -114,8 +124,23 @@ def add_product():
     ).strip()
 
 
+    product_type = request.form.get(
+        "product_type",
+        "preorder"
+    ).strip()
+
+
     # =====================================================
-    # DỮ LIỆU SỐ
+    # KIỂM TRA LOẠI SẢN PHẨM
+    # =====================================================
+
+    if product_type not in ALLOWED_PRODUCT_TYPES:
+
+        product_type = "preorder"
+
+
+    # =====================================================
+    # NUMBER
     # =====================================================
 
     try:
@@ -211,11 +236,13 @@ def add_product():
                 deposit,
                 eta,
                 image_url,
+                product_type,
                 active
             )
 
             VALUES
             (
+                %s,
                 %s,
                 %s,
                 %s,
@@ -233,7 +260,8 @@ def add_product():
                 price,
                 deposit,
                 eta,
-                image_url
+                image_url,
+                product_type
             )
         )
 
@@ -327,10 +355,6 @@ def edit_product(
 
         if request.method == "POST":
 
-            # =============================================
-            # TEXT
-            # =============================================
-
             name = request.form.get(
                 "name",
                 ""
@@ -355,9 +379,16 @@ def edit_product(
             ).strip()
 
 
-            # =============================================
-            # ACTIVE
-            # =============================================
+            product_type = request.form.get(
+                "product_type",
+                "preorder"
+            ).strip()
+
+
+            if product_type not in ALLOWED_PRODUCT_TYPES:
+
+                product_type = "preorder"
+
 
             active = (
                 request.form.get(
@@ -405,10 +436,6 @@ def edit_product(
                 )
 
 
-            # =============================================
-            # KIỂM TRA TÊN
-            # =============================================
-
             if not name:
 
                 return (
@@ -416,10 +443,6 @@ def edit_product(
                     400
                 )
 
-
-            # =============================================
-            # KHÔNG CHO GIÁ TRỊ ÂM
-            # =============================================
 
             price = max(
                 price,
@@ -454,6 +477,7 @@ def edit_product(
                     deposit=%s,
                     eta=%s,
                     image_url=%s,
+                    product_type=%s,
                     active=%s
 
                 WHERE id=%s
@@ -465,6 +489,7 @@ def edit_product(
                     deposit,
                     eta,
                     image_url,
+                    product_type,
                     active,
                     product_id
                 )
@@ -632,9 +657,7 @@ def delete_product(
 
         # =================================================
         # ĐÃ TỪNG CÓ ĐƠN
-        #
-        # Không xóa cứng để giữ lịch sử.
-        # Chỉ ẩn sản phẩm.
+        # → CHỈ ẨN
         # =================================================
 
         if order_count > 0:
@@ -664,8 +687,8 @@ def delete_product(
 
 
         # =================================================
-        # CHƯA TỪNG CÓ ĐƠN
-        # XÓA STOCK
+        # CHƯA CÓ ĐƠN
+        # → XÓA STOCK
         # =================================================
 
         cursor.execute(
