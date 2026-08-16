@@ -4,6 +4,11 @@ from flask import (
 )
 
 from database import get_db
+from payos_service import payos
+
+from services.notification_service import (
+    send_new_order_notification
+)
 
 
 payment_webhook_bp = Blueprint(
@@ -27,312 +32,350 @@ def webhook():
     )
 
 
-    # =====================================================
-    # LẤY DỮ LIỆU PAYOS
-    # =====================================================
-
-    data = request.get_json(
-        silent=True
-    )
-
-
-    print(
-        "PAYOS DATA:",
-        data
-    )
-
-
-    if not data:
-
-        return "NO DATA", 400
-
-
-    # =====================================================
-    # PAYOS KHÔNG BÁO THÀNH CÔNG
-    # =====================================================
-
-    if data.get("code") != "00":
-
-        print(
-            "PAYMENT NOT SUCCESS"
-        )
-
-        return "OK", 200
-
-
-    # =====================================================
-    # LẤY ORDER CODE
-    #
-    # submit_order.py gửi:
-    #
-    # description = TGMxxx
-    # =====================================================
-
-    order_code = (
-        data
-        .get("data", {})
-        .get("description")
-    )
-
-
-    if not order_code:
-
-        print(
-            "KHONG CO ORDER CODE"
-        )
-
-        return "OK", 200
-
-
-    print(
-        "ORDER CODE:",
-        order_code
-    )
-
-
-    # =====================================================
-    # DATABASE
-    # =====================================================
-
-    conn = get_db()
-
-    cursor = conn.cursor()
-
-
     try:
 
         # =================================================
-        # TÌM ĐƠN
+        # XÁC MINH WEBHOOK BẰNG PAYOS SDK
         # =================================================
 
-        cursor.execute(
-            """
-            SELECT
-                id,
-                status,
-                payment_type,
-                stock_reserved,
-                product_id,
-                quantity
-
-            FROM orders
-
-            WHERE order_code=%s
-
-            LIMIT 1
-            """,
-            (
-                order_code,
+        webhook_data = (
+            payos.webhooks.verify(
+                request.data
             )
-        )
-
-
-        order = cursor.fetchone()
-
-
-        # =================================================
-        # KHÔNG TÌM THẤY ĐƠN
-        # =================================================
-
-        if order is None:
-
-            print(
-                "KHONG TIM THAY DON:",
-                order_code
-            )
-
-            return "OK", 200
-
-
-        order_id = order[0]
-
-        current_status = order[1]
-
-        payment_type = order[2]
-
-        stock_reserved = order[3]
-
-        product_id = order[4]
-
-        quantity = order[5]
-
-
-        print(
-            "ORDER ID:",
-            order_id
         )
 
 
         print(
-            "CURRENT STATUS:",
-            current_status
+            "WEBHOOK VERIFIED:",
+            webhook_data
+        )
+
+
+        # =================================================
+        # LẤY THÔNG TIN PAYOS
+        # =================================================
+
+        order_code = (
+            webhook_data.description
+        )
+
+
+        paid_amount = (
+            webhook_data.amount
         )
 
 
         print(
-            "PAYMENT TYPE:",
-            payment_type
-        )
-
-
-        print(
-            "STOCK RESERVED:",
-            stock_reserved
-        )
-
-
-        # =================================================
-        # ĐƠN ĐÃ ĐƯỢC THANH TOÁN TRƯỚC ĐÓ
-        # =================================================
-
-        if current_status in (
-            "Đã cọc",
-            "Đã chuyển khoản full"
-        ):
-
-            print(
-                "DON DA THANH TOAN TRUOC DO"
-            )
-
-            return "OK", 200
-
-
-        # =================================================
-        # ĐƠN ĐÃ HỦY
-        # =================================================
-
-        if current_status == "Đã hủy":
-
-            print(
-                "DON DA BI HUY"
-            )
-
-            return "OK", 200
-
-
-        # =================================================
-        # ĐƠN ĐÃ HẾT HẠN
-        # =================================================
-
-        if current_status == "Hết hạn thanh toán":
-
-            print(
-                "DON DA HET HAN"
-            )
-
-            return "OK", 200
-
-
-        # =================================================
-        # CHỈ XỬ LÝ ĐƠN CHƯA THANH TOÁN
-        # =================================================
-
-        if current_status != "Chưa thanh toán":
-
-            print(
-                "TRANG THAI KHONG HOP LE:",
-                current_status
-            )
-
-            return "OK", 200
-
-
-        # =================================================
-        # XÁC ĐỊNH TRẠNG THÁI SAU THANH TOÁN
-        # =================================================
-
-        if payment_type == "full":
-
-            new_status = (
-                "Đã chuyển khoản full"
-            )
-
-        else:
-
-            new_status = (
-                "Đã cọc"
-            )
-
-
-        print(
-            "NEW STATUS:",
-            new_status
-        )
-
-
-        # =================================================
-        # THANH TOÁN THÀNH CÔNG
-        #
-        # Hàng đã được trừ khi tạo đơn.
-        #
-        # Vì vậy:
-        #
-        # - KHÔNG trừ kho thêm
-        # - KHÔNG cộng kho lại
-        #
-        # Chỉ:
-        #
-        # - đổi trạng thái
-        # - stock_reserved = FALSE
-        # =================================================
-
-        cursor.execute(
-            """
-            UPDATE orders
-
-            SET
-                status=%s,
-                stock_reserved=FALSE
-
-            WHERE id=%s
-            AND status=%s
-            """,
-            (
-                new_status,
-                order_id,
-                "Chưa thanh toán"
-            )
-        )
-
-
-        updated_rows = (
-            cursor.rowcount
-        )
-
-
-        conn.commit()
-
-
-        print(
-            "PAYMENT UPDATED ROW:",
-            updated_rows
-        )
-
-
-        print(
-            "PAYMENT SUCCESS:",
+            "ORDER CODE:",
             order_code
         )
 
-
         print(
-            "FINAL STATUS:",
-            new_status
+            "PAID AMOUNT:",
+            paid_amount
         )
 
 
-        return "OK", 200
+        if not order_code:
+
+            return (
+                "OK",
+                200
+            )
 
 
-    except Exception:
+        # =================================================
+        # DATABASE
+        # =================================================
 
-        conn.rollback()
+        conn = get_db()
 
-        raise
+        cursor = conn.cursor()
 
 
-    finally:
+        try:
 
-        cursor.close()
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    status,
+                    payment_type,
+                    quantity,
 
-        conn.close()
+                    order_code,
+                    fullname,
+                    phone,
+                    product_name,
+
+                    price,
+                    deposit
+
+                FROM orders
+
+                WHERE order_code=%s
+
+                LIMIT 1
+
+                FOR UPDATE
+                """,
+                (
+                    order_code,
+                )
+            )
+
+
+            order = cursor.fetchone()
+
+
+            # =============================================
+            # KHÔNG TÌM THẤY ĐƠN
+            # =============================================
+
+            if order is None:
+
+                print(
+                    "KHONG TIM THAY DON:",
+                    order_code
+                )
+
+                return (
+                    "OK",
+                    200
+                )
+
+
+            order_id = (
+                order[0]
+            )
+
+            current_status = (
+                order[1]
+            )
+
+            payment_type = (
+                order[2]
+            )
+
+            quantity = (
+                order[3]
+                or 1
+            )
+
+            order_code = (
+                order[4]
+            )
+
+            fullname = (
+                order[5]
+                or ""
+            )
+
+            phone = (
+                order[6]
+                or ""
+            )
+
+            product_name = (
+                order[7]
+                or ""
+            )
+
+            price = (
+                order[8]
+                or 0
+            )
+
+            deposit = (
+                order[9]
+                or 0
+            )
+
+
+            print(
+                "CURRENT STATUS:",
+                current_status
+            )
+
+
+            # =============================================
+            # CHỈ XỬ LÝ ĐƠN ĐANG CHỜ THANH TOÁN
+            #
+            # Giúp chống webhook gọi lại nhiều lần.
+            # =============================================
+
+            if current_status != "Chưa thanh toán":
+
+                print(
+                    "BO QUA WEBHOOK - STATUS:",
+                    current_status
+                )
+
+                return (
+                    "OK",
+                    200
+                )
+
+
+            # =============================================
+            # KIỂM TRA SỐ TIỀN
+            # =============================================
+
+            if payment_type == "full":
+
+                expected_amount = (
+                    price
+                    * quantity
+                )
+
+                new_status = (
+                    "Đã chuyển khoản full"
+                )
+
+            else:
+
+                expected_amount = (
+                    deposit
+                    * quantity
+                )
+
+                new_status = (
+                    "Đã cọc"
+                )
+
+
+            print(
+                "EXPECTED AMOUNT:",
+                expected_amount
+            )
+
+
+            # =============================================
+            # SỐ TIỀN KHÔNG KHỚP
+            # =============================================
+
+            if paid_amount < expected_amount:
+
+                print(
+                    "SO TIEN THANH TOAN KHONG DU"
+                )
+
+                return (
+                    "OK",
+                    200
+                )
+
+
+            # =============================================
+            # UPDATE ĐƠN
+            # =============================================
+
+            cursor.execute(
+                """
+                UPDATE orders
+
+                SET
+                    status=%s,
+                    stock_reserved=FALSE
+
+                WHERE id=%s
+                AND status=%s
+                """,
+                (
+                    new_status,
+                    order_id,
+                    "Chưa thanh toán"
+                )
+            )
+
+
+            updated_rows = (
+                cursor.rowcount
+            )
+
+
+            conn.commit()
+
+
+            print(
+                "UPDATED ROWS:",
+                updated_rows
+            )
+
+
+            # =============================================
+            # TELEGRAM
+            #
+            # CHỈ BÁO KHI ĐƠN VỪA ĐƯỢC
+            # XÁC NHẬN THANH TOÁN.
+            # =============================================
+
+            if updated_rows > 0:
+
+                telegram_result = (
+                    send_new_order_notification(
+                        order_code=order_code,
+                        fullname=fullname,
+                        phone=phone,
+                        product_name=product_name,
+                        quantity=quantity,
+                        payment_type=payment_type,
+                        payment_amount=expected_amount,
+                        status=new_status
+                    )
+                )
+
+
+                print(
+                    "TELEGRAM RESULT:",
+                    telegram_result
+                )
+
+
+            print(
+                "PAYMENT SUCCESS:",
+                order_code
+            )
+
+            print(
+                "FINAL STATUS:",
+                new_status
+            )
+
+
+            return (
+                "OK",
+                200
+            )
+
+
+        except Exception as error:
+
+            conn.rollback()
+
+            print(
+                "DATABASE WEBHOOK ERROR:",
+                error
+            )
+
+            raise
+
+
+        finally:
+
+            cursor.close()
+            conn.close()
+
+
+    except Exception as error:
+
+        print(
+            "INVALID PAYOS WEBHOOK:",
+            error
+        )
+
+
+        return (
+            "INVALID WEBHOOK",
+            400
+        )
