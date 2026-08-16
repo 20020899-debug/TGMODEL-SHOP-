@@ -28,18 +28,10 @@
 <div class="container container-small">
 
 
-    <!-- =================================================
-         TIÊU ĐỀ
-         ================================================= -->
-
     <h1 class="page-title">
         Sửa sản phẩm
     </h1>
 
-
-    <!-- =================================================
-         ID
-         ================================================= -->
 
     <div class="form-row">
 
@@ -54,19 +46,11 @@
     </div>
 
 
-    <!-- =================================================
-         FORM
-         ================================================= -->
-
     <form
         method="POST"
         action="/admin/products/{{ product['id'] }}/edit"
     >
 
-
-        <!-- =============================================
-             TÊN
-             ============================================= -->
 
         <div class="form-row">
 
@@ -85,10 +69,6 @@
         </div>
 
 
-        <!-- =============================================
-             Người bán
-             ============================================= -->
-
         <div class="form-row">
 
             <label class="form-label">
@@ -105,9 +85,40 @@
         </div>
 
 
-        <!-- =============================================
-             GIÁ
-             ============================================= -->
+        <!-- =================================================
+             LOẠI SẢN PHẨM
+             ================================================= -->
+
+        <div class="form-row">
+
+            <label class="form-label">
+                Loại sản phẩm
+            </label>
+
+            <select
+                name="product_type"
+                class="form-control"
+                required
+            >
+
+                <option
+                    value="preorder"
+                    {% if product["product_type"] == "preorder" %}selected{% endif %}
+                >
+                    Hàng Pre-order
+                </option>
+
+                <option
+                    value="instock"
+                    {% if product["product_type"] == "instock" %}selected{% endif %}
+                >
+                    Hàng sẵn
+                </option>
+
+            </select>
+
+        </div>
+
 
         <div class="form-row">
 
@@ -127,10 +138,6 @@
         </div>
 
 
-        <!-- =============================================
-             CỌC
-             ============================================= -->
-
         <div class="form-row">
 
             <label class="form-label">
@@ -149,10 +156,6 @@
         </div>
 
 
-        <!-- =============================================
-             ETA
-             ============================================= -->
-
         <div class="form-row">
 
             <label class="form-label">
@@ -169,10 +172,6 @@
 
         </div>
 
-
-        <!-- =============================================
-             LINK ẢNH
-             ============================================= -->
 
         <div class="form-row">
 
@@ -191,10 +190,6 @@
 
         </div>
 
-
-        <!-- =============================================
-             PREVIEW ẢNH
-             ============================================= -->
 
         <div class="form-row">
 
@@ -221,9 +216,7 @@
                     class="product-preview product-preview-hidden"
                 >
 
-                <span
-                    id="no-image-message"
-                >
+                <span id="no-image-message">
                     Chưa có ảnh
                 </span>
 
@@ -231,10 +224,6 @@
 
         </div>
 
-
-        <!-- =============================================
-             STOCK
-             ============================================= -->
 
         <div class="form-row">
 
@@ -253,10 +242,6 @@
 
         </div>
 
-
-        <!-- =============================================
-             HIỂN THỊ
-             ============================================= -->
 
         <div class="form-row">
 
@@ -288,10 +273,6 @@
         </div>
 
 
-        <!-- =============================================
-             LƯU
-             ============================================= -->
-
         <button
             type="submit"
             class="btn btn-orange"
@@ -317,10 +298,6 @@
 </div>
 
 
-<!-- =====================================================
-     PREVIEW ẢNH KHI ĐỔI URL
-     ===================================================== -->
-
 <script>
 
 const imageUrlInput =
@@ -328,12 +305,10 @@ const imageUrlInput =
         "image-url"
     );
 
-
 const imagePreview =
     document.getElementById(
         "image-preview"
     );
-
 
 const noImageMessage =
     document.getElementById(
@@ -348,17 +323,14 @@ imageUrlInput.addEventListener(
         const url =
             this.value.trim();
 
-
         if (url) {
 
             imagePreview.src =
                 url;
 
-
             imagePreview.classList.remove(
                 "product-preview-hidden"
             );
-
 
             if (noImageMessage) {
 
@@ -372,11 +344,9 @@ imageUrlInput.addEventListener(
             imagePreview.src =
                 "";
 
-
             imagePreview.classList.add(
                 "product-preview-hidden"
             );
-
 
             if (noImageMessage) {
 
