@@ -46,7 +46,6 @@ def submit():
     # =====================================================
 
     try:
-
         product_id = int(
             request.form.get(
                 "product_id"
@@ -70,42 +69,35 @@ def submit():
         ""
     ).strip()
 
-
     phone = request.form.get(
         "phone",
         ""
     ).strip()
-
 
     contact = request.form.get(
         "contact",
         ""
     ).strip()
 
-
     province = request.form.get(
         "province",
         ""
     ).strip()
-
 
     district = request.form.get(
         "district",
         ""
     ).strip()
 
-
     ward = request.form.get(
         "ward",
         ""
     ).strip()
 
-
     address_detail = request.form.get(
         "address_detail",
         ""
     ).strip()
-
 
     note = request.form.get(
         "note",
@@ -136,7 +128,6 @@ def submit():
     # =====================================================
 
     try:
-
         quantity = int(
             request.form.get(
                 "quantity",
@@ -164,13 +155,8 @@ def submit():
         <html lang="vi">
 
         <head>
-
             <meta charset="UTF-8">
-
-            <title>
-                Số lượng không hợp lệ
-            </title>
-
+            <title>Số lượng không hợp lệ</title>
         </head>
 
         <body>
@@ -198,14 +184,13 @@ def submit():
     # =====================================================
 
     conn = get_db()
-
     cursor = conn.cursor()
 
 
     try:
 
         # =================================================
-        # LẤY SẢN PHẨM TRỰC TIẾP TỪ DATABASE
+        # LẤY SẢN PHẨM
         # =================================================
 
         cursor.execute(
@@ -217,6 +202,8 @@ def submit():
                 price,
                 deposit,
                 eta,
+                image_url,
+                product_type,
                 active
 
             FROM products
@@ -235,10 +222,6 @@ def submit():
         product = cursor.fetchone()
 
 
-        # =================================================
-        # KHÔNG TÌM THẤY SẢN PHẨM
-        # =================================================
-
         if product is None:
 
             return (
@@ -248,16 +231,30 @@ def submit():
 
 
         product_name = product[1]
-
         product_brand = product[2]
+        product_price = product[3] or 0
+        product_deposit = product[4] or 0
+        product_type = product[7]
 
-        product_price = product[3]
 
-        product_deposit = product[4]
+        # =================================================
+        # KIỂM TRA PRODUCT TYPE
+        # =================================================
+
+        if product_type not in (
+            "preorder",
+            "instock"
+        ):
+
+            product_type = "preorder"
 
 
         # =================================================
         # TÍNH SỐ TIỀN THANH TOÁN
+        #
+        # Cả hàng Pre-order và hàng sẵn hiện vẫn cho:
+        # - Cọc
+        # - Thanh toán full
         # =================================================
 
         if payment_type == "full":
@@ -276,13 +273,12 @@ def submit():
 
 
         # =================================================
-        # COOKIE
+        # COOKIE CHỐNG TẠO NHIỀU ĐƠN
         # =================================================
 
         order_token = request.cookies.get(
             "order_token"
         )
-
 
         existing_order = None
 
@@ -412,19 +408,9 @@ def submit():
 
         if existing_order:
 
-            old_order_code = (
-                existing_order[0]
-            )
-
-
-            old_payment_url = (
-                existing_order[1]
-            )
-
-
-            old_token = (
-                existing_order[4]
-            )
+            old_order_code = existing_order[0]
+            old_payment_url = existing_order[1]
+            old_token = existing_order[4]
 
 
             if old_payment_url:
@@ -441,17 +427,9 @@ def submit():
                     response.set_cookie(
                         "order_token",
                         old_token,
-
-                        max_age=
-                            60
-                            * 60
-                            * 24
-                            * 30,
-
+                        max_age=60 * 60 * 24 * 30,
                         httponly=True,
-
                         samesite="Lax",
-
                         secure=True
                     )
 
@@ -465,13 +443,8 @@ def submit():
             <html lang="vi">
 
             <head>
-
                 <meta charset="UTF-8">
-
-                <title>
-                    Đơn đang chờ thanh toán
-                </title>
-
+                <title>Đơn đang chờ thanh toán</title>
             </head>
 
             <body>
@@ -506,10 +479,6 @@ def submit():
         )
 
 
-        # =================================================
-        # KHÔNG ĐỦ HÀNG
-        # =================================================
-
         if not stock_reserved:
 
             conn.rollback()
@@ -520,13 +489,8 @@ def submit():
             <html lang="vi">
 
             <head>
-
                 <meta charset="UTF-8">
-
-                <title>
-                    Không đủ hàng
-                </title>
-
+                <title>Không đủ hàng</title>
             </head>
 
             <body>
@@ -566,15 +530,9 @@ def submit():
         )
 
 
-        last_id = (
-            cursor.fetchone()[0]
-        )
+        last_id = cursor.fetchone()[0]
 
-
-        order_id = (
-            last_id + 1
-        )
-
+        order_id = last_id + 1
 
         order_code = (
             f"TGM{order_id:03d}"
@@ -607,16 +565,13 @@ def submit():
 
         created_time = get_now_vn()
 
-
-        created_at = (
-            created_time.strftime(
-                "%d/%m/%Y %H:%M:%S"
-            )
+        created_at = created_time.strftime(
+            "%d/%m/%Y %H:%M:%S"
         )
 
 
         # =================================================
-        # HẠN THANH TOÁN
+        # HẠN THANH TOÁN 15 PHÚT
         # =================================================
 
         expires_time = (
@@ -627,20 +582,22 @@ def submit():
         )
 
 
-        expires_at_db = (
-            expires_time.replace(
-                tzinfo=None
-            )
+        # Database lưu giờ Việt Nam không timezone
+        expires_at_db = expires_time.replace(
+            tzinfo=None
         )
 
 
         # =================================================
         # INSERT ORDER
         #
-        # LƯU SNAPSHOT TÊN / GIÁ / CỌC
+        # Lưu snapshot:
+        # - tên
+        # - người bán
+        # - giá
+        # - tiền cọc
         #
-        # Sau này Admin đổi giá sản phẩm thì đơn cũ
-        # vẫn giữ đúng giá tại thời điểm khách đặt.
+        # Sản phẩm sửa về sau không ảnh hưởng đơn cũ.
         # =================================================
 
         cursor.execute(
@@ -832,19 +789,10 @@ def submit():
 
         response.set_cookie(
             "order_token",
-
             new_order_token,
-
-            max_age=
-                60
-                * 60
-                * 24
-                * 30,
-
+            max_age=60 * 60 * 24 * 30,
             httponly=True,
-
             samesite="Lax",
-
             secure=True
         )
 
@@ -862,5 +810,4 @@ def submit():
     finally:
 
         cursor.close()
-
         conn.close()
