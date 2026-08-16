@@ -22,17 +22,13 @@ preorder_page_bp = Blueprint(
 
 
 # =========================================================
-# TRANG PRE-ORDER
+# TRANG ĐẶT HÀNG
 # =========================================================
 
 @preorder_page_bp.route(
     "/preorder/<int:product_id>"
 )
 def preorder(product_id):
-
-    # =====================================================
-    # DATABASE
-    # =====================================================
 
     conn = get_db()
 
@@ -44,79 +40,12 @@ def preorder(product_id):
     try:
 
         # =================================================
-        # TÌM SẢN PHẨM TRỰC TIẾP TỪ DATABASE
-        # + ẢNH
-        # + TỒN KHO
-        # =================================================
-
-        cursor.execute(
-            """
-            SELECT
-                p.id,
-                p.name,
-                p.brand,
-                p.price,
-                p.deposit,
-                p.eta,
-                p.image_url,
-                p.active,
-
-                COALESCE(
-                    ps.stock,
-                    0
-                ) AS stock
-
-            FROM products p
-
-            LEFT JOIN product_stock ps
-                ON ps.product_id = p.id
-
-            WHERE p.id=%s
-            AND p.active=TRUE
-
-            LIMIT 1
-            """,
-            (
-                product_id,
-            )
-        )
-
-
-        product = cursor.fetchone()
-
-
-        # =================================================
-        # KHÔNG TÌM THẤY SẢN PHẨM
-        # =================================================
-
-        if product is None:
-
-            return (
-                "Không tìm thấy sản phẩm",
-                404
-            )
-
-
-        # =================================================
-        # KIỂM TRA TỒN KHO
-        # =================================================
-
-        if product["stock"] <= 0:
-
-            return (
-                "Sản phẩm hiện đã hết hàng",
-                400
-            )
-
-
-        # =================================================
-        # KIỂM TRA ĐƠN CŨ THEO COOKIE
+        # KIỂM TRA ĐƠN CŨ THEO COOKIE TRƯỚC
         # =================================================
 
         order_token = request.cookies.get(
             "order_token"
         )
-
 
         existing_order = None
 
@@ -155,16 +84,10 @@ def preorder(product_id):
 
             if order:
 
-                expires_at = (
-                    normalize_expires_at(
-                        order["expires_at"]
-                    )
+                expires_at = normalize_expires_at(
+                    order["expires_at"]
                 )
 
-
-                # =========================================
-                # ĐƠN ĐÃ HẾT HẠN
-                # =========================================
 
                 if is_order_expired(
                     expires_at
@@ -176,14 +99,81 @@ def preorder(product_id):
                         order["order_code"]
                     )
 
-
-                # =========================================
-                # ĐƠN VẪN CÒN HẠN
-                # =========================================
-
                 else:
 
                     existing_order = order
+
+
+        # =================================================
+        # LẤY SẢN PHẨM
+        # =================================================
+
+        cursor.execute(
+            """
+            SELECT
+                p.id,
+                p.name,
+                p.brand,
+                p.price,
+                p.deposit,
+                p.eta,
+                p.image_url,
+                p.product_type,
+                p.active,
+
+                COALESCE(
+                    ps.stock,
+                    0
+                ) AS stock
+
+            FROM products p
+
+            LEFT JOIN product_stock ps
+                ON ps.product_id = p.id
+
+            WHERE p.id=%s
+            AND p.active=TRUE
+
+            LIMIT 1
+            """,
+            (
+                product_id,
+            )
+        )
+
+
+        product = cursor.fetchone()
+
+
+        # =================================================
+        # KHÔNG TÌM THẤY
+        # =================================================
+
+        if product is None:
+
+            return (
+                "Không tìm thấy sản phẩm",
+                404
+            )
+
+
+        # =================================================
+        # HẾT HÀNG
+        #
+        # Nếu khách đang có đơn chưa thanh toán thì vẫn
+        # cho hiển thị trang để họ tiếp tục thanh toán.
+        # =================================================
+
+        if (
+            product["stock"] <= 0
+            and
+            existing_order is None
+        ):
+
+            return (
+                "Sản phẩm hiện đã hết hàng",
+                400
+            )
 
 
         # =================================================
@@ -200,5 +190,4 @@ def preorder(product_id):
     finally:
 
         cursor.close()
-
         conn.close()
