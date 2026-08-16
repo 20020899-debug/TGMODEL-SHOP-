@@ -85,10 +85,6 @@
         </div>
 
 
-        <!-- =================================================
-             LOẠI SẢN PHẨM
-             ================================================= -->
-
         <div class="form-row">
 
             <label class="form-label">
@@ -97,6 +93,7 @@
 
             <select
                 name="product_type"
+                id="product-type"
                 class="form-control"
                 required
             >
@@ -156,7 +153,10 @@
         </div>
 
 
-        <div class="form-row">
+        <div
+            class="form-row"
+            id="eta-row"
+        >
 
             <label class="form-label">
                 ETA
@@ -300,6 +300,16 @@
 
 <script>
 
+const productType =
+    document.getElementById(
+        "product-type"
+    );
+
+const etaRow =
+    document.getElementById(
+        "eta-row"
+    );
+
 const imageUrlInput =
     document.getElementById(
         "image-url"
@@ -316,12 +326,38 @@ const noImageMessage =
     );
 
 
+function updateEtaVisibility() {
+
+    if (
+        productType.value === "instock"
+    ) {
+
+        etaRow.style.display =
+            "none";
+
+    } else {
+
+        etaRow.style.display =
+            "";
+
+    }
+
+}
+
+
+productType.addEventListener(
+    "change",
+    updateEtaVisibility
+);
+
+
 imageUrlInput.addEventListener(
     "input",
     function() {
 
         const url =
             this.value.trim();
+
 
         if (url) {
 
@@ -331,6 +367,7 @@ imageUrlInput.addEventListener(
             imagePreview.classList.remove(
                 "product-preview-hidden"
             );
+
 
             if (noImageMessage) {
 
@@ -348,6 +385,7 @@ imageUrlInput.addEventListener(
                 "product-preview-hidden"
             );
 
+
             if (noImageMessage) {
 
                 noImageMessage.style.display =
@@ -359,6 +397,9 @@ imageUrlInput.addEventListener(
 
     }
 );
+
+
+updateEtaVisibility();
 
 </script>
 
