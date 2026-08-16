@@ -24,6 +24,10 @@ from services.stock_service import (
     reserve_stock
 )
 
+from services.notification_service import (
+    send_new_order_notification
+)
+
 
 submit_order_bp = Blueprint(
     "submit_order",
@@ -277,16 +281,11 @@ def submit():
             "order_token"
         )
 
-
         existing_order = None
 
 
         # =================================================
         # KIỂM TRA THEO COOKIE
-        #
-        # Chặn cả:
-        # - Chưa thanh toán
-        # - Chờ xác nhận
         # =================================================
 
         if order_token:
@@ -330,25 +329,14 @@ def submit():
                 )
 
 
-                # =========================================
-                # ĐƠN 0Đ ĐANG CHỜ ADMIN
-                # =========================================
-
                 if candidate_status == "Chờ xác nhận":
 
                     existing_order = candidate
 
-
-                # =========================================
-                # ĐƠN PAYOS
-                # =========================================
-
                 else:
 
-                    expires_at = (
-                        normalize_expires_at(
-                            candidate[2]
-                        )
+                    expires_at = normalize_expires_at(
+                        candidate[2]
                     )
 
 
@@ -373,8 +361,7 @@ def submit():
 
         if (
             existing_order is None
-            and
-            phone
+            and phone
         ):
 
             cursor.execute(
@@ -420,13 +407,10 @@ def submit():
 
                     existing_order = candidate
 
-
                 else:
 
-                    expires_at = (
-                        normalize_expires_at(
-                            candidate[2]
-                        )
+                    expires_at = normalize_expires_at(
+                        candidate[2]
                     )
 
 
@@ -599,7 +583,7 @@ def submit():
 
 
         # =================================================
-        # MÃ ĐƠN
+        # TẠO MÃ ĐƠN
         # =================================================
 
         cursor.execute(
@@ -619,11 +603,9 @@ def submit():
             cursor.fetchone()[0]
         )
 
-
         order_id = (
             last_id + 1
         )
-
 
         order_code = (
             f"TGM{order_id:03d}"
@@ -634,10 +616,8 @@ def submit():
         # TOKEN
         # =================================================
 
-        new_order_token = (
-            secrets.token_urlsafe(
-                32
-            )
+        new_order_token = secrets.token_urlsafe(
+            32
         )
 
 
@@ -647,20 +627,13 @@ def submit():
 
         created_time = get_now_vn()
 
-
-        created_at = (
-            created_time.strftime(
-                "%d/%m/%Y %H:%M:%S"
-            )
+        created_at = created_time.strftime(
+            "%d/%m/%Y %H:%M:%S"
         )
 
 
         # =================================================
-        # CÓ THANH TOÁN
-        # → 15 PHÚT
-        #
-        # 0Đ
-        # → KHÔNG CÓ HẠN PAYOS
+        # TRẠNG THÁI + HẠN THANH TOÁN
         # =================================================
 
         if requires_payment:
@@ -672,13 +645,9 @@ def submit():
                 )
             )
 
-
-            expires_at_db = (
-                expires_time.replace(
-                    tzinfo=None
-                )
+            expires_at_db = expires_time.replace(
+                tzinfo=None
             )
-
 
             order_status = (
                 "Chưa thanh toán"
@@ -800,7 +769,7 @@ def submit():
 
 
         # =================================================
-        # THANH TOÁN = 0Đ
+        # ĐƠN 0Đ
         #
         # KHÔNG GỌI PAYOS
         # =================================================
@@ -808,6 +777,22 @@ def submit():
         if not requires_payment:
 
             conn.commit()
+
+
+            # =============================================
+            # THÔNG BÁO TELEGRAM
+            # =============================================
+
+            send_new_order_notification(
+                order_code=order_code,
+                fullname=fullname,
+                phone=phone,
+                product_name=product_name,
+                quantity=quantity,
+                payment_type=payment_type,
+                payment_amount=payment_amount,
+                status=order_status
+            )
 
 
             response = make_response(
@@ -835,14 +820,13 @@ def submit():
         # =================================================
 
         payos_order_code = int(
-            time.time()
+            time.time_ns()
+            // 1_000_000
         )
 
 
-        # Tự lấy domain hiện tại của website
-        base_url = (
-            request.url_root
-            .rstrip("/")
+        base_url = request.url_root.rstrip(
+            "/"
         )
 
 
@@ -908,6 +892,22 @@ def submit():
 
 
         conn.commit()
+
+
+        # =================================================
+        # THÔNG BÁO TELEGRAM
+        # =================================================
+
+        send_new_order_notification(
+            order_code=order_code,
+            fullname=fullname,
+            phone=phone,
+            product_name=product_name,
+            quantity=quantity,
+            payment_type=payment_type,
+            payment_amount=payment_amount,
+            status=order_status
+        )
 
 
         # =================================================
