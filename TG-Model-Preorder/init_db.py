@@ -1,19 +1,14 @@
 from database import get_db
 
 
-# =========================================================
-# KẾT NỐI DATABASE
-# =========================================================
-
 conn = get_db()
-
 cursor = conn.cursor()
 
 
 try:
 
     # =====================================================
-    # TẠO BẢNG ORDERS
+    # ORDERS
     # =====================================================
 
     cursor.execute(
@@ -34,7 +29,6 @@ try:
             address_detail TEXT,
 
             quantity INTEGER,
-
             note TEXT,
 
             product_name TEXT,
@@ -65,87 +59,63 @@ try:
 
 
     # =====================================================
-    # BỔ SUNG CỘT CHO DATABASE ORDERS CŨ
+    # ORDERS - CỘT CHO DATABASE CŨ
     # =====================================================
 
     cursor.execute(
         """
         ALTER TABLE orders
-
-        ADD COLUMN IF NOT EXISTS
-            expires_at TIMESTAMP
+        ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE orders
-
-        ADD COLUMN IF NOT EXISTS
-            payment_type TEXT
+        ADD COLUMN IF NOT EXISTS payment_type TEXT
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE orders
-
-        ADD COLUMN IF NOT EXISTS
-            payment_url TEXT
+        ADD COLUMN IF NOT EXISTS payment_url TEXT
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE orders
-
-        ADD COLUMN IF NOT EXISTS
-            order_token TEXT
+        ADD COLUMN IF NOT EXISTS order_token TEXT
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE orders
-
-        ADD COLUMN IF NOT EXISTS
-            product_id INTEGER
+        ADD COLUMN IF NOT EXISTS product_id INTEGER
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE orders
+        ADD COLUMN IF NOT EXISTS tracking_code TEXT
+        """
+    )
 
-        ADD COLUMN IF NOT EXISTS
-            stock_reserved BOOLEAN
-            NOT NULL
-            DEFAULT FALSE
+    cursor.execute(
+        """
+        ALTER TABLE orders
+        ADD COLUMN IF NOT EXISTS stock_reserved BOOLEAN
+        NOT NULL
+        DEFAULT FALSE
         """
     )
 
 
     # =====================================================
-    # MÃ VẬN ĐƠN
-    # =====================================================
-
-    cursor.execute(
-        """
-        ALTER TABLE orders
-
-        ADD COLUMN IF NOT EXISTS
-            tracking_code TEXT
-        """
-    )
-
-
-    # =====================================================
-    # TẠO BẢNG PRODUCTS
+    # PRODUCTS
     # =====================================================
 
     cursor.execute(
@@ -171,6 +141,10 @@ try:
 
             image_url TEXT,
 
+            product_type TEXT
+                NOT NULL
+                DEFAULT 'preorder',
+
             active BOOLEAN
                 NOT NULL
                 DEFAULT TRUE
@@ -180,91 +154,85 @@ try:
 
 
     # =====================================================
-    # BỔ SUNG CỘT PRODUCTS CHO DATABASE CŨ
+    # PRODUCTS - CỘT CHO DATABASE CŨ
     # =====================================================
 
     cursor.execute(
         """
         ALTER TABLE products
-
-        ADD COLUMN IF NOT EXISTS
-            name TEXT
+        ADD COLUMN IF NOT EXISTS name TEXT
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE products
-
-        ADD COLUMN IF NOT EXISTS
-            brand TEXT
+        ADD COLUMN IF NOT EXISTS brand TEXT
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE products
-
-        ADD COLUMN IF NOT EXISTS
-            price INTEGER
-            NOT NULL
-            DEFAULT 0
+        ADD COLUMN IF NOT EXISTS price INTEGER
+        NOT NULL
+        DEFAULT 0
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE products
-
-        ADD COLUMN IF NOT EXISTS
-            deposit INTEGER
-            NOT NULL
-            DEFAULT 0
+        ADD COLUMN IF NOT EXISTS deposit INTEGER
+        NOT NULL
+        DEFAULT 0
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE products
-
-        ADD COLUMN IF NOT EXISTS
-            eta TEXT
+        ADD COLUMN IF NOT EXISTS eta TEXT
         """
     )
 
+    cursor.execute(
+        """
+        ALTER TABLE products
+        ADD COLUMN IF NOT EXISTS image_url TEXT
+        """
+    )
 
     # =====================================================
-    # IMAGE URL
+    # LOẠI SẢN PHẨM
+    #
+    # preorder = hàng Pre-order
+    # instock  = hàng sẵn
+    #
+    # Sản phẩm cũ mặc định là preorder.
     # =====================================================
 
     cursor.execute(
         """
         ALTER TABLE products
-
-        ADD COLUMN IF NOT EXISTS
-            image_url TEXT
+        ADD COLUMN IF NOT EXISTS product_type TEXT
+        NOT NULL
+        DEFAULT 'preorder'
         """
     )
-
 
     cursor.execute(
         """
         ALTER TABLE products
-
-        ADD COLUMN IF NOT EXISTS
-            active BOOLEAN
-            NOT NULL
-            DEFAULT TRUE
+        ADD COLUMN IF NOT EXISTS active BOOLEAN
+        NOT NULL
+        DEFAULT TRUE
         """
     )
 
 
     # =====================================================
-    # TẠO BẢNG TỒN KHO
+    # TỒN KHO
     # =====================================================
 
     cursor.execute(
@@ -284,24 +252,18 @@ try:
     )
 
 
-    # =====================================================
-    # BỔ SUNG STOCK CHO DATABASE CŨ
-    # =====================================================
-
     cursor.execute(
         """
         ALTER TABLE product_stock
-
-        ADD COLUMN IF NOT EXISTS
-            stock INTEGER
-            NOT NULL
-            DEFAULT 0
+        ADD COLUMN IF NOT EXISTS stock INTEGER
+        NOT NULL
+        DEFAULT 0
         """
     )
 
 
     # =====================================================
-    # ĐẢM BẢO MỌI PRODUCT ĐỀU CÓ DÒNG STOCK
+    # ĐẢM BẢO MỌI PRODUCT CÓ STOCK
     # =====================================================
 
     cursor.execute(
@@ -356,85 +318,60 @@ try:
 
 
     # =====================================================
-    # INDEX ORDERS - PRODUCT ID
+    # INDEX ORDERS
     # =====================================================
 
     cursor.execute(
         """
-        CREATE INDEX IF NOT EXISTS
-            idx_orders_product_id
-
+        CREATE INDEX IF NOT EXISTS idx_orders_product_id
         ON orders(product_id)
         """
     )
 
-
-    # =====================================================
-    # INDEX ORDERS - ORDER TOKEN
-    # =====================================================
-
     cursor.execute(
         """
-        CREATE INDEX IF NOT EXISTS
-            idx_orders_order_token
-
+        CREATE INDEX IF NOT EXISTS idx_orders_order_token
         ON orders(order_token)
         """
     )
 
-
-    # =====================================================
-    # INDEX ORDERS - STATUS
-    # =====================================================
-
     cursor.execute(
         """
-        CREATE INDEX IF NOT EXISTS
-            idx_orders_status
-
+        CREATE INDEX IF NOT EXISTS idx_orders_status
         ON orders(status)
         """
     )
 
-
-    # =====================================================
-    # INDEX ORDERS - TRACKING CODE
-    # =====================================================
-
     cursor.execute(
         """
-        CREATE INDEX IF NOT EXISTS
-            idx_orders_tracking_code
-
+        CREATE INDEX IF NOT EXISTS idx_orders_tracking_code
         ON orders(tracking_code)
         """
     )
 
 
     # =====================================================
-    # INDEX PRODUCTS - ACTIVE
+    # INDEX PRODUCTS
     # =====================================================
 
     cursor.execute(
         """
-        CREATE INDEX IF NOT EXISTS
-            idx_products_active
-
+        CREATE INDEX IF NOT EXISTS idx_products_active
         ON products(active)
         """
     )
 
-
-    # =====================================================
-    # INDEX PRODUCTS - NAME
-    # =====================================================
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_products_name
+        ON products(name)
+        """
+    )
 
     cursor.execute(
         """
-        CREATE INDEX IF NOT EXISTS
-            idx_products_name
-
-        ON products(name)
+        CREATE INDEX IF NOT EXISTS idx_products_type
+        ON products(product_type)
         """
     )
 
@@ -446,94 +383,32 @@ try:
     conn.commit()
 
 
-    print(
-        "======================================"
-    )
+    print("======================================")
+    print("PostgreSQL OK")
+    print("orders: OK")
+    print("products: OK")
+    print("product_stock: OK")
+    print("payment_type: OK")
+    print("tracking_code: OK")
+    print("image_url: OK")
+    print("product_type: OK")
+    print("Product ID sequence: OK")
+    print("======================================")
 
-    print(
-        "PostgreSQL OK"
-    )
-
-    print(
-        "orders: OK"
-    )
-
-    print(
-        "products: OK"
-    )
-
-    print(
-        "product_stock: OK"
-    )
-
-    print(
-        "payment_type: OK"
-    )
-
-    print(
-        "product_id: OK"
-    )
-
-    print(
-        "stock_reserved: OK"
-    )
-
-    print(
-        "tracking_code: OK"
-    )
-
-    print(
-        "image_url: OK"
-    )
-
-    print(
-        "Product ID sequence: OK"
-    )
-
-    print(
-        "Không còn phụ thuộc config.py"
-    )
-
-    print(
-        "======================================"
-    )
-
-
-# =========================================================
-# LỖI
-# =========================================================
 
 except Exception as error:
 
     conn.rollback()
 
-
-    print(
-        "======================================"
-    )
-
-    print(
-        "LỖI KHỞI TẠO DATABASE:"
-    )
-
-    print(
-        error
-    )
-
-    print(
-        "======================================"
-    )
-
+    print("======================================")
+    print("LỖI KHỞI TẠO DATABASE:")
+    print(error)
+    print("======================================")
 
     raise
 
 
-# =========================================================
-# ĐÓNG DATABASE
-# =========================================================
-
 finally:
 
     cursor.close()
-
     conn.close()
