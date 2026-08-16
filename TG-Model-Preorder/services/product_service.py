@@ -16,6 +16,7 @@ def get_all_products(
         p.deposit,
         p.eta,
         p.image_url,
+        p.product_type,
         p.active,
 
         COALESCE(
@@ -69,6 +70,7 @@ def get_product(
             p.deposit,
             p.eta,
             p.image_url,
+            p.product_type,
             p.active,
 
             COALESCE(
