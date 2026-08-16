@@ -33,6 +33,7 @@ admin_orders_bp = Blueprint(
 # =========================================================
 
 ALLOWED_STATUSES = (
+    "Chờ xác nhận",
     "Chưa thanh toán",
     "Đã cọc",
     "Đã chuyển khoản full",
@@ -45,11 +46,11 @@ ALLOWED_STATUSES = (
 
 
 # =========================================================
-# TRẠNG THÁI ĐÃ XÁC NHẬN ĐƠN
+# TRẠNG THÁI ĐÃ XÁC NHẬN
 #
-# Khi chuyển sang các trạng thái này:
-# - hàng đã được giữ/trừ từ lúc tạo đơn
-# - không được hoàn kho khi xóa đơn về sau
+# Khi vào các trạng thái này:
+# - hàng đã được trừ từ lúc tạo đơn
+# - không được hoàn kho khi xóa lịch sử
 # =========================================================
 
 CONFIRMED_STATUSES = (
@@ -62,7 +63,7 @@ CONFIRMED_STATUSES = (
 
 
 # =========================================================
-# TRẠNG THÁI PHẢI HOÀN KHO
+# TRẠNG THÁI HỦY
 # =========================================================
 
 CANCEL_STATUSES = (
@@ -72,7 +73,19 @@ CANCEL_STATUSES = (
 
 
 # =========================================================
-# CHI TIẾT ĐƠN HÀNG
+# TRẠNG THÁI ĐANG GIỮ HÀNG
+#
+# stock_reserved có thể vẫn TRUE
+# =========================================================
+
+RESERVED_STATUSES = (
+    "Chờ xác nhận",
+    "Chưa thanh toán"
+)
+
+
+# =========================================================
+# CHI TIẾT ĐƠN
 # =========================================================
 
 @admin_orders_bp.route(
@@ -126,15 +139,15 @@ def order_detail(id):
 
 
         # =================================================
-        # KIỂM TRA ĐƠN CHƯA THANH TOÁN ĐÃ HẾT HẠN CHƯA
+        # CHỈ "CHƯA THANH TOÁN" MỚI CÓ HẠN 15 PHÚT
+        #
+        # "Chờ xác nhận" không tự hết hạn.
         # =================================================
 
         if order["status"] == "Chưa thanh toán":
 
-            expires_at = (
-                normalize_expires_at(
-                    order["expires_at"]
-                )
+            expires_at = normalize_expires_at(
+                order["expires_at"]
             )
 
 
@@ -148,10 +161,6 @@ def order_detail(id):
                     order["order_code"]
                 )
 
-
-                # =========================================
-                # ĐỌC LẠI SAU KHI UPDATE
-                # =========================================
 
                 cursor.execute(
                     """
@@ -185,7 +194,7 @@ def order_detail(id):
 
 
 # =========================================================
-# CẬP NHẬT ĐƠN HÀNG
+# CẬP NHẬT ĐƠN
 #
 # - trạng thái
 # - mã vận đơn
@@ -206,10 +215,6 @@ def update_order(id):
         )
 
 
-    # =====================================================
-    # TRẠNG THÁI MỚI
-    # =====================================================
-
     new_status = request.form.get(
         "status",
         ""
@@ -223,10 +228,6 @@ def update_order(id):
             400
         )
 
-
-    # =====================================================
-    # MÃ VẬN ĐƠN
-    # =====================================================
 
     tracking_code = request.form.get(
         "tracking_code",
@@ -249,7 +250,7 @@ def update_order(id):
     try:
 
         # =================================================
-        # KHÓA DÒNG TRƯỚC KHI UPDATE
+        # KHÓA DÒNG
         # =================================================
 
         cursor.execute(
@@ -288,25 +289,37 @@ def update_order(id):
             )
 
 
-        old_status = order["status"]
+        old_status = (
+            order["status"]
+        )
 
-        product_id = order["product_id"]
+        product_id = (
+            order["product_id"]
+        )
 
-        quantity = order["quantity"]
+        quantity = (
+            order["quantity"]
+        )
 
-        stock_reserved = order["stock_reserved"]
+        stock_reserved = (
+            order["stock_reserved"]
+        )
 
 
         # =================================================
-        # CHƯA THANH TOÁN
+        # ĐƠN ĐANG GIỮ HÀNG
         # →
         # HỦY / HẾT HẠN
         #
-        # PHẢI HOÀN KHO
+        # HOÀN KHO
+        #
+        # Áp dụng cho:
+        # - Chờ xác nhận
+        # - Chưa thanh toán
         # =================================================
 
         if (
-            old_status == "Chưa thanh toán"
+            old_status in RESERVED_STATUSES
             and
             new_status in CANCEL_STATUSES
         ):
@@ -358,17 +371,20 @@ def update_order(id):
 
 
         # =================================================
-        # CHƯA THANH TOÁN
+        # ĐƠN ĐANG GIỮ HÀNG
         # →
-        # ĐƠN ĐÃ ĐƯỢC XÁC NHẬN
+        # ĐÃ XÁC NHẬN
         #
-        # HÀNG ĐÃ TRỪ TỪ LÚC TẠO ĐƠN
-        # KHÔNG TRỪ THÊM
-        # CHỈ BỎ CỜ GIỮ HÀNG
+        # KHÔNG TRỪ THÊM HÀNG
+        # CHỈ BỎ stock_reserved
+        #
+        # Áp dụng cho cả:
+        # - Chờ xác nhận
+        # - Chưa thanh toán
         # =================================================
 
         elif (
-            old_status == "Chưa thanh toán"
+            old_status in RESERVED_STATUSES
             and
             new_status in CONFIRMED_STATUSES
         ):
@@ -393,9 +409,8 @@ def update_order(id):
 
 
         # =================================================
-        # ĐANG Ở TRẠNG THÁI ĐÃ XÁC NHẬN
-        #
-        # ĐẢM BẢO stock_reserved LUÔN FALSE
+        # ĐẢM BẢO ĐƠN ĐÃ XÁC NHẬN
+        # KHÔNG CÒN GIỮ STOCK
         # =================================================
 
         elif new_status in CONFIRMED_STATUSES:
@@ -424,7 +439,8 @@ def update_order(id):
         #
         # Ví dụ:
         # - chỉ sửa mã vận đơn
-        # - đổi giữa trạng thái hủy/hết hạn
+        # - đổi Chờ xác nhận ↔ Chưa thanh toán
+        # - đổi giữa các trạng thái hủy
         # =================================================
 
         else:
@@ -500,7 +516,7 @@ def delete_order(id):
     try:
 
         # =================================================
-        # KHÓA ĐƠN TRƯỚC KHI XÓA
+        # KHÓA ĐƠN
         # =================================================
 
         cursor.execute(
@@ -528,7 +544,8 @@ def delete_order(id):
 
 
         # =================================================
-        # CHỈ HOÀN KHO NẾU ĐƠN VẪN ĐANG GIỮ HÀNG
+        # ĐƠN VẪN GIỮ HÀNG
+        # → HOÀN KHO TRƯỚC KHI XÓA
         # =================================================
 
         if (
