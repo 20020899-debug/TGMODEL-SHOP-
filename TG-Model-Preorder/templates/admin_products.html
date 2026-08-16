@@ -91,6 +91,7 @@
 
             <select
                 name="product_type"
+                id="product-type"
                 class="form-control"
                 required
             >
@@ -144,7 +145,10 @@
         </div>
 
 
-        <div class="form-row">
+        <div
+            class="form-row"
+            id="eta-row"
+        >
 
             <label class="form-label">
                 ETA
@@ -221,25 +225,15 @@
                 <tr>
 
                     <th>ID</th>
-
                     <th>Ảnh</th>
-
                     <th>Sản phẩm</th>
-
                     <th>Người bán</th>
-
                     <th>Loại</th>
-
                     <th>Giá</th>
-
                     <th>Tiền cọc</th>
-
                     <th>ETA</th>
-
                     <th>Tồn kho</th>
-
                     <th>Hiển thị</th>
-
                     <th>Thao tác</th>
 
                 </tr>
@@ -328,7 +322,17 @@
 
 
                     <td>
-                        {{ product["eta"] or "--" }}
+
+                        {% if product["product_type"] == "preorder" %}
+
+                            {{ product["eta"] or "--" }}
+
+                        {% else %}
+
+                            --
+
+                        {% endif %}
+
                     </td>
 
 
@@ -337,17 +341,13 @@
                         {% if product["stock"] > 0 %}
 
                             <span class="stock-available">
-
                                 {{ product["stock"] }}
-
                             </span>
 
                         {% else %}
 
                             <span class="stock-zero">
-
                                 0
-
                             </span>
 
                         {% endif %}
@@ -360,17 +360,13 @@
                         {% if product["active"] %}
 
                             <span class="status status-complete">
-
                                 Đang hiện
-
                             </span>
 
                         {% else %}
 
                             <span class="status status-cancel">
-
                                 Đang ẩn
-
                             </span>
 
                         {% endif %}
@@ -441,6 +437,49 @@
 
 
 </div>
+
+
+<script>
+
+const productType =
+    document.getElementById(
+        "product-type"
+    );
+
+const etaRow =
+    document.getElementById(
+        "eta-row"
+    );
+
+
+function updateEtaVisibility() {
+
+    if (
+        productType.value === "instock"
+    ) {
+
+        etaRow.style.display =
+            "none";
+
+    } else {
+
+        etaRow.style.display =
+            "";
+
+    }
+
+}
+
+
+productType.addEventListener(
+    "change",
+    updateEtaVisibility
+);
+
+
+updateEtaVisibility();
+
+</script>
 
 
 </body>
