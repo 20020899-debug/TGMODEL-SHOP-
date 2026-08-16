@@ -55,7 +55,9 @@
             💰 Giá chính thức:
         </strong>
 
-        {{ "{:,}".format(product.price or 0) }} đ
+        {{ "{:,}".format(
+            product.price or 0
+        ) }} đ
 
     </p>
 
@@ -70,24 +72,31 @@
             💵 Tiền cọc:
         </strong>
 
-        {{ "{:,}".format(product.deposit or 0) }} đ
+        {{ "{:,}".format(
+            product.deposit or 0
+        ) }} đ
 
     </p>
 
 
     <!-- =================================================
          ETA
+         CHỈ HIỆN VỚI HÀNG PRE-ORDER
          ================================================= -->
 
-    <p>
+    {% if product.product_type == "preorder" %}
 
-        <strong>
-            📦 Dự kiến trả hàng:
-        </strong>
+        <p>
 
-        {{ product.eta or "Chưa xác định" }}
+            <strong>
+                📦 Dự kiến trả hàng:
+            </strong>
 
-    </p>
+            {{ product.eta or "Chưa xác định" }}
+
+        </p>
+
+    {% endif %}
 
 
     <!-- =================================================
@@ -99,6 +108,7 @@
         <strong>
             📊 Tồn kho:
         </strong>
+
 
         {% if product.stock > 0 %}
 
