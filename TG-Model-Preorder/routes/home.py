@@ -32,8 +32,6 @@ def home():
 
         # =================================================
         # LẤY SẢN PHẨM ĐANG HOẠT ĐỘNG
-        # + ẢNH
-        # + TỒN KHO
         # =================================================
 
         cursor.execute(
@@ -46,6 +44,7 @@ def home():
                 p.deposit,
                 p.eta,
                 p.image_url,
+                p.product_type,
                 p.active,
 
                 COALESCE(
@@ -69,17 +68,36 @@ def home():
 
 
         # =================================================
+        # CHIA 2 NHÓM SẢN PHẨM
+        # =================================================
+
+        preorder_products = [
+            product
+            for product in products
+            if product["product_type"] == "preorder"
+        ]
+
+
+        instock_products = [
+            product
+            for product in products
+            if product["product_type"] == "instock"
+        ]
+
+
+        # =================================================
         # HIỂN THỊ TRANG CHỦ
         # =================================================
 
         return render_template(
             "index.html",
-            products=products
+            products=products,
+            preorder_products=preorder_products,
+            instock_products=instock_products
         )
 
 
     finally:
 
         cursor.close()
-
         conn.close()
