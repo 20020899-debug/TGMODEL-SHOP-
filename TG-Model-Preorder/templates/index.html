@@ -26,36 +26,43 @@
 
 
 <div class="container">
+
+
     <!-- =================================================
-     LƯU Ý QUAN TRỌNG
-     ================================================= -->
+         LƯU Ý
+         ================================================= -->
 
-<div class="important-note">
+    <div class="important-note">
 
-    <strong>
-        Lưu ý:
-    </strong>
+        <strong>
+            Lưu ý:
+        </strong>
 
-    Nếu muốn hủy đơn đã cọc hoặc mọi thắc mắc xin liên hệ Admin.
-    <br>
+        Nếu muốn hủy đơn đã cọc hoặc mọi thắc mắc xin liên hệ Admin.
 
-    Facebook:
-    <a
-        href="https://www.facebook.com/profile.php?id=61582122569875"
-        target="_blank"
-        rel="noopener noreferrer"
-    >
-        Liên hệ qua Facebook
-    </a>
+        <br>
 
-    <span class="note-separator">|</span>
+        Facebook:
 
-    SĐT:
-    <a href="tel:0866914802">
-        0866914802
-    </a>
+        <a
+            href="https://www.facebook.com/profile.php?id=61582122569875"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Liên hệ qua Facebook
+        </a>
 
-</div>
+        <span class="note-separator">
+            |
+        </span>
+
+        SĐT:
+
+        <a href="tel:0866914802">
+            0866914802
+        </a>
+
+    </div>
 
 
     <!-- =================================================
@@ -82,10 +89,6 @@
     <div class="top-tools">
 
 
-        <!-- =============================================
-             TÌM KIẾM
-             ============================================= -->
-
         <div class="product-search">
 
             <input
@@ -97,10 +100,6 @@
 
         </div>
 
-
-        <!-- =============================================
-             THEO DÕI ĐƠN HÀNG
-             ============================================= -->
 
         <a
             href="{{ url_for('order_tracking.order_status') }}"
@@ -121,29 +120,67 @@
 
 
     <!-- =================================================
-         DANH SÁCH SẢN PHẨM
+         HÀNG PRE-ORDER
          ================================================= -->
 
-    <div class="product-grid">
+    <section class="product-section">
+
+        <h2 class="product-section-title">
+            HÀNG PRE-ORDER
+        </h2>
 
 
-        {% for product in products %}
+        <div class="product-grid">
 
-            {% include "components/product_card.html" %}
+            {% for product in preorder_products %}
+
+                {% include "components/product_card.html" %}
+
+            {% else %}
+
+                <div class="empty-products">
+
+                    Hiện chưa có sản phẩm Pre-order.
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
 
 
-        {% else %}
+    <!-- =================================================
+         HÀNG SẴN
+         ================================================= -->
 
-            <div class="empty-products">
+    <section class="product-section">
 
-                Hiện chưa có sản phẩm.
-
-            </div>
-
-        {% endfor %}
+        <h2 class="product-section-title">
+            HÀNG SẴN
+        </h2>
 
 
-    </div>
+        <div class="product-grid">
+
+            {% for product in instock_products %}
+
+                {% include "components/product_card.html" %}
+
+            {% else %}
+
+                <div class="empty-products">
+
+                    Hiện chưa có hàng sẵn.
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
 
 
 </div>
