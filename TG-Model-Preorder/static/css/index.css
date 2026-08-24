@@ -425,6 +425,170 @@ body {
     }
 
     .product-name {
+    /* =========================================================
+   POPUP LƯU Ý ĐẶT HÀNG
+   ========================================================= */
+
+.order-notice-overlay {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.6);
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    z-index: 9999;
+}
+
+
+.order-notice-overlay.show {
+    display: flex;
+}
+
+
+.order-notice-box {
+    width: 100%;
+    max-width: 650px;
+
+    max-height: 90vh;
+    overflow-y: auto;
+
+    background: #ffffff;
+
+    border-radius: 12px;
+
+    padding: 25px;
+
+    box-sizing: border-box;
+
+    box-shadow:
+        0 10px 40px
+        rgba(0, 0, 0, 0.25);
+}
+
+
+.order-notice-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+
+    text-align: center;
+
+    font-size: 22px;
+}
+
+
+.order-notice-content {
+    line-height: 1.6;
+}
+
+
+.order-notice-content p {
+    margin:
+        0
+        0
+        15px
+        0;
+}
+
+
+.order-notice-actions {
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 25px;
+}
+
+
+.order-notice-cancel,
+.order-notice-confirm {
+    border: none;
+
+    border-radius: 7px;
+
+    padding: 13px 18px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+
+.order-notice-cancel {
+    background: #e9ecef;
+    color: #333333;
+}
+
+
+.order-notice-confirm {
+    flex: 1;
+
+    background: #ff7a00;
+    color: #ffffff;
+}
+
+
+.order-notice-confirm:hover {
+    opacity: 0.9;
+}
+
+
+.order-notice-cancel:hover {
+    background: #dcdfe2;
+}
+
+
+body.modal-open {
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (
+    max-width: 600px
+) {
+
+    .order-notice-box {
+        padding: 18px;
+    }
+
+
+    .order-notice-title {
+        font-size: 19px;
+    }
+
+
+    .order-notice-content {
+        font-size: 14px;
+    }
+
+
+    .order-notice-actions {
+        flex-direction: column;
+    }
+
+
+    .order-notice-cancel,
+    .order-notice-confirm {
+        width: 100%;
+    }
+
+}
         font-size: 19px;
     }
 }
