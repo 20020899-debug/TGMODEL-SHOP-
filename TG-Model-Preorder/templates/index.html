@@ -29,7 +29,7 @@
 
 
     <!-- =================================================
-         LƯU Ý
+         LƯU Ý LIÊN HỆ
          ================================================= -->
 
     <div class="important-note">
@@ -38,7 +38,8 @@
             Lưu ý:
         </strong>
 
-        Nếu quý khách muốn hủy đơn hoặc mọi thắc mắc xin liên hệ Admin.
+        Nếu quý khách muốn hủy đơn hoặc có thắc mắc,
+        vui lòng liên hệ Admin.
 
         <br>
 
@@ -89,6 +90,10 @@
     <div class="top-tools">
 
 
+        <!-- =============================================
+             TÌM KIẾM
+             ============================================= -->
+
         <div class="product-search">
 
             <input
@@ -100,6 +105,10 @@
 
         </div>
 
+
+        <!-- =============================================
+             THEO DÕI ĐƠN
+             ============================================= -->
 
         <a
             href="{{ url_for('order_tracking.order_status') }}"
@@ -187,77 +196,408 @@
 
 
 <!-- =====================================================
-     TÌM KIẾM SẢN PHẨM
+     POPUP LƯU Ý TRƯỚC KHI ĐẶT HÀNG
+     ===================================================== -->
+
+<div
+    id="order-notice-overlay"
+    class="order-notice-overlay"
+>
+
+    <div class="order-notice-box">
+
+        <h2 class="order-notice-title">
+            ⚠️ LƯU Ý KHI ĐẶT HÀNG
+        </h2>
+
+
+        <div class="order-notice-content">
+
+
+            <p>
+                <strong>
+                    1. Đơn có thanh toán cọc:
+                </strong>
+
+                Nếu đơn trước chưa thanh toán,
+                quý khách cần
+                <strong>
+                    hoàn tất thanh toán hoặc hủy đơn
+                </strong>
+                trước khi đặt đơn mới.
+            </p>
+
+
+            <p>
+                <strong>
+                    2. Thời hạn thanh toán:
+                </strong>
+
+                Đơn thanh toán qua PayOS cần được hoàn tất trong
+                <strong>
+                    15 phút
+                </strong>.
+
+                Quá thời gian này,
+                đơn sẽ tự động hết hạn.
+            </p>
+
+
+            <p>
+                <strong>
+                    3. Theo dõi đơn hàng:
+                </strong>
+
+                Website tự động ghi nhớ đơn trên thiết bị hiện tại.
+
+                Nếu đổi thiết bị,
+                đổi trình duyệt hoặc đặt nhiều đơn,
+                vui lòng lưu lại
+
+                <strong>
+                    Mã đơn hàng + Số điện thoại
+                </strong>
+
+                để tra cứu.
+            </p>
+
+
+            <p>
+                <strong>
+                    4. Kiểm tra thông tin:
+                </strong>
+
+                Vui lòng kiểm tra kỹ
+
+                <strong>
+                    sản phẩm, số lượng và thông tin nhận hàng
+                </strong>
+
+                trước khi xác nhận đặt hàng.
+            </p>
+
+
+            <p>
+                <strong>
+                    5. Hủy đơn & hỗ trợ:
+                </strong>
+
+                Nếu muốn hủy đơn hoặc cần hỗ trợ,
+                vui lòng
+
+                <strong>
+                    liên hệ Admin.
+                </strong>
+            </p>
+
+
+        </div>
+
+
+        <!-- =============================================
+             NÚT POPUP
+             ============================================= -->
+
+        <div class="order-notice-actions">
+
+
+            <button
+                type="button"
+                id="order-notice-cancel"
+                class="order-notice-cancel"
+            >
+                QUAY LẠI
+            </button>
+
+
+            <button
+                type="button"
+                id="order-notice-confirm"
+                class="order-notice-confirm"
+            >
+                TÔI ĐÃ HIỂU – TIẾP TỤC
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
      ===================================================== -->
 
 <script>
 
-const searchInput =
-    document.getElementById(
-        "product-search-input"
-    );
-
-
-searchInput.addEventListener(
-    "input",
+document.addEventListener(
+    "DOMContentLoaded",
     function() {
 
-        const keyword =
-            this.value
-                .toLowerCase()
-                .trim();
+        // =================================================
+        // TÌM KIẾM
+        // =================================================
 
-
-        const products =
-            document.querySelectorAll(
-                ".product-card"
+        const searchInput =
+            document.getElementById(
+                "product-search-input"
             );
 
 
-        products.forEach(
-            function(product) {
+        if (searchInput) {
 
-                const nameElement =
-                    product.querySelector(
-                        ".product-name"
+            searchInput.addEventListener(
+                "input",
+                function() {
+
+                    const keyword =
+                        this.value
+                            .toLowerCase()
+                            .trim();
+
+
+                    const products =
+                        document.querySelectorAll(
+                            ".product-card"
+                        );
+
+
+                    products.forEach(
+                        function(product) {
+
+                            const nameElement =
+                                product.querySelector(
+                                    ".product-name"
+                                );
+
+
+                            const brandElement =
+                                product.querySelector(
+                                    ".product-brand"
+                                );
+
+
+                            const name =
+                                nameElement
+                                    ? nameElement
+                                        .textContent
+                                        .toLowerCase()
+                                    : "";
+
+
+                            const brand =
+                                brandElement
+                                    ? brandElement
+                                        .textContent
+                                        .toLowerCase()
+                                    : "";
+
+
+                            if (
+                                name.includes(
+                                    keyword
+                                )
+                                ||
+                                brand.includes(
+                                    keyword
+                                )
+                            ) {
+
+                                product.style.display =
+                                    "";
+
+                            } else {
+
+                                product.style.display =
+                                    "none";
+
+                            }
+
+                        }
                     );
 
+                }
+            );
 
-                const brandElement =
-                    product.querySelector(
-                        ".product-brand"
-                    );
-
-
-                const name =
-                    nameElement
-                        ? nameElement
-                            .textContent
-                            .toLowerCase()
-                        : "";
+        }
 
 
-                const brand =
-                    brandElement
-                        ? brandElement
-                            .textContent
-                            .toLowerCase()
-                        : "";
+        // =================================================
+        // POPUP LƯU Ý ĐẶT HÀNG
+        // =================================================
 
+        const overlay =
+            document.getElementById(
+                "order-notice-overlay"
+            );
+
+
+        const confirmButton =
+            document.getElementById(
+                "order-notice-confirm"
+            );
+
+
+        const cancelButton =
+            document.getElementById(
+                "order-notice-cancel"
+            );
+
+
+        const orderButtons =
+            document.querySelectorAll(
+                ".order-button"
+            );
+
+
+        let targetUrl = null;
+
+
+        // =================================================
+        // BẤM NÚT ĐẶT HÀNG
+        // =================================================
+
+        orderButtons.forEach(
+            function(button) {
+
+                button.addEventListener(
+                    "click",
+                    function(event) {
+
+                        // =================================
+                        // NÚT ĐANG BỊ KHÓA
+                        // =================================
+
+                        if (
+                            button.classList.contains(
+                                "disabled"
+                            )
+                        ) {
+
+                            event.preventDefault();
+
+                            return;
+
+                        }
+
+
+                        event.preventDefault();
+
+
+                        targetUrl =
+                            button.getAttribute(
+                                "href"
+                            );
+
+
+                        overlay.classList.add(
+                            "show"
+                        );
+
+
+                        document.body.classList.add(
+                            "modal-open"
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+        // =================================================
+        // ĐÓNG POPUP
+        // =================================================
+
+        function closeOrderNotice() {
+
+            overlay.classList.remove(
+                "show"
+            );
+
+
+            document.body.classList.remove(
+                "modal-open"
+            );
+
+
+            targetUrl = null;
+
+        }
+
+
+        // =================================================
+        // TIẾP TỤC
+        // =================================================
+
+        confirmButton.addEventListener(
+            "click",
+            function() {
+
+                if (targetUrl) {
+
+                    window.location.href =
+                        targetUrl;
+
+                }
+
+            }
+        );
+
+
+        // =================================================
+        // QUAY LẠI
+        // =================================================
+
+        cancelButton.addEventListener(
+            "click",
+            closeOrderNotice
+        );
+
+
+        // =================================================
+        // CLICK RA NGOÀI POPUP
+        // =================================================
+
+        overlay.addEventListener(
+            "click",
+            function(event) {
 
                 if (
-                    name.includes(keyword)
-                    ||
-                    brand.includes(keyword)
+                    event.target
+                    ===
+                    overlay
                 ) {
 
-                    product.style.display =
-                        "";
+                    closeOrderNotice();
 
-                } else {
+                }
 
-                    product.style.display =
-                        "none";
+            }
+        );
+
+
+        // =================================================
+        // PHÍM ESC
+        // =================================================
+
+        document.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (
+                    event.key === "Escape"
+                    &&
+                    overlay.classList.contains(
+                        "show"
+                    )
+                ) {
+
+                    closeOrderNotice();
 
                 }
 
