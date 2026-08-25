@@ -16,14 +16,10 @@ payment_webhook_bp = Blueprint(
 
 # =========================================================
 # WEBHOOK PAYOS
-#
 # Xử lý 2 loại thanh toán:
-#
 # 1. Thanh toán ban đầu
-#
 #    Description:
 #    TGM001
-#
 #    → Đã cọc
 #    hoặc
 #    → Đã chuyển khoản full
