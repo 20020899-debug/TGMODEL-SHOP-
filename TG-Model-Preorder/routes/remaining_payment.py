@@ -23,10 +23,8 @@ remaining_payment_bp = Blueprint("remaining_payment", __name__)
 # Chỉ áp dụng khi:
 # - đơn sử dụng hình thức cọc
 # - trạng thái = "Chờ thanh toán phần còn lại"
-#
 # Nếu link PayOS cũ còn hạn:
 # → sử dụng lại link cũ.
-#
 # Nếu link PayOS cũ hết hạn:
 # → tạo link mới.
 #
