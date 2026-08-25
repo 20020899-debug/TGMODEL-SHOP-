@@ -9,6 +9,9 @@ try:
 
     # =====================================================
     # ORDERS
+    #
+    # Lưu thông tin đơn hàng, thanh toán ban đầu,
+    # thanh toán phần còn lại và vận chuyển.
     # =====================================================
 
     cursor.execute(
@@ -41,16 +44,17 @@ try:
             status TEXT,
 
             tracking_code TEXT,
-
             created_at TEXT,
 
-            -- Thanh toán ban đầu / tiền cọc
+            -- Thanh toán ban đầu: cọc hoặc full
             expires_at TIMESTAMP,
             payment_url TEXT,
+            payment_order_code BIGINT,
 
             -- Thanh toán phần còn lại của Pre-order
             remaining_payment_url TEXT,
             remaining_expires_at TIMESTAMP,
+            remaining_payment_order_code BIGINT,
 
             order_token TEXT,
             product_id INTEGER,
@@ -64,8 +68,8 @@ try:
     # =====================================================
     # ORDERS - CỘT CHO DATABASE CŨ
     #
-    # Các lệnh này đảm bảo database đã tạo từ trước cũng
-    # được bổ sung các cột mới mà không làm mất dữ liệu.
+    # ADD COLUMN IF NOT EXISTS giúp database cũ được nâng
+    # cấp mà không làm mất các đơn hàng đang có.
     # =====================================================
 
     cursor.execute(
@@ -86,6 +90,34 @@ try:
         """
         ALTER TABLE orders
         ADD COLUMN IF NOT EXISTS payment_url TEXT
+        """
+    )
+
+    cursor.execute(
+        """
+        ALTER TABLE orders
+        ADD COLUMN IF NOT EXISTS payment_order_code BIGINT
+        """
+    )
+
+    cursor.execute(
+        """
+        ALTER TABLE orders
+        ADD COLUMN IF NOT EXISTS remaining_payment_url TEXT
+        """
+    )
+
+    cursor.execute(
+        """
+        ALTER TABLE orders
+        ADD COLUMN IF NOT EXISTS remaining_expires_at TIMESTAMP
+        """
+    )
+
+    cursor.execute(
+        """
+        ALTER TABLE orders
+        ADD COLUMN IF NOT EXISTS remaining_payment_order_code BIGINT
         """
     )
 
@@ -115,35 +147,6 @@ try:
         ALTER TABLE orders
         ADD COLUMN IF NOT EXISTS stock_reserved BOOLEAN
         NOT NULL DEFAULT FALSE
-        """
-    )
-
-
-    # =====================================================
-    # THANH TOÁN PHẦN CÒN LẠI CỦA PRE-ORDER
-    #
-    # remaining_payment_url:
-    # Link PayOS dùng để thanh toán phần tiền còn lại.
-    #
-    # remaining_expires_at:
-    # Thời điểm link PayOS phần còn lại hết hạn.
-    #
-    # Lưu ý:
-    # Hết hạn link này KHÔNG được hủy đơn và KHÔNG hoàn kho.
-    # Khách có thể tạo link thanh toán mới.
-    # =====================================================
-
-    cursor.execute(
-        """
-        ALTER TABLE orders
-        ADD COLUMN IF NOT EXISTS remaining_payment_url TEXT
-        """
-    )
-
-    cursor.execute(
-        """
-        ALTER TABLE orders
-        ADD COLUMN IF NOT EXISTS remaining_expires_at TIMESTAMP
         """
     )
 
@@ -228,8 +231,6 @@ try:
     #
     # preorder = hàng Pre-order
     # instock  = hàng sẵn
-    #
-    # Sản phẩm cũ mặc định là preorder.
     # =====================================================
 
     cursor.execute(
@@ -299,8 +300,8 @@ try:
     # =====================================================
     # ĐỒNG BỘ SEQUENCE PRODUCTS.ID
     #
-    # Tránh trường hợp PostgreSQL tạo ID mới bị trùng với
-    # sản phẩm đã tồn tại.
+    # Tránh PostgreSQL tạo ID mới trùng với sản phẩm
+    # đã tồn tại trong database.
     # =====================================================
 
     cursor.execute(
@@ -357,6 +358,20 @@ try:
         """
     )
 
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_orders_payment_order_code
+        ON orders(payment_order_code)
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_orders_remaining_payment_order_code
+        ON orders(remaining_payment_order_code)
+        """
+    )
+
 
     # =====================================================
     # INDEX PRODUCTS
@@ -390,17 +405,16 @@ try:
 
     conn.commit()
 
+
     print("======================================")
     print("PostgreSQL OK")
     print("orders: OK")
     print("products: OK")
     print("product_stock: OK")
-    print("payment_type: OK")
-    print("tracking_code: OK")
-    print("image_url: OK")
-    print("product_type: OK")
+    print("payment_order_code: OK")
     print("remaining_payment_url: OK")
     print("remaining_expires_at: OK")
+    print("remaining_payment_order_code: OK")
     print("Product ID sequence: OK")
     print("======================================")
 
