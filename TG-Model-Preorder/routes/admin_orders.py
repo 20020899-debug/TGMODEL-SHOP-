@@ -17,20 +17,6 @@ admin_orders_bp = Blueprint("admin_orders", __name__)
 
 # =========================================================
 # TRẠNG THÁI HỢP LỆ
-#
-# Luồng Pre-order có cọc:
-#
-# Đã cọc
-#     ↓
-# Chờ thanh toán phần còn lại
-#     ↓
-# Đã thanh toán đủ
-#     ↓
-# Đang chuẩn bị hàng
-#     ↓
-# Đã gửi hàng
-#     ↓
-# Hoàn thành
 # =========================================================
 
 ALLOWED_STATUSES = (
@@ -50,15 +36,6 @@ ALLOWED_STATUSES = (
 
 # =========================================================
 # TRẠNG THÁI ĐÃ XÁC NHẬN
-#
-# Khi đơn đã vào các trạng thái này:
-#
-# - hàng đã được trừ từ lúc tạo đơn
-# - stock_reserved phải là FALSE
-# - không được hoàn kho khi chỉ xóa lịch sử đơn
-#
-# "Chờ thanh toán phần còn lại" cũng là đơn đã cọc,
-# vì vậy tuyệt đối không coi đây là đơn chưa thanh toán.
 # =========================================================
 
 CONFIRMED_STATUSES = (
@@ -84,10 +61,6 @@ CANCEL_STATUSES = (
 
 # =========================================================
 # TRẠNG THÁI ĐANG GIỮ HÀNG
-#
-# Chỉ áp dụng cho giai đoạn trước khi đơn được xác nhận.
-#
-# stock_reserved có thể vẫn TRUE.
 # =========================================================
 
 RESERVED_STATUSES = (
@@ -116,20 +89,39 @@ def order_detail(id):
     # =====================================================
 
     conn = get_db()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor = conn.cursor(
+        cursor_factory=RealDictCursor
+    )
 
 
     try:
 
         # =================================================
         # LẤY ĐƠN HÀNG
+        #
+        # LEFT JOIN products để lấy thêm product_type:
+        #
+        # preorder = Pre-order
+        # instock  = Hàng sẵn
+        #
+        # Dùng LEFT JOIN để đơn vẫn xem được kể cả trong
+        # trường hợp product không còn tồn tại.
         # =================================================
 
         cursor.execute(
             """
-            SELECT *
+            SELECT
+                orders.*,
+                products.product_type AS product_type
+
             FROM orders
-            WHERE id=%s
+
+            LEFT JOIN products
+                ON products.id = orders.product_id
+
+            WHERE orders.id=%s
+
             LIMIT 1
             """,
             (id,)
@@ -148,19 +140,22 @@ def order_detail(id):
         # Chỉ trạng thái "Chưa thanh toán" mới sử dụng
         # expires_at của lần thanh toán đầu tiên.
         #
-        # Không áp dụng cơ chế này cho:
+        # Không áp dụng cho:
         #
         # - Đã cọc
         # - Chờ thanh toán phần còn lại
         # - Đã thanh toán đủ
         #
-        # Link thanh toán phần còn lại hết hạn sẽ được
-        # xử lý riêng và KHÔNG làm đơn bị hủy.
+        # Link thanh toán phần còn lại hết hạn được xử lý
+        # riêng và KHÔNG làm đơn bị hủy.
         # =================================================
 
         if order["status"] == "Chưa thanh toán":
 
-            expires_at = normalize_expires_at(order["expires_at"])
+            expires_at = normalize_expires_at(
+                order["expires_at"]
+            )
+
 
             if is_order_expired(expires_at):
 
@@ -170,15 +165,26 @@ def order_detail(id):
                     order["order_code"]
                 )
 
+
                 # =========================================
                 # ĐỌC LẠI ĐƠN SAU KHI UPDATE
+                #
+                # Vẫn JOIN products để giữ product_type.
                 # =========================================
 
                 cursor.execute(
                     """
-                    SELECT *
+                    SELECT
+                        orders.*,
+                        products.product_type AS product_type
+
                     FROM orders
-                    WHERE id=%s
+
+                    LEFT JOIN products
+                        ON products.id = orders.product_id
+
+                    WHERE orders.id=%s
+
                     LIMIT 1
                     """,
                     (id,)
@@ -198,6 +204,7 @@ def order_detail(id):
 
 
     finally:
+
         cursor.close()
         conn.close()
 
@@ -212,14 +219,11 @@ def order_detail(id):
 #
 # Đối với Pre-order:
 #
-# Admin đổi:
-#
 # Đã cọc
 #     ↓
 # Chờ thanh toán phần còn lại
 #
-# thì khách sẽ được phép thanh toán số tiền còn lại
-# ở trang Theo dõi đơn hàng.
+# thì khách sẽ được phép thanh toán số tiền còn lại.
 # =========================================================
 
 @admin_orders_bp.route(
@@ -240,13 +244,21 @@ def update_order(id):
     # DỮ LIỆU FORM
     # =====================================================
 
-    new_status = request.form.get("status", "").strip()
+    new_status = request.form.get(
+        "status",
+        ""
+    ).strip()
+
 
     if new_status not in ALLOWED_STATUSES:
         return "Trạng thái không hợp lệ", 400
 
 
-    tracking_code = request.form.get("tracking_code", "").strip()
+    tracking_code = request.form.get(
+        "tracking_code",
+        ""
+    ).strip()
+
 
     if not tracking_code:
         tracking_code = None
@@ -257,16 +269,16 @@ def update_order(id):
     # =====================================================
 
     conn = get_db()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor = conn.cursor(
+        cursor_factory=RealDictCursor
+    )
 
 
     try:
 
         # =================================================
         # KHÓA ĐƠN TRONG LÚC CẬP NHẬT
-        #
-        # FOR UPDATE tránh hai thao tác đồng thời làm sai
-        # trạng thái hoặc tồn kho.
         # =================================================
 
         cursor.execute(
@@ -285,10 +297,12 @@ def update_order(id):
             WHERE id=%s
 
             LIMIT 1
+
             FOR UPDATE
             """,
             (id,)
         )
+
 
         order = cursor.fetchone()
 
@@ -298,15 +312,18 @@ def update_order(id):
 
 
         old_status = order["status"]
+
         product_id = order["product_id"]
+
         quantity = order["quantity"]
+
         stock_reserved = order["stock_reserved"]
 
 
         # =================================================
         # ĐƠN ĐANG GIỮ HÀNG → HỦY / HẾT HẠN
         #
-        # Áp dụng cho:
+        # Áp dụng:
         #
         # - Chờ xác nhận
         # - Chưa thanh toán
@@ -332,7 +349,9 @@ def update_order(id):
                     quantity
                 )
 
+
                 if not released:
+
                     raise RuntimeError(
                         "Không thể hoàn tồn kho cho đơn "
                         + str(order["order_code"])
@@ -437,7 +456,7 @@ def update_order(id):
         # Ví dụ:
         #
         # - chỉ sửa mã vận đơn
-        # - đổi Chờ xác nhận ↔ Chưa thanh toán
+        # - Chờ xác nhận ↔ Chưa thanh toán
         # - đổi giữa các trạng thái hủy
         # =================================================
 
@@ -471,10 +490,12 @@ def update_order(id):
     except Exception:
 
         conn.rollback()
+
         raise
 
 
     finally:
+
         cursor.close()
         conn.close()
 
@@ -520,7 +541,10 @@ def delete_order(id):
     # =====================================================
 
     conn = get_db()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor = conn.cursor(
+        cursor_factory=RealDictCursor
+    )
 
 
     try:
@@ -541,10 +565,12 @@ def delete_order(id):
             WHERE id=%s
 
             LIMIT 1
+
             FOR UPDATE
             """,
             (id,)
         )
+
 
         order = cursor.fetchone()
 
@@ -568,7 +594,9 @@ def delete_order(id):
                 order["quantity"]
             )
 
+
             if not released:
+
                 raise RuntimeError(
                     "Không thể hoàn tồn kho trước khi xóa đơn"
                 )
@@ -586,16 +614,19 @@ def delete_order(id):
             (id,)
         )
 
+
         conn.commit()
 
 
     except Exception:
 
         conn.rollback()
+
         raise
 
 
     finally:
+
         cursor.close()
         conn.close()
 
@@ -604,4 +635,8 @@ def delete_order(id):
     # QUAY LẠI DANH SÁCH ĐƠN
     # =====================================================
 
-    return redirect(url_for("admin.admin"))
+    return redirect(
+        url_for(
+            "admin.admin"
+        )
+    )
