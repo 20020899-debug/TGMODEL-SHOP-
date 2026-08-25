@@ -181,7 +181,7 @@ def pay_remaining(order_id):
         payment_data = {
             "orderCode": payos_order_code,
             "amount": remaining_amount,
-            "description": f"{order['order_code']}-REM",
+            "description": f"{order['order_code']}REM",
             "returnUrl": base_url + "/payment/success",
             "cancelUrl": base_url + "/payment/cancel",
             "expiredAt": int(expires_time.timestamp())
