@@ -43,16 +43,19 @@ try:
             tracking_code TEXT,
 
             created_at TEXT,
+
+            -- Thanh toán ban đầu / tiền cọc
             expires_at TIMESTAMP,
-
             payment_url TEXT,
-            order_token TEXT,
 
+            -- Thanh toán phần còn lại của Pre-order
+            remaining_payment_url TEXT,
+            remaining_expires_at TIMESTAMP,
+
+            order_token TEXT,
             product_id INTEGER,
 
-            stock_reserved BOOLEAN
-                NOT NULL
-                DEFAULT FALSE
+            stock_reserved BOOLEAN NOT NULL DEFAULT FALSE
         )
         """
     )
@@ -60,6 +63,9 @@ try:
 
     # =====================================================
     # ORDERS - CỘT CHO DATABASE CŨ
+    #
+    # Các lệnh này đảm bảo database đã tạo từ trước cũng
+    # được bổ sung các cột mới mà không làm mất dữ liệu.
     # =====================================================
 
     cursor.execute(
@@ -108,8 +114,36 @@ try:
         """
         ALTER TABLE orders
         ADD COLUMN IF NOT EXISTS stock_reserved BOOLEAN
-        NOT NULL
-        DEFAULT FALSE
+        NOT NULL DEFAULT FALSE
+        """
+    )
+
+
+    # =====================================================
+    # THANH TOÁN PHẦN CÒN LẠI CỦA PRE-ORDER
+    #
+    # remaining_payment_url:
+    # Link PayOS dùng để thanh toán phần tiền còn lại.
+    #
+    # remaining_expires_at:
+    # Thời điểm link PayOS phần còn lại hết hạn.
+    #
+    # Lưu ý:
+    # Hết hạn link này KHÔNG được hủy đơn và KHÔNG hoàn kho.
+    # Khách có thể tạo link thanh toán mới.
+    # =====================================================
+
+    cursor.execute(
+        """
+        ALTER TABLE orders
+        ADD COLUMN IF NOT EXISTS remaining_payment_url TEXT
+        """
+    )
+
+    cursor.execute(
+        """
+        ALTER TABLE orders
+        ADD COLUMN IF NOT EXISTS remaining_expires_at TIMESTAMP
         """
     )
 
@@ -124,30 +158,17 @@ try:
         (
             id SERIAL PRIMARY KEY,
 
-            name TEXT
-                NOT NULL,
-
+            name TEXT NOT NULL,
             brand TEXT,
 
-            price INTEGER
-                NOT NULL
-                DEFAULT 0,
-
-            deposit INTEGER
-                NOT NULL
-                DEFAULT 0,
+            price INTEGER NOT NULL DEFAULT 0,
+            deposit INTEGER NOT NULL DEFAULT 0,
 
             eta TEXT,
-
             image_url TEXT,
 
-            product_type TEXT
-                NOT NULL
-                DEFAULT 'preorder',
-
-            active BOOLEAN
-                NOT NULL
-                DEFAULT TRUE
+            product_type TEXT NOT NULL DEFAULT 'preorder',
+            active BOOLEAN NOT NULL DEFAULT TRUE
         )
         """
     )
@@ -175,8 +196,7 @@ try:
         """
         ALTER TABLE products
         ADD COLUMN IF NOT EXISTS price INTEGER
-        NOT NULL
-        DEFAULT 0
+        NOT NULL DEFAULT 0
         """
     )
 
@@ -184,8 +204,7 @@ try:
         """
         ALTER TABLE products
         ADD COLUMN IF NOT EXISTS deposit INTEGER
-        NOT NULL
-        DEFAULT 0
+        NOT NULL DEFAULT 0
         """
     )
 
@@ -203,6 +222,7 @@ try:
         """
     )
 
+
     # =====================================================
     # LOẠI SẢN PHẨM
     #
@@ -216,8 +236,7 @@ try:
         """
         ALTER TABLE products
         ADD COLUMN IF NOT EXISTS product_type TEXT
-        NOT NULL
-        DEFAULT 'preorder'
+        NOT NULL DEFAULT 'preorder'
         """
     )
 
@@ -225,8 +244,7 @@ try:
         """
         ALTER TABLE products
         ADD COLUMN IF NOT EXISTS active BOOLEAN
-        NOT NULL
-        DEFAULT TRUE
+        NOT NULL DEFAULT TRUE
         """
     )
 
@@ -241,9 +259,7 @@ try:
         (
             product_id INTEGER PRIMARY KEY,
 
-            stock INTEGER
-                NOT NULL
-                DEFAULT 0,
+            stock INTEGER NOT NULL DEFAULT 0,
 
             CONSTRAINT product_stock_not_negative
                 CHECK (stock >= 0)
@@ -251,32 +267,24 @@ try:
         """
     )
 
-
     cursor.execute(
         """
         ALTER TABLE product_stock
         ADD COLUMN IF NOT EXISTS stock INTEGER
-        NOT NULL
-        DEFAULT 0
+        NOT NULL DEFAULT 0
         """
     )
 
 
     # =====================================================
-    # ĐẢM BẢO MỌI PRODUCT CÓ STOCK
+    # ĐẢM BẢO MỌI PRODUCT ĐỀU CÓ STOCK
     # =====================================================
 
     cursor.execute(
         """
-        INSERT INTO product_stock
-        (
-            product_id,
-            stock
-        )
+        INSERT INTO product_stock (product_id, stock)
 
-        SELECT
-            p.id,
-            0
+        SELECT p.id, 0
 
         FROM products p
 
@@ -290,15 +298,15 @@ try:
 
     # =====================================================
     # ĐỒNG BỘ SEQUENCE PRODUCTS.ID
+    #
+    # Tránh trường hợp PostgreSQL tạo ID mới bị trùng với
+    # sản phẩm đã tồn tại.
     # =====================================================
 
     cursor.execute(
         """
         SELECT setval(
-            pg_get_serial_sequence(
-                'products',
-                'id'
-            ),
+            pg_get_serial_sequence('products', 'id'),
 
             GREATEST(
                 COALESCE(
@@ -382,7 +390,6 @@ try:
 
     conn.commit()
 
-
     print("======================================")
     print("PostgreSQL OK")
     print("orders: OK")
@@ -392,6 +399,8 @@ try:
     print("tracking_code: OK")
     print("image_url: OK")
     print("product_type: OK")
+    print("remaining_payment_url: OK")
+    print("remaining_expires_at: OK")
     print("Product ID sequence: OK")
     print("======================================")
 
