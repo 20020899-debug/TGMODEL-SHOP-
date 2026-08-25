@@ -26,6 +26,11 @@ body {
     padding: 30px 20px;
 }
 
+
+/* =========================================================
+   TIÊU ĐỀ
+   ========================================================= */
+
 .tracking-header {
     text-align: center;
     margin-bottom: 25px;
@@ -41,6 +46,11 @@ body {
     color: var(--gray);
 }
 
+
+/* =========================================================
+   KHUNG TRA CỨU + THÔNG TIN ĐƠN
+   ========================================================= */
+
 .lookup-box,
 .order-box {
     background: white;
@@ -53,6 +63,11 @@ body {
 .lookup-box h2 {
     margin-top: 0;
 }
+
+
+/* =========================================================
+   FORM TRA CỨU
+   ========================================================= */
 
 .form-group {
     margin-bottom: 15px;
@@ -93,6 +108,11 @@ body {
     background: var(--orange-dark);
 }
 
+
+/* =========================================================
+   THÔNG BÁO LỖI
+   ========================================================= */
+
 .error-message {
     margin-top: 15px;
     padding: 12px;
@@ -100,6 +120,11 @@ body {
     background: #f8d7da;
     color: #842029;
 }
+
+
+/* =========================================================
+   TIÊU ĐỀ ĐƠN + CÁC DÒNG THÔNG TIN
+   ========================================================= */
 
 .order-title,
 .info-row {
@@ -132,6 +157,11 @@ body {
     font-size: 14px;
 }
 
+
+/* =========================================================
+   CÁC PHẦN TRONG ĐƠN
+   ========================================================= */
+
 .section {
     padding: 17px 0;
     border-bottom: 1px solid var(--border);
@@ -153,10 +183,20 @@ body {
     text-align: right;
 }
 
+
+/* =========================================================
+   TIỀN + MÃ VẬN ĐƠN
+   ========================================================= */
+
 .money,
 .tracking-code {
     color: var(--orange-dark);
 }
+
+
+/* =========================================================
+   TRẠNG THÁI ĐƠN HÀNG
+   ========================================================= */
 
 .status-box {
     display: flex;
@@ -184,6 +224,79 @@ body {
     color: var(--gray);
 }
 
+
+/* =========================================================
+   THANH TOÁN PHẦN CÒN LẠI CỦA PRE-ORDER
+
+   Chỉ xuất hiện khi:
+   - khách đã cọc
+   - hàng đã về
+   - Admin chuyển trạng thái sang
+     "Chờ thanh toán phần còn lại"
+   ========================================================= */
+
+.remaining-payment-section {
+    margin-top: 4px;
+    padding: 18px;
+    border: 1px solid #ffe0b2;
+    border-radius: 8px;
+    background: #fffaf2;
+}
+
+.remaining-payment-section h3 {
+    color: var(--orange-dark);
+}
+
+.remaining-payment-section p {
+    margin: 0 0 15px;
+    line-height: 1.5;
+    color: var(--gray);
+}
+
+
+/* =========================================================
+   SỐ TIỀN CẦN THANH TOÁN
+   ========================================================= */
+
+.remaining-money {
+    color: var(--red);
+    font-size: 17px;
+}
+
+
+/* =========================================================
+   NÚT THANH TOÁN PHẦN CÒN LẠI
+   ========================================================= */
+
+.remaining-payment-section form {
+    margin-top: 16px;
+}
+
+.remaining-payment-button {
+    width: 100%;
+    padding: 13px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--orange);
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.remaining-payment-button:hover {
+    background: var(--orange-dark);
+}
+
+.remaining-payment-button:active {
+    transform: translateY(1px);
+}
+
+
+/* =========================================================
+   QUAY LẠI TRANG CHỦ
+   ========================================================= */
+
 .back-link {
     color: var(--orange-dark);
     font-weight: bold;
@@ -194,7 +307,13 @@ body {
     text-decoration: underline;
 }
 
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
 @media (max-width: 600px) {
+
     .tracking-container {
         padding: 20px 12px;
     }
@@ -213,5 +332,13 @@ body {
 
     .info-row strong {
         text-align: left;
+    }
+
+    .remaining-payment-section {
+        padding: 15px;
+    }
+
+    .remaining-payment-button {
+        font-size: 14px;
     }
 }
