@@ -15,24 +15,21 @@ from services.order_service import (
 )
 
 
-remaining_payment_bp = Blueprint(
-    "remaining_payment",
-    __name__
-)
+remaining_payment_bp = Blueprint("remaining_payment", __name__)
 
 
 # =========================================================
 # THANH TOÁN PHẦN CÒN LẠI CỦA PRE-ORDER
 #
 # Chỉ áp dụng khi:
-# - đơn chọn hình thức cọc
+# - đơn sử dụng hình thức cọc
 # - trạng thái = "Chờ thanh toán phần còn lại"
 #
 # Nếu link PayOS cũ còn hạn:
 # → sử dụng lại link cũ.
 #
-# Nếu link cũ hết hạn:
-# → tạo link PayOS mới.
+# Nếu link PayOS cũ hết hạn:
+# → tạo link mới.
 #
 # Link hết hạn KHÔNG hủy đơn và KHÔNG hoàn kho.
 # =========================================================
@@ -70,7 +67,7 @@ def pay_remaining(order_id):
 
 
         # =================================================
-        # KIỂM TRA ĐÚNG ĐƠN CỌC
+        # KIỂM TRA HÌNH THỨC THANH TOÁN
         # =================================================
 
         if order["payment_type"] != "deposit":
@@ -80,8 +77,10 @@ def pay_remaining(order_id):
         # =================================================
         # KIỂM TRA TRẠNG THÁI
         #
-        # Admin phải chuyển đơn sang trạng thái này trước
-        # thì khách mới được thanh toán phần còn lại.
+        # Admin phải chuyển đơn sang:
+        # "Chờ thanh toán phần còn lại"
+        #
+        # thì khách mới được phép thanh toán.
         # =================================================
 
         if order["status"] != "Chờ thanh toán phần còn lại":
@@ -90,6 +89,10 @@ def pay_remaining(order_id):
 
         # =================================================
         # TÍNH SỐ TIỀN CÒN LẠI
+        #
+        # Tổng đơn = Giá × Số lượng
+        # Đã cọc   = Tiền cọc × Số lượng
+        # Còn lại  = Tổng đơn - Đã cọc
         # =================================================
 
         quantity = order["quantity"] or 1
@@ -98,11 +101,7 @@ def pay_remaining(order_id):
 
         total_amount = price * quantity
         deposited_amount = deposit * quantity
-
-        remaining_amount = max(
-            total_amount - deposited_amount,
-            0
-        )
+        remaining_amount = max(total_amount - deposited_amount, 0)
 
 
         # =================================================
@@ -116,7 +115,10 @@ def pay_remaining(order_id):
         # =================================================
         # KIỂM TRA LINK PAYOS CŨ
         #
-        # Nếu link cũ vẫn còn hạn thì không tạo thêm link.
+        # Nếu link cũ vẫn còn hạn:
+        # → chuyển thẳng sang link đó.
+        #
+        # Tránh tạo nhiều giao dịch PayOS cho cùng một đơn.
         # =================================================
 
         old_payment_url = order["remaining_payment_url"]
@@ -124,7 +126,6 @@ def pay_remaining(order_id):
         old_expires_at = normalize_expires_at(
             order["remaining_expires_at"]
         )
-
 
         if (
             old_payment_url
@@ -136,23 +137,23 @@ def pay_remaining(order_id):
 
         # =================================================
         # TẠO HẠN THANH TOÁN MỚI
+        #
+        # Link thanh toán phần còn lại có hiệu lực 15 phút.
+        #
+        # Khi hết hạn khách có thể bấm lại để tạo link mới.
         # =================================================
 
         created_time = get_now_vn()
+        expires_time = created_time + timedelta(minutes=15)
 
-        expires_time = created_time + timedelta(
-            minutes=15
-        )
-
-        expires_at_db = expires_time.replace(
-            tzinfo=None
-        )
+        expires_at_db = expires_time.replace(tzinfo=None)
 
 
         # =================================================
         # MÃ GIAO DỊCH PAYOS
         #
-        # Dùng timestamp mili-giây để hạn chế trùng mã.
+        # Đây là orderCode riêng của PayOS,
+        # không phải mã đơn TGMxxx của website.
         # =================================================
 
         payos_order_code = int(
@@ -170,14 +171,18 @@ def pay_remaining(order_id):
         # =================================================
         # DỮ LIỆU PAYOS
         #
-        # Prefix "REM-" giúp webhook phân biệt đây là
-        # thanh toán phần còn lại, không phải tiền cọc.
+        # Description:
+        #
+        # TGM001-REM
+        #
+        # "-REM" giúp webhook nhận biết đây là thanh toán
+        # phần còn lại của Pre-order.
         # =================================================
 
         payment_data = {
             "orderCode": payos_order_code,
             "amount": remaining_amount,
-            "description": f"REM-{order['order_code']}",
+            "description": f"{order['order_code']}-REM",
             "returnUrl": base_url + "/payment/success",
             "cancelUrl": base_url + "/payment/cancel",
             "expiredAt": int(expires_time.timestamp())
@@ -197,6 +202,13 @@ def pay_remaining(order_id):
 
         # =================================================
         # LƯU LINK THANH TOÁN PHẦN CÒN LẠI
+        #
+        # Không sử dụng payment_url ban đầu.
+        #
+        # Hai loại link được lưu riêng:
+        #
+        # payment_url           = thanh toán ban đầu
+        # remaining_payment_url = thanh toán phần còn lại
         # =================================================
 
         cursor.execute(
