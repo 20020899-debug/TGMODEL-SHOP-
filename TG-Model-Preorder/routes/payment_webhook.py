@@ -3,15 +3,10 @@ from flask import Blueprint, request
 from database import get_db
 from payos_service import payos
 
-from services.notification_service import (
-    send_new_order_notification
-)
+from services.notification_service import send_new_order_notification
 
 
-payment_webhook_bp = Blueprint(
-    "payment_webhook",
-    __name__
-)
+payment_webhook_bp = Blueprint("payment_webhook", __name__)
 
 
 # =========================================================
@@ -19,12 +14,13 @@ payment_webhook_bp = Blueprint(
 #
 # Xử lý 2 loại thanh toán:
 #
-# 1. TGM001
-#    → thanh toán ban đầu
-#    → cọc hoặc thanh toán full
+# 1. Thanh toán ban đầu
+#    TGM001
+#    → Đã cọc / Đã chuyển khoản full
 #
-# 2. REM-TGM001
-#    → thanh toán phần còn lại của Pre-order
+# 2. Thanh toán phần còn lại của Pre-order
+#    TGM001-REM
+#    → Đã thanh toán đủ
 # =========================================================
 
 @payment_webhook_bp.route(
@@ -35,32 +31,22 @@ def webhook():
 
     print("========== PAYOS WEBHOOK ==========")
 
-
     try:
 
         # =================================================
         # XÁC MINH WEBHOOK PAYOS
         # =================================================
 
-        webhook_data = payos.webhooks.verify(
-            request.data
-        )
+        webhook_data = payos.webhooks.verify(request.data)
 
-        print(
-            "WEBHOOK VERIFIED:",
-            webhook_data
-        )
+        print("WEBHOOK VERIFIED:", webhook_data)
 
 
         # =================================================
-        # THÔNG TIN THANH TOÁN
+        # LẤY THÔNG TIN THANH TOÁN
         # =================================================
 
-        description = (
-            webhook_data.description
-            or ""
-        ).strip()
-
+        description = (webhook_data.description or "").strip()
         paid_amount = webhook_data.amount or 0
 
         print("DESCRIPTION:", description)
@@ -74,35 +60,20 @@ def webhook():
         # =================================================
         # XÁC ĐỊNH LOẠI THANH TOÁN
         #
-        # REM- = thanh toán phần còn lại.
-        # Không có REM- = thanh toán ban đầu.
+        # TGM001     = thanh toán ban đầu
+        # TGM001-REM = thanh toán phần còn lại
         # =================================================
 
-        is_remaining_payment = description.startswith(
-            "REM-"
-        )
-
+        is_remaining_payment = description.endswith("-REM")
 
         if is_remaining_payment:
-            order_code = description[4:]
+            order_code = description[:-4]
         else:
             order_code = description
 
 
-        if not order_code:
-            return "OK", 200
-
-
         print("ORDER CODE:", order_code)
-
-        print(
-            "PAYMENT TYPE:",
-            (
-                "REMAINING"
-                if is_remaining_payment
-                else "INITIAL"
-            )
-        )
+        print("REMAINING PAYMENT:", is_remaining_payment)
 
 
         # =================================================
@@ -116,7 +87,7 @@ def webhook():
         try:
 
             # =================================================
-            # KHÓA VÀ LẤY ĐƠN
+            # KHÓA ĐƠN
             # =================================================
 
             cursor.execute(
@@ -152,10 +123,7 @@ def webhook():
 
             if order is None:
 
-                print(
-                    "KHONG TIM THAY DON:",
-                    order_code
-                )
+                print("KHONG TIM THAY DON:", order_code)
 
                 return "OK", 200
 
@@ -174,22 +142,39 @@ def webhook():
             deposit = order[9] or 0
 
 
-            print(
-                "CURRENT STATUS:",
-                current_status
-            )
+            print("CURRENT STATUS:", current_status)
 
 
             # =================================================
             # THANH TOÁN PHẦN CÒN LẠI
+            #
+            # Chỉ chấp nhận khi đơn đang:
+            # "Chờ thanh toán phần còn lại"
+            #
+            # Sau khi PayOS xác nhận:
+            # → Đã thanh toán đủ
+            #
+            # Không thay đổi tồn kho.
             # =================================================
 
             if is_remaining_payment:
 
                 # =============================================
-                # CHỈ XỬ LÝ ĐÚNG TRẠNG THÁI
-                #
-                # Giúp chống PayOS gửi webhook nhiều lần.
+                # CHỈ ĐƠN CỌC MỚI CÓ THANH TOÁN CÒN LẠI
+                # =============================================
+
+                if payment_type != "deposit":
+
+                    print(
+                        "BO QUA REMAINING - "
+                        "KHONG PHAI DON COC"
+                    )
+
+                    return "OK", 200
+
+
+                # =============================================
+                # CHỐNG WEBHOOK GỌI LẠI
                 # =============================================
 
                 if current_status != "Chờ thanh toán phần còn lại":
@@ -203,27 +188,13 @@ def webhook():
 
 
                 # =============================================
-                # CHỈ ĐƠN CỌC MỚI CÓ THANH TOÁN CÒN LẠI
-                # =============================================
-
-                if payment_type != "deposit":
-
-                    print(
-                        "BO QUA - KHONG PHAI DON COC"
-                    )
-
-                    return "OK", 200
-
-
-                # =============================================
                 # TÍNH SỐ TIỀN CÒN LẠI
+                #
+                # (Giá - cọc) × số lượng
                 # =============================================
-
-                total_amount = price * quantity
-                deposited_amount = deposit * quantity
 
                 expected_amount = max(
-                    total_amount - deposited_amount,
+                    (price - deposit) * quantity,
                     0
                 )
 
@@ -235,20 +206,7 @@ def webhook():
 
 
                 # =============================================
-                # KHÔNG CÒN TIỀN PHẢI THANH TOÁN
-                # =============================================
-
-                if expected_amount <= 0:
-
-                    print(
-                        "KHONG CON TIEN CAN THANH TOAN"
-                    )
-
-                    return "OK", 200
-
-
-                # =============================================
-                # SỐ TIỀN KHÔNG ĐỦ
+                # KIỂM TRA SỐ TIỀN
                 # =============================================
 
                 if paid_amount < expected_amount:
@@ -261,8 +219,10 @@ def webhook():
 
 
                 # =============================================
-                # XÁC NHẬN ĐÃ THANH TOÁN ĐỦ
-                # =============================================
+                # CẬP NHẬT ĐƠN
+                #
+                # Xóa link cũ để tránh sử dụng lại.
+                # =================================================
 
                 cursor.execute(
                     """
@@ -288,10 +248,17 @@ def webhook():
                 conn.commit()
 
 
+                print(
+                    "REMAINING UPDATED ROWS:",
+                    updated_rows
+                )
+
+
                 # =============================================
                 # TELEGRAM
                 #
-                # Báo Admin khi khách đã thanh toán nốt.
+                # Chỉ gửi khi trạng thái vừa được thay đổi.
+                # Webhook gọi lại sẽ không gửi lần thứ hai.
                 # =============================================
 
                 if updated_rows > 0:
@@ -310,7 +277,7 @@ def webhook():
                     )
 
                     print(
-                        "TELEGRAM RESULT:",
+                        "TELEGRAM REMAINING RESULT:",
                         telegram_result
                     )
 
@@ -326,7 +293,9 @@ def webhook():
             # =================================================
             # THANH TOÁN BAN ĐẦU
             #
-            # Logic cọc / full hiện tại.
+            # Chỉ xử lý đơn "Chưa thanh toán".
+            #
+            # Chống webhook PayOS gọi lại nhiều lần.
             # =================================================
 
             if current_status != "Chưa thanh toán":
@@ -340,38 +309,28 @@ def webhook():
 
 
             # =================================================
-            # XÁC ĐỊNH SỐ TIỀN + TRẠNG THÁI
+            # TÍNH SỐ TIỀN THANH TOÁN BAN ĐẦU
             # =================================================
 
             if payment_type == "full":
 
-                expected_amount = (
-                    price * quantity
-                )
-
-                new_status = (
-                    "Đã chuyển khoản full"
-                )
+                expected_amount = price * quantity
+                new_status = "Đã chuyển khoản full"
 
             else:
 
-                expected_amount = (
-                    deposit * quantity
-                )
-
-                new_status = (
-                    "Đã cọc"
-                )
+                expected_amount = deposit * quantity
+                new_status = "Đã cọc"
 
 
             print(
-                "EXPECTED AMOUNT:",
+                "EXPECTED INITIAL AMOUNT:",
                 expected_amount
             )
 
 
             # =================================================
-            # SỐ TIỀN KHÔNG ĐỦ
+            # KIỂM TRA SỐ TIỀN
             # =================================================
 
             if paid_amount < expected_amount:
@@ -384,7 +343,10 @@ def webhook():
 
 
             # =================================================
-            # XÁC NHẬN THANH TOÁN BAN ĐẦU
+            # CẬP NHẬT THANH TOÁN BAN ĐẦU
+            #
+            # Hàng đã được trừ lúc tạo đơn nên chỉ cần
+            # bỏ trạng thái stock_reserved.
             # =================================================
 
             cursor.execute(
@@ -410,10 +372,16 @@ def webhook():
             conn.commit()
 
 
+            print(
+                "INITIAL UPDATED ROWS:",
+                updated_rows
+            )
+
+
             # =================================================
             # TELEGRAM
             #
-            # Chỉ gửi khi webhook vừa xác nhận thanh toán.
+            # Chỉ gửi khi PayOS vừa xác nhận thanh toán.
             # =================================================
 
             if updated_rows > 0:
