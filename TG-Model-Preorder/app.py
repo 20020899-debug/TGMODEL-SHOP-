@@ -14,6 +14,7 @@ from routes.payment_webhook import payment_webhook_bp
 from routes.admin_products import admin_products_bp
 from routes.admin_orders import admin_orders_bp
 from routes.order_tracking import order_tracking_bp
+from routes.remaining_payment import remaining_payment_bp
 from routes.health import health_bp
 
 
@@ -21,9 +22,7 @@ from routes.health import health_bp
 # KHỞI TẠO FLASK
 # =========================================================
 
-app = Flask(
-    __name__
-)
+app = Flask(__name__)
 
 
 # =========================================================
@@ -40,64 +39,30 @@ app.secret_key = os.environ.get(
 # REGISTER BLUEPRINTS
 # =========================================================
 
-app.register_blueprint(
-    home_bp
-)
+app.register_blueprint(home_bp)
+app.register_blueprint(auth_bp)
 
-app.register_blueprint(
-    auth_bp
-)
+app.register_blueprint(admin_bp)
+app.register_blueprint(admin_orders_bp)
+app.register_blueprint(admin_products_bp)
 
-app.register_blueprint(
-    admin_bp
-)
+app.register_blueprint(pending_order_bp)
+app.register_blueprint(preorder_page_bp)
+app.register_blueprint(submit_order_bp)
 
-app.register_blueprint(
-    admin_orders_bp
-)
+app.register_blueprint(order_tracking_bp)
+app.register_blueprint(remaining_payment_bp)
 
-app.register_blueprint(
-    admin_products_bp
-)
+app.register_blueprint(payment_success_bp)
+app.register_blueprint(payment_cancel_bp)
+app.register_blueprint(payment_webhook_bp)
 
-app.register_blueprint(
-    pending_order_bp
-)
+app.register_blueprint(health_bp)
 
-app.register_blueprint(
-    preorder_page_bp
-)
-
-app.register_blueprint(
-    submit_order_bp
-)
-
-app.register_blueprint(
-    order_tracking_bp
-)
-
-app.register_blueprint(
-    payment_success_bp
-)
-
-app.register_blueprint(
-    payment_cancel_bp
-)
-
-app.register_blueprint(
-    payment_webhook_bp
-)
-
-app.register_blueprint(
-    health_bp
-)
 
 # =========================================================
 # CHẠY LOCAL
 # =========================================================
 
 if __name__ == "__main__":
-
-    app.run(
-        debug=True
-    )
+    app.run(debug=True)
