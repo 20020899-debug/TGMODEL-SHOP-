@@ -19,15 +19,12 @@ payment_webhook_bp = Blueprint(
 #
 # Xử lý 2 loại thanh toán:
 #
-# 1. Thanh toán ban đầu
-#    - Cọc
-#    - Chuyển khoản full
+# 1. TGM001
+#    → thanh toán ban đầu
+#    → cọc hoặc thanh toán full
 #
-# 2. Thanh toán phần còn lại của Pre-order
-#
-# Webhook có thể được PayOS gửi lại nhiều lần nên việc
-# kiểm tra trạng thái và mã giao dịch giúp tránh xử lý
-# trùng một giao dịch đã hoàn thành.
+# 2. REM-TGM001
+#    → thanh toán phần còn lại của Pre-order
 # =========================================================
 
 @payment_webhook_bp.route(
@@ -42,7 +39,7 @@ def webhook():
     try:
 
         # =================================================
-        # XÁC MINH WEBHOOK
+        # XÁC MINH WEBHOOK PAYOS
         # =================================================
 
         webhook_data = payos.webhooks.verify(
@@ -56,7 +53,7 @@ def webhook():
 
 
         # =================================================
-        # THÔNG TIN GIAO DỊCH PAYOS
+        # THÔNG TIN THANH TOÁN
         # =================================================
 
         description = (
@@ -64,39 +61,48 @@ def webhook():
             or ""
         ).strip()
 
-        paid_amount = (
-            webhook_data.amount
-            or 0
-        )
+        paid_amount = webhook_data.amount or 0
 
-        payos_order_code = (
-            webhook_data.order_code
-        )
+        print("DESCRIPTION:", description)
+        print("PAID AMOUNT:", paid_amount)
 
 
-        print(
-            "DESCRIPTION:",
-            description
-        )
-
-        print(
-            "PAYOS ORDER CODE:",
-            payos_order_code
-        )
-
-        print(
-            "PAID AMOUNT:",
-            paid_amount
-        )
-
-
-        if not payos_order_code:
-
-            print(
-                "WEBHOOK KHONG CO PAYOS ORDER CODE"
-            )
-
+        if not description:
             return "OK", 200
+
+
+        # =================================================
+        # XÁC ĐỊNH LOẠI THANH TOÁN
+        #
+        # REM- = thanh toán phần còn lại.
+        # Không có REM- = thanh toán ban đầu.
+        # =================================================
+
+        is_remaining_payment = description.startswith(
+            "REM-"
+        )
+
+
+        if is_remaining_payment:
+            order_code = description[4:]
+        else:
+            order_code = description
+
+
+        if not order_code:
+            return "OK", 200
+
+
+        print("ORDER CODE:", order_code)
+
+        print(
+            "PAYMENT TYPE:",
+            (
+                "REMAINING"
+                if is_remaining_payment
+                else "INITIAL"
+            )
+        )
 
 
         # =================================================
@@ -110,13 +116,7 @@ def webhook():
         try:
 
             # =================================================
-            # TÌM ĐƠN THEO MÃ GIAO DỊCH PAYOS
-            #
-            # Không chỉ dựa vào description vì cùng một đơn
-            # có thể thanh toán PayOS hai lần:
-            #
-            # - lần đầu
-            # - phần còn lại
+            # KHÓA VÀ LẤY ĐƠN
             # =================================================
 
             cursor.execute(
@@ -126,83 +126,24 @@ def webhook():
                     status,
                     payment_type,
                     quantity,
-
                     order_code,
                     fullname,
                     phone,
                     product_name,
-
                     price,
-                    deposit,
-
-                    payment_order_code,
-                    remaining_payment_order_code
+                    deposit
 
                 FROM orders
 
-                WHERE
-                    payment_order_code=%s
-                    OR
-                    remaining_payment_order_code=%s
+                WHERE order_code=%s
 
                 LIMIT 1
-
                 FOR UPDATE
                 """,
-                (
-                    payos_order_code,
-                    payos_order_code
-                )
+                (order_code,)
             )
 
-
             order = cursor.fetchone()
-
-
-            # =================================================
-            # TƯƠNG THÍCH ĐƠN CŨ
-            #
-            # Các đơn được tạo trước khi có cột
-            # payment_order_code chưa lưu mã giao dịch PayOS.
-            #
-            # Với các đơn này mới thử tìm bằng description.
-            # =================================================
-
-            if order is None and description:
-
-                cursor.execute(
-                    """
-                    SELECT
-                        id,
-                        status,
-                        payment_type,
-                        quantity,
-
-                        order_code,
-                        fullname,
-                        phone,
-                        product_name,
-
-                        price,
-                        deposit,
-
-                        payment_order_code,
-                        remaining_payment_order_code
-
-                    FROM orders
-
-                    WHERE order_code=%s
-
-                    LIMIT 1
-
-                    FOR UPDATE
-                    """,
-                    (
-                        description,
-                    )
-                )
-
-                order = cursor.fetchone()
 
 
             # =================================================
@@ -212,16 +153,12 @@ def webhook():
             if order is None:
 
                 print(
-                    "KHONG TIM THAY DON CHO PAYOS:",
-                    payos_order_code
+                    "KHONG TIM THAY DON:",
+                    order_code
                 )
 
                 return "OK", 200
 
-
-            # =================================================
-            # DỮ LIỆU ĐƠN
-            # =================================================
 
             order_id = order[0]
             current_status = order[1]
@@ -236,187 +173,11 @@ def webhook():
             price = order[8] or 0
             deposit = order[9] or 0
 
-            payment_order_code = order[10]
-            remaining_payment_order_code = order[11]
-
-
-            print(
-                "ORDER:",
-                order_code
-            )
 
             print(
                 "CURRENT STATUS:",
                 current_status
             )
-
-
-            # =================================================
-            # XÁC ĐỊNH LOẠI THANH TOÁN
-            #
-            # Ưu tiên xác định bằng mã PayOS đã lưu trong DB.
-            # =================================================
-
-            is_initial_payment = (
-                payment_order_code == payos_order_code
-            )
-
-            is_remaining_payment = (
-                remaining_payment_order_code
-                == payos_order_code
-            )
-
-
-            # =================================================
-            # TƯƠNG THÍCH ĐƠN CŨ
-            #
-            # Đơn cũ chưa có payment_order_code nhưng đang
-            # "Chưa thanh toán" được coi là thanh toán lần đầu.
-            # =================================================
-
-            if (
-                not is_initial_payment
-                and not is_remaining_payment
-                and current_status == "Chưa thanh toán"
-                and description == order_code
-            ):
-                is_initial_payment = True
-
-
-            # =================================================
-            # THANH TOÁN LẦN ĐẦU
-            # =================================================
-
-            if is_initial_payment:
-
-                # =============================================
-                # CHỐNG XỬ LÝ WEBHOOK TRÙNG
-                # =============================================
-
-                if current_status != "Chưa thanh toán":
-
-                    print(
-                        "BO QUA WEBHOOK LAN DAU - STATUS:",
-                        current_status
-                    )
-
-                    return "OK", 200
-
-
-                # =============================================
-                # TÍNH SỐ TIỀN PHẢI THANH TOÁN
-                # =============================================
-
-                if payment_type == "full":
-
-                    expected_amount = (
-                        price
-                        * quantity
-                    )
-
-                    new_status = (
-                        "Đã chuyển khoản full"
-                    )
-
-                else:
-
-                    expected_amount = (
-                        deposit
-                        * quantity
-                    )
-
-                    new_status = (
-                        "Đã cọc"
-                    )
-
-
-                print(
-                    "PAYMENT TYPE: INITIAL"
-                )
-
-                print(
-                    "EXPECTED AMOUNT:",
-                    expected_amount
-                )
-
-
-                # =============================================
-                # KIỂM TRA SỐ TIỀN
-                # =============================================
-
-                if paid_amount < expected_amount:
-
-                    print(
-                        "THANH TOAN LAN DAU KHONG DU TIEN"
-                    )
-
-                    return "OK", 200
-
-
-                # =============================================
-                # CẬP NHẬT ĐƠN
-                # =============================================
-
-                cursor.execute(
-                    """
-                    UPDATE orders
-
-                    SET
-                        status=%s,
-                        stock_reserved=FALSE
-
-                    WHERE id=%s
-                    AND status=%s
-                    """,
-                    (
-                        new_status,
-                        order_id,
-                        "Chưa thanh toán"
-                    )
-                )
-
-                updated_rows = cursor.rowcount
-
-                conn.commit()
-
-
-                # =============================================
-                # TELEGRAM
-                # =============================================
-
-                if updated_rows > 0:
-
-                    telegram_result = (
-                        send_new_order_notification(
-                            order_code=order_code,
-                            fullname=fullname,
-                            phone=phone,
-                            product_name=product_name,
-                            quantity=quantity,
-                            payment_type=payment_type,
-                            payment_amount=expected_amount,
-                            status=new_status
-                        )
-                    )
-
-                    print(
-                        "TELEGRAM RESULT:",
-                        telegram_result
-                    )
-
-
-                print(
-                    "INITIAL PAYMENT SUCCESS:",
-                    order_code
-                )
-
-                print(
-                    "FINAL STATUS:",
-                    new_status
-                )
-
-
-                return "OK", 200
 
 
             # =================================================
@@ -426,17 +187,15 @@ def webhook():
             if is_remaining_payment:
 
                 # =============================================
-                # CHỈ CHẤP NHẬN KHI ADMIN ĐÃ YÊU CẦU
-                # THANH TOÁN PHẦN CÒN LẠI
+                # CHỈ XỬ LÝ ĐÚNG TRẠNG THÁI
+                #
+                # Giúp chống PayOS gửi webhook nhiều lần.
                 # =============================================
 
-                if (
-                    current_status
-                    != "Chờ thanh toán phần còn lại"
-                ):
+                if current_status != "Chờ thanh toán phần còn lại":
 
                     print(
-                        "BO QUA REMAINING PAYMENT - STATUS:",
+                        "BO QUA REMAINING WEBHOOK - STATUS:",
                         current_status
                     )
 
@@ -444,48 +203,33 @@ def webhook():
 
 
                 # =============================================
-                # TÍNH SỐ TIỀN CÒN LẠI
-                #
-                # Tổng đơn:
-                # price × quantity
-                #
-                # Đã cọc:
-                # deposit × quantity
+                # CHỈ ĐƠN CỌC MỚI CÓ THANH TOÁN CÒN LẠI
                 # =============================================
 
-                total_amount = (
-                    price
-                    * quantity
-                )
+                if payment_type != "deposit":
 
-                deposited_amount = (
-                    deposit
-                    * quantity
-                )
+                    print(
+                        "BO QUA - KHONG PHAI DON COC"
+                    )
+
+                    return "OK", 200
+
+
+                # =============================================
+                # TÍNH SỐ TIỀN CÒN LẠI
+                # =============================================
+
+                total_amount = price * quantity
+                deposited_amount = deposit * quantity
 
                 expected_amount = max(
-                    total_amount
-                    - deposited_amount,
+                    total_amount - deposited_amount,
                     0
                 )
 
 
                 print(
-                    "PAYMENT TYPE: REMAINING"
-                )
-
-                print(
-                    "TOTAL AMOUNT:",
-                    total_amount
-                )
-
-                print(
-                    "DEPOSITED AMOUNT:",
-                    deposited_amount
-                )
-
-                print(
-                    "EXPECTED REMAINING:",
+                    "EXPECTED REMAINING AMOUNT:",
                     expected_amount
                 )
 
@@ -497,30 +241,27 @@ def webhook():
                 if expected_amount <= 0:
 
                     print(
-                        "DON KHONG CON SO TIEN PHAI THANH TOAN"
+                        "KHONG CON TIEN CAN THANH TOAN"
                     )
 
                     return "OK", 200
 
 
                 # =============================================
-                # KIỂM TRA SỐ TIỀN
+                # SỐ TIỀN KHÔNG ĐỦ
                 # =============================================
 
                 if paid_amount < expected_amount:
 
                     print(
-                        "THANH TOAN PHAN CON LAI KHONG DU TIEN"
+                        "SO TIEN THANH TOAN CON LAI KHONG DU"
                     )
 
                     return "OK", 200
 
 
                 # =============================================
-                # CẬP NHẬT ĐÃ THANH TOÁN ĐỦ
-                #
-                # Không tác động tồn kho vì hàng của đơn này
-                # đã được trừ từ khi khách tạo đơn ban đầu.
+                # XÁC NHẬN ĐÃ THANH TOÁN ĐỦ
                 # =============================================
 
                 cursor.execute(
@@ -550,8 +291,7 @@ def webhook():
                 # =============================================
                 # TELEGRAM
                 #
-                # Báo Admin khi khách đã thanh toán phần
-                # còn lại của đơn Pre-order.
+                # Báo Admin khi khách đã thanh toán nốt.
                 # =============================================
 
                 if updated_rows > 0:
@@ -580,22 +320,133 @@ def webhook():
                     order_code
                 )
 
-                print(
-                    "FINAL STATUS: Đã thanh toán đủ"
-                )
+                return "OK", 200
 
+
+            # =================================================
+            # THANH TOÁN BAN ĐẦU
+            #
+            # Logic cọc / full hiện tại.
+            # =================================================
+
+            if current_status != "Chưa thanh toán":
+
+                print(
+                    "BO QUA WEBHOOK - STATUS:",
+                    current_status
+                )
 
                 return "OK", 200
 
 
             # =================================================
-            # KHÔNG XÁC ĐỊNH ĐƯỢC GIAO DỊCH
+            # XÁC ĐỊNH SỐ TIỀN + TRẠNG THÁI
             # =================================================
 
+            if payment_type == "full":
+
+                expected_amount = (
+                    price * quantity
+                )
+
+                new_status = (
+                    "Đã chuyển khoản full"
+                )
+
+            else:
+
+                expected_amount = (
+                    deposit * quantity
+                )
+
+                new_status = (
+                    "Đã cọc"
+                )
+
+
             print(
-                "KHONG XAC DINH DUOC LOAI THANH TOAN:",
-                payos_order_code
+                "EXPECTED AMOUNT:",
+                expected_amount
             )
+
+
+            # =================================================
+            # SỐ TIỀN KHÔNG ĐỦ
+            # =================================================
+
+            if paid_amount < expected_amount:
+
+                print(
+                    "SO TIEN THANH TOAN KHONG DU"
+                )
+
+                return "OK", 200
+
+
+            # =================================================
+            # XÁC NHẬN THANH TOÁN BAN ĐẦU
+            # =================================================
+
+            cursor.execute(
+                """
+                UPDATE orders
+
+                SET
+                    status=%s,
+                    stock_reserved=FALSE
+
+                WHERE id=%s
+                AND status=%s
+                """,
+                (
+                    new_status,
+                    order_id,
+                    "Chưa thanh toán"
+                )
+            )
+
+            updated_rows = cursor.rowcount
+
+            conn.commit()
+
+
+            # =================================================
+            # TELEGRAM
+            #
+            # Chỉ gửi khi webhook vừa xác nhận thanh toán.
+            # =================================================
+
+            if updated_rows > 0:
+
+                telegram_result = (
+                    send_new_order_notification(
+                        order_code=order_code,
+                        fullname=fullname,
+                        phone=phone,
+                        product_name=product_name,
+                        quantity=quantity,
+                        payment_type=payment_type,
+                        payment_amount=expected_amount,
+                        status=new_status
+                    )
+                )
+
+                print(
+                    "TELEGRAM RESULT:",
+                    telegram_result
+                )
+
+
+            print(
+                "PAYMENT SUCCESS:",
+                order_code
+            )
+
+            print(
+                "FINAL STATUS:",
+                new_status
+            )
+
 
             return "OK", 200
 
