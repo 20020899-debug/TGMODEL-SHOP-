@@ -2,7 +2,6 @@
 <html lang="vi">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -10,85 +9,77 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
-        Chi tiết đơn hàng
-    </title>
+    <title>Chi tiết đơn hàng</title>
 
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='css/admin.css') }}"
     >
-
 </head>
 
 
 <body>
 
-
 <div class="container container-small">
 
+
+    <!-- =================================================
+         TIÊU ĐỀ
+         ================================================= -->
 
     <h1 class="page-title">
         Chi tiết đơn hàng
     </h1>
 
 
-    <div class="form-row">
+    <!-- =================================================
+         THÔNG TIN ĐƠN
+         ================================================= -->
 
-        <span class="form-label">
-            Mã đơn:
-        </span>
+    <div class="form-row">
+        <span class="form-label">Mã đơn:</span>
 
         <strong>
             {{ order["order_code"] }}
         </strong>
-
     </div>
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Thời gian đặt:
-        </span>
+        <span class="form-label">Thời gian đặt:</span>
 
         {{ order["created_at"] }}
-
     </div>
 
 
-    <div class="form-row">
+    <!-- =================================================
+         THÔNG TIN KHÁCH HÀNG
+         ================================================= -->
 
-        <span class="form-label">
-            Họ và tên:
-        </span>
+    <div class="form-row">
+        <span class="form-label">Họ và tên:</span>
 
         {{ order["fullname"] }}
-
     </div>
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Số điện thoại:
-        </span>
+        <span class="form-label">Số điện thoại:</span>
 
         {{ order["phone"] }}
-
     </div>
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Facebook / Zalo:
-        </span>
+        <span class="form-label">Facebook / Zalo:</span>
 
         {{ order["contact"] or "--" }}
-
     </div>
 
+
+    <!-- =================================================
+         ĐỊA CHỈ GIAO HÀNG
+         ================================================= -->
 
     <h2 class="section-title">
         Địa chỉ giao hàng
@@ -96,48 +87,36 @@
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Tỉnh / Thành phố:
-        </span>
+        <span class="form-label">Tỉnh / Thành phố:</span>
 
         {{ order["province"] }}
-
     </div>
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Quận / Huyện:
-        </span>
+        <span class="form-label">Quận / Huyện:</span>
 
         {{ order["district"] }}
-
     </div>
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Phường / Xã:
-        </span>
+        <span class="form-label">Phường / Xã:</span>
 
         {{ order["ward"] }}
-
     </div>
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Địa chỉ chi tiết:
-        </span>
+        <span class="form-label">Địa chỉ chi tiết:</span>
 
         {{ order["address_detail"] }}
-
     </div>
 
+
+    <!-- =================================================
+         THÔNG TIN SẢN PHẨM
+         ================================================= -->
 
     <h2 class="section-title">
         Thông tin sản phẩm
@@ -145,59 +124,43 @@
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Sản phẩm:
-        </span>
+        <span class="form-label">Sản phẩm:</span>
 
         {{ order["product_name"] }}
-
     </div>
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Người bán:
-        </span>
+        <span class="form-label">Người bán:</span>
 
         {{ order["product_brand"] or "--" }}
-
     </div>
 
 
     <div class="form-row">
+        <span class="form-label">Số lượng:</span>
 
-        <span class="form-label">
-            Số lượng:
-        </span>
-
-        {{ order["quantity"] }}
-
+        {{ order["quantity"] or 1 }}
     </div>
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Giá sản phẩm:
-        </span>
+        <span class="form-label">Giá / sản phẩm:</span>
 
         {{ "{:,}".format(order["price"] or 0) }} đ
-
     </div>
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Tiền cọc / sản phẩm:
-        </span>
+        <span class="form-label">Tiền cọc / sản phẩm:</span>
 
         {{ "{:,}".format(order["deposit"] or 0) }} đ
-
     </div>
 
+
+    <!-- =================================================
+         THANH TOÁN
+         ================================================= -->
 
     <h2 class="section-title">
         Thanh toán
@@ -205,11 +168,7 @@
 
 
     <div class="form-row">
-
-        <span class="form-label">
-            Hình thức thanh toán:
-        </span>
-
+        <span class="form-label">Hình thức thanh toán:</span>
 
         {% if order["payment_type"] == "full" %}
 
@@ -228,16 +187,31 @@
             --
 
         {% endif %}
-
     </div>
 
 
+    <!-- =================================================
+         TỔNG GIÁ TRỊ ĐƠN
+         ================================================= -->
+
     <div class="form-row">
+        <span class="form-label">Tổng giá trị đơn:</span>
 
-        <span class="form-label">
-            Số tiền thanh toán:
-        </span>
+        <strong class="payment-amount">
+            {{ "{:,}".format(
+                (order["price"] or 0)
+                * (order["quantity"] or 1)
+            ) }} đ
+        </strong>
+    </div>
 
+
+    <!-- =================================================
+         SỐ TIỀN THANH TOÁN BAN ĐẦU
+         ================================================= -->
+
+    <div class="form-row">
+        <span class="form-label">Thanh toán ban đầu:</span>
 
         <span class="payment-amount">
 
@@ -258,9 +232,80 @@
             {% endif %}
 
         </span>
-
     </div>
 
+
+    <!-- =================================================
+         SỐ TIỀN CÒN LẠI CỦA PRE-ORDER
+
+         Chỉ có ý nghĩa với đơn chọn hình thức cọc.
+         ================================================= -->
+
+    {% if order["payment_type"] == "deposit" %}
+
+        <div class="form-row">
+
+            <span class="form-label">
+                Còn phải thanh toán:
+            </span>
+
+            <strong class="payment-amount">
+
+                {{ "{:,}".format(
+                    (
+                        (order["price"] or 0)
+                        -
+                        (order["deposit"] or 0)
+                    )
+                    *
+                    (order["quantity"] or 1)
+                ) }} đ
+
+            </strong>
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- =================================================
+         TRẠNG THÁI THANH TOÁN PHẦN CÒN LẠI
+         ================================================= -->
+
+    {% if order["status"] == "Chờ thanh toán phần còn lại" %}
+
+        <div class="form-row">
+
+            <span class="form-label">
+                Thanh toán còn lại:
+            </span>
+
+            <strong class="payment-deposit">
+                Đang chờ khách thanh toán
+            </strong>
+
+        </div>
+
+    {% elif order["status"] == "Đã thanh toán đủ" %}
+
+        <div class="form-row">
+
+            <span class="form-label">
+                Thanh toán còn lại:
+            </span>
+
+            <strong class="payment-full">
+                Đã thanh toán đủ
+            </strong>
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- =================================================
+         GHI CHÚ
+         ================================================= -->
 
     <h2 class="section-title">
         Ghi chú
@@ -268,11 +313,13 @@
 
 
     <div class="form-row">
-
         {{ order["note"] or "Không có ghi chú" }}
-
     </div>
 
+
+    <!-- =================================================
+         VẬN CHUYỂN
+         ================================================= -->
 
     <h2 class="section-title">
         Vận chuyển
@@ -289,23 +336,23 @@
         {% if order["tracking_code"] %}
 
             <strong class="tracking-code">
-
                 {{ order["tracking_code"] }}
-
             </strong>
 
         {% else %}
 
             <span class="tracking-empty">
-
                 Chưa có mã vận đơn
-
             </span>
 
         {% endif %}
 
     </div>
 
+
+    <!-- =================================================
+         CẬP NHẬT TRẠNG THÁI
+         ================================================= -->
 
     <h2 class="section-title">
         Trạng thái đơn hàng
@@ -332,7 +379,6 @@
                 required
             >
 
-
                 <option
                     value="Chờ xác nhận"
                     {% if order["status"] == "Chờ xác nhận" %}selected{% endif %}
@@ -354,6 +400,30 @@
                     {% if order["status"] == "Đã cọc" %}selected{% endif %}
                 >
                     Đã cọc
+                </option>
+
+
+                <!-- =====================================
+                     PRE-ORDER - HÀNG ĐÃ VỀ
+                     ===================================== -->
+
+                <option
+                    value="Chờ thanh toán phần còn lại"
+                    {% if order["status"] == "Chờ thanh toán phần còn lại" %}selected{% endif %}
+                >
+                    Chờ thanh toán phần còn lại
+                </option>
+
+
+                <!-- =====================================
+                     PRE-ORDER - ĐÃ THANH TOÁN HẾT
+                     ===================================== -->
+
+                <option
+                    value="Đã thanh toán đủ"
+                    {% if order["status"] == "Đã thanh toán đủ" %}selected{% endif %}
+                >
+                    Đã thanh toán đủ
                 </option>
 
 
@@ -404,11 +474,14 @@
                     Hết hạn thanh toán
                 </option>
 
-
             </select>
 
         </div>
 
+
+        <!-- =================================================
+             MÃ VẬN ĐƠN
+             ================================================= -->
 
         <div
             class="form-row"
@@ -443,7 +516,6 @@
             💾 LƯU THAY ĐỔI
         </button>
 
-
     </form>
 
 
@@ -461,77 +533,51 @@
 </div>
 
 
+<!-- =====================================================
+     HIỂN THỊ Ô MÃ VẬN ĐƠN
+     ===================================================== -->
+
 <script>
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
+document.addEventListener("DOMContentLoaded", function() {
 
-        const statusSelect =
-            document.getElementById(
-                "order-status"
-            );
+    const statusSelect = document.getElementById("order-status");
+    const trackingRow = document.getElementById("tracking-code-row");
+    const trackingInput = document.getElementById("tracking-code");
 
-        const trackingRow =
-            document.getElementById(
-                "tracking-code-row"
-            );
-
-        const trackingInput =
-            document.getElementById(
-                "tracking-code"
-            );
+    const trackingStatuses = [
+        "Đang chuẩn bị hàng",
+        "Đã gửi hàng",
+        "Hoàn thành"
+    ];
 
 
-        const trackingStatuses = [
-            "Đang chuẩn bị hàng",
-            "Đã gửi hàng",
-            "Hoàn thành"
-        ];
+    function updateTrackingVisibility() {
 
+        const status = statusSelect.value;
+        const hasTrackingCode = trackingInput.value.trim().length > 0;
 
-        function updateTrackingVisibility() {
-
-            const status =
-                statusSelect.value;
-
-            const hasTrackingCode =
-                trackingInput.value
-                    .trim()
-                    .length > 0;
-
-
-            if (
-                trackingStatuses.includes(
-                    status
-                )
-                ||
-                hasTrackingCode
-            ) {
-
-                trackingRow.style.display =
-                    "";
-
-            } else {
-
-                trackingRow.style.display =
-                    "none";
-
-            }
-
+        if (
+            trackingStatuses.includes(status)
+            ||
+            hasTrackingCode
+        ) {
+            trackingRow.style.display = "";
+        } else {
+            trackingRow.style.display = "none";
         }
 
-
-        statusSelect.addEventListener(
-            "change",
-            updateTrackingVisibility
-        );
-
-
-        updateTrackingVisibility();
-
     }
-);
+
+
+    statusSelect.addEventListener(
+        "change",
+        updateTrackingVisibility
+    );
+
+    updateTrackingVisibility();
+
+});
 
 </script>
 
