@@ -130,6 +130,46 @@
     </div>
 
 
+    <!-- =================================================
+         LOẠI HÀNG
+
+         product_type:
+         preorder = Pre-order
+         instock  = Hàng sẵn
+         ================================================= -->
+
+    <div class="form-row">
+
+        <span class="form-label">
+            Loại hàng:
+        </span>
+
+
+        {% if order["product_type"] == "preorder" %}
+
+            <strong class="payment-deposit">
+                Pre-order
+            </strong>
+
+
+        {% elif order["product_type"] == "instock" %}
+
+            <strong class="payment-full">
+                Hàng sẵn
+            </strong>
+
+
+        {% else %}
+
+            <span>
+                --
+            </span>
+
+        {% endif %}
+
+    </div>
+
+
     <div class="form-row">
         <span class="form-label">Người bán:</span>
 
@@ -238,7 +278,7 @@
     <!-- =================================================
          SỐ TIỀN CÒN LẠI CỦA PRE-ORDER
 
-         Chỉ có ý nghĩa với đơn chọn hình thức cọc.
+         Chỉ áp dụng với đơn sử dụng hình thức cọc.
          ================================================= -->
 
     {% if order["payment_type"] == "deposit" %}
@@ -285,6 +325,7 @@
             </strong>
 
         </div>
+
 
     {% elif order["status"] == "Đã thanh toán đủ" %}
 
@@ -535,15 +576,27 @@
 
 <!-- =====================================================
      HIỂN THỊ Ô MÃ VẬN ĐƠN
+
+     Chỉ hiển thị khi:
+     - Đang chuẩn bị hàng
+     - Đã gửi hàng
+     - Hoàn thành
+     - hoặc đơn đã có mã vận đơn từ trước
      ===================================================== -->
 
 <script>
 
 document.addEventListener("DOMContentLoaded", function() {
 
-    const statusSelect = document.getElementById("order-status");
-    const trackingRow = document.getElementById("tracking-code-row");
-    const trackingInput = document.getElementById("tracking-code");
+    const statusSelect =
+        document.getElementById("order-status");
+
+    const trackingRow =
+        document.getElementById("tracking-code-row");
+
+    const trackingInput =
+        document.getElementById("tracking-code");
+
 
     const trackingStatuses = [
         "Đang chuẩn bị hàng",
@@ -554,17 +607,25 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function updateTrackingVisibility() {
 
-        const status = statusSelect.value;
-        const hasTrackingCode = trackingInput.value.trim().length > 0;
+        const status =
+            statusSelect.value;
+
+        const hasTrackingCode =
+            trackingInput.value.trim().length > 0;
+
 
         if (
             trackingStatuses.includes(status)
             ||
             hasTrackingCode
         ) {
+
             trackingRow.style.display = "";
+
         } else {
+
             trackingRow.style.display = "none";
+
         }
 
     }
@@ -574,6 +635,7 @@ document.addEventListener("DOMContentLoaded", function() {
         "change",
         updateTrackingVisibility
     );
+
 
     updateTrackingVisibility();
 
