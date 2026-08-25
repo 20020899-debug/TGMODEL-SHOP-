@@ -1,10 +1,4 @@
-from flask import (
-    Blueprint,
-    request,
-    redirect,
-    make_response
-)
-
+from flask import Blueprint, request, redirect, make_response
 from datetime import timedelta
 
 import time
@@ -20,29 +14,18 @@ from services.order_service import (
     mark_order_expired
 )
 
-from services.stock_service import (
-    reserve_stock
-)
-
-from services.notification_service import (
-    send_new_order_notification
-)
+from services.stock_service import reserve_stock
+from services.notification_service import send_new_order_notification
 
 
-submit_order_bp = Blueprint(
-    "submit_order",
-    __name__
-)
+submit_order_bp = Blueprint("submit_order", __name__)
 
 
 # =========================================================
 # TẠO ĐƠN HÀNG
 # =========================================================
 
-@submit_order_bp.route(
-    "/submit",
-    methods=["POST"]
-)
+@submit_order_bp.route("/submit", methods=["POST"])
 def submit():
 
     # =====================================================
@@ -50,81 +33,37 @@ def submit():
     # =====================================================
 
     try:
-
-        product_id = int(
-            request.form.get(
-                "product_id"
-            )
-        )
-
+        product_id = int(request.form.get("product_id"))
     except (TypeError, ValueError):
-
-        return (
-            "Sản phẩm không hợp lệ",
-            400
-        )
+        return "Sản phẩm không hợp lệ", 400
 
 
     # =====================================================
     # THÔNG TIN KHÁCH
     # =====================================================
 
-    fullname = request.form.get(
-        "fullname",
-        ""
-    ).strip()
+    fullname = request.form.get("fullname", "").strip()
+    phone = request.form.get("phone", "").strip()
+    contact = request.form.get("contact", "").strip()
 
-    phone = request.form.get(
-        "phone",
-        ""
-    ).strip()
+    province = request.form.get("province", "").strip()
+    district = request.form.get("district", "").strip()
+    ward = request.form.get("ward", "").strip()
+    address_detail = request.form.get("address_detail", "").strip()
 
-    contact = request.form.get(
-        "contact",
-        ""
-    ).strip()
-
-    province = request.form.get(
-        "province",
-        ""
-    ).strip()
-
-    district = request.form.get(
-        "district",
-        ""
-    ).strip()
-
-    ward = request.form.get(
-        "ward",
-        ""
-    ).strip()
-
-    address_detail = request.form.get(
-        "address_detail",
-        ""
-    ).strip()
-
-    note = request.form.get(
-        "note",
-        ""
-    ).strip()
+    note = request.form.get("note", "").strip()
 
 
     # =====================================================
     # HÌNH THỨC THANH TOÁN
+    #
+    # deposit = cọc
+    # full    = thanh toán toàn bộ
     # =====================================================
 
-    payment_type = request.form.get(
-        "payment_type",
-        "deposit"
-    ).strip()
+    payment_type = request.form.get("payment_type", "deposit").strip()
 
-
-    if payment_type not in (
-        "deposit",
-        "full"
-    ):
-
+    if payment_type not in ("deposit", "full"):
         payment_type = "deposit"
 
 
@@ -133,49 +72,23 @@ def submit():
     # =====================================================
 
     try:
-
-        quantity = int(
-            request.form.get(
-                "quantity",
-                1
-            )
-        )
-
+        quantity = int(request.form.get("quantity", 1))
     except (TypeError, ValueError):
-
-        return (
-            "Số lượng không hợp lệ",
-            400
-        )
-
+        return "Số lượng không hợp lệ", 400
 
     if quantity < 1 or quantity > 2:
-
         return """
         <!DOCTYPE html>
         <html lang="vi">
-
         <head>
             <meta charset="UTF-8">
             <title>Số lượng không hợp lệ</title>
         </head>
-
         <body>
-
-            <h2>
-                Mỗi đơn chỉ được đặt tối đa 2 sản phẩm
-            </h2>
-
-            <p>
-                Vui lòng chọn số lượng từ 1 đến 2.
-            </p>
-
-            <a href="/">
-                Quay lại trang chủ
-            </a>
-
+            <h2>Mỗi đơn chỉ được đặt tối đa 2 sản phẩm</h2>
+            <p>Vui lòng chọn số lượng từ 1 đến 2.</p>
+            <a href="/">Quay lại trang chủ</a>
         </body>
-
         </html>
         """, 400
 
@@ -186,7 +99,6 @@ def submit():
 
     conn = get_db()
     cursor = conn.cursor()
-
 
     try:
 
@@ -206,95 +118,52 @@ def submit():
                 image_url,
                 product_type,
                 active
-
             FROM products
-
             WHERE id=%s
             AND active=TRUE
-
             LIMIT 1
             """,
-            (
-                product_id,
-            )
+            (product_id,)
         )
-
 
         product = cursor.fetchone()
 
-
         if product is None:
+            return "Không tìm thấy sản phẩm", 404
 
-            return (
-                "Không tìm thấy sản phẩm",
-                404
-            )
-
-
-        product_name = (
-            product[1]
-        )
-
-        product_brand = (
-            product[2]
-        )
-
-        product_price = (
-            product[3]
-            or 0
-        )
-
-        product_deposit = (
-            product[4]
-            or 0
-        )
+        product_name = product[1]
+        product_brand = product[2]
+        product_price = product[3] or 0
+        product_deposit = product[4] or 0
 
 
         # =================================================
-        # SỐ TIỀN CẦN THANH TOÁN
+        # SỐ TIỀN THANH TOÁN BAN ĐẦU
         # =================================================
 
         if payment_type == "full":
-
-            payment_amount = (
-                product_price
-                * quantity
-            )
-
+            payment_amount = product_price * quantity
         else:
+            payment_amount = product_deposit * quantity
 
-            payment_amount = (
-                product_deposit
-                * quantity
-            )
+        requires_payment = payment_amount > 0
 
 
         # =================================================
-        # CÓ CẦN PAYOS KHÔNG
-        # =================================================
-
-        requires_payment = (
-            payment_amount > 0
-        )
-
-
-        # =================================================
-        # CHỐNG SPAM
+        # CHỐNG TẠO NHIỀU ĐƠN PAYOS CHƯA THANH TOÁN
         #
-        # CHỈ "CHƯA THANH TOÁN" MỚI KHÓA 15 PHÚT
+        # Chỉ "Chưa thanh toán" mới khóa việc tạo đơn mới.
         #
-        # "CHỜ XÁC NHẬN" CỌC 0Đ KHÔNG KHÓA
+        # Đơn cọc 0đ có trạng thái "Chờ xác nhận" nên khách
+        # vẫn có thể tiếp tục đặt đơn khác.
         # =================================================
 
-        order_token = request.cookies.get(
-            "order_token"
-        )
-
+        order_token = request.cookies.get("order_token")
         existing_order = None
 
 
         # =================================================
-        # KIỂM TRA THEO COOKIE
+        # KIỂM TRA ĐƠN CHƯA THANH TOÁN THEO COOKIE
         # =================================================
 
         if order_token:
@@ -307,57 +176,36 @@ def submit():
                     expires_at,
                     status,
                     order_token
-
                 FROM orders
-
                 WHERE order_token=%s
                 AND status=%s
-
                 ORDER BY id DESC
-
                 LIMIT 1
                 """,
-                (
-                    order_token,
-                    "Chưa thanh toán"
-                )
+                (order_token, "Chưa thanh toán")
             )
-
 
             candidate = cursor.fetchone()
 
-
             if candidate:
 
-                expires_at = normalize_expires_at(
-                    candidate[2]
-                )
+                expires_at = normalize_expires_at(candidate[2])
 
-
-                if is_order_expired(
-                    expires_at
-                ):
-
+                if is_order_expired(expires_at):
                     mark_order_expired(
                         cursor,
                         conn,
                         candidate[0]
                     )
-
                 else:
-
                     existing_order = candidate
 
 
         # =================================================
-        # KIỂM TRA THEO SĐT
+        # KIỂM TRA ĐƠN CHƯA THANH TOÁN THEO SĐT
         # =================================================
 
-        if (
-            existing_order is None
-            and
-            phone
-        ):
+        if existing_order is None and phone:
 
             cursor.execute(
                 """
@@ -367,78 +215,51 @@ def submit():
                     expires_at,
                     status,
                     order_token
-
                 FROM orders
-
                 WHERE phone=%s
                 AND status=%s
-
                 ORDER BY id DESC
-
                 LIMIT 1
                 """,
-                (
-                    phone,
-                    "Chưa thanh toán"
-                )
+                (phone, "Chưa thanh toán")
             )
-
 
             candidate = cursor.fetchone()
 
-
             if candidate:
 
-                expires_at = normalize_expires_at(
-                    candidate[2]
-                )
+                expires_at = normalize_expires_at(candidate[2])
 
-
-                if is_order_expired(
-                    expires_at
-                ):
-
+                if is_order_expired(expires_at):
                     mark_order_expired(
                         cursor,
                         conn,
                         candidate[0]
                     )
-
                 else:
-
                     existing_order = candidate
 
 
         # =================================================
         # ĐÃ CÓ ĐƠN PAYOS CÒN HẠN
+        #
+        # Không tạo đơn mới.
+        # Đưa khách trở lại link thanh toán của đơn cũ.
         # =================================================
 
         if existing_order:
 
-            old_order_code = (
-                existing_order[0]
-            )
-
-            old_payment_url = (
-                existing_order[1]
-            )
-
-            old_token = (
-                existing_order[4]
-            )
-
+            old_order_code = existing_order[0]
+            old_payment_url = existing_order[1]
+            old_token = existing_order[4]
 
             if old_payment_url:
 
                 response = make_response(
-                    redirect(
-                        old_payment_url
-                    )
+                    redirect(old_payment_url)
                 )
 
-
                 if old_token:
-
                     response.set_cookie(
                         "order_token",
                         old_token,
@@ -448,36 +269,20 @@ def submit():
                         secure=True
                     )
 
-
                 return response
-
 
             return f"""
             <!DOCTYPE html>
             <html lang="vi">
-
             <head>
                 <meta charset="UTF-8">
                 <title>Đơn đang xử lý</title>
             </head>
-
             <body>
-
-                <h2>
-                    Bạn đang có đơn chưa thanh toán
-                </h2>
-
-                <p>
-                    Mã đơn:
-                    <b>{old_order_code}</b>
-                </p>
-
-                <a href="/order-status">
-                    Theo dõi đơn hàng
-                </a>
-
+                <h2>Bạn đang có đơn chưa thanh toán</h2>
+                <p>Mã đơn: <b>{old_order_code}</b></p>
+                <a href="/order-status">Theo dõi đơn hàng</a>
             </body>
-
             </html>
             """, 400
 
@@ -492,7 +297,6 @@ def submit():
             quantity
         )
 
-
         if not stock_reserved:
 
             conn.rollback()
@@ -500,28 +304,15 @@ def submit():
             return """
             <!DOCTYPE html>
             <html lang="vi">
-
             <head>
                 <meta charset="UTF-8">
                 <title>Không đủ hàng</title>
             </head>
-
             <body>
-
-                <h2>
-                    Sản phẩm không còn đủ số lượng
-                </h2>
-
-                <p>
-                    Vui lòng chọn số lượng nhỏ hơn.
-                </p>
-
-                <a href="/">
-                    Quay lại trang chủ
-                </a>
-
+                <h2>Sản phẩm không còn đủ số lượng</h2>
+                <p>Vui lòng chọn số lượng nhỏ hơn.</p>
+                <a href="/">Quay lại trang chủ</a>
             </body>
-
             </html>
             """, 400
 
@@ -532,93 +323,61 @@ def submit():
 
         cursor.execute(
             """
-            SELECT
-                COALESCE(
-                    MAX(id),
-                    0
-                )
-
+            SELECT COALESCE(MAX(id), 0)
             FROM orders
             """
         )
 
-
-        last_id = (
-            cursor.fetchone()[0]
-        )
-
-
-        order_id = (
-            last_id + 1
-        )
-
-
-        order_code = (
-            f"TGM{order_id:03d}"
-        )
+        last_id = cursor.fetchone()[0]
+        order_id = last_id + 1
+        order_code = f"TGM{order_id:03d}"
 
 
         # =================================================
-        # TOKEN
+        # TOKEN THEO DÕI ĐƠN
         # =================================================
 
-        new_order_token = (
-            secrets.token_urlsafe(
-                32
-            )
-        )
+        new_order_token = secrets.token_urlsafe(32)
 
 
         # =================================================
-        # THỜI GIAN
+        # THỜI GIAN TẠO ĐƠN
         # =================================================
 
         created_time = get_now_vn()
-
-
-        created_at = created_time.strftime(
-            "%d/%m/%Y %H:%M:%S"
-        )
+        created_at = created_time.strftime("%d/%m/%Y %H:%M:%S")
 
 
         # =================================================
-        # TRẠNG THÁI + HẾT HẠN
+        # TRẠNG THÁI + THỜI HẠN THANH TOÁN
+        #
+        # Có tiền phải thanh toán:
+        # → Chưa thanh toán
+        # → PayOS có hạn 15 phút
+        #
+        # Cọc 0đ:
+        # → Chờ xác nhận
+        # → Không tạo PayOS
         # =================================================
 
         if requires_payment:
 
-            expires_time = (
-                created_time
-                + timedelta(
-                    minutes=15
-                )
-            )
-
-
-            expires_at_db = (
-                expires_time.replace(
-                    tzinfo=None
-                )
-            )
-
-
-            order_status = (
-                "Chưa thanh toán"
-            )
+            expires_time = created_time + timedelta(minutes=15)
+            expires_at_db = expires_time.replace(tzinfo=None)
+            order_status = "Chưa thanh toán"
 
         else:
 
             expires_time = None
-
             expires_at_db = None
-
-            order_status = (
-                "Chờ xác nhận"
-            )
+            order_status = "Chờ xác nhận"
 
 
         # =================================================
-        # INSERT ORDER
+        # TẠO ĐƠN TRONG DATABASE
+        #
+        # payment_url và payment_order_code ban đầu để NULL.
+        # Nếu cần PayOS sẽ cập nhật sau khi tạo link.
         # =================================================
 
         cursor.execute(
@@ -654,11 +413,11 @@ def submit():
                 expires_at,
 
                 payment_url,
-                order_token,
+                payment_order_code,
 
+                order_token,
                 stock_reserved
             )
-
             VALUES
             (
                 %s,
@@ -681,7 +440,7 @@ def submit():
 
                 %s,%s,
 
-                %s
+                %s,%s
             )
             """,
             (
@@ -714,25 +473,25 @@ def submit():
                 expires_at_db,
 
                 None,
-                new_order_token,
+                None,
 
+                new_order_token,
                 True
             )
         )
 
 
         # =================================================
-        # CỌC / THANH TOÁN = 0Đ
+        # ĐƠN CỌC / THANH TOÁN = 0Đ
         #
-        # KHÔNG PAYOS
-        # → COMMIT
-        # → TELEGRAM NGAY
+        # Không cần PayOS.
+        #
+        # Đơn được lưu ngay và Telegram báo cho Admin.
         # =================================================
 
         if not requires_payment:
 
             conn.commit()
-
 
             send_new_order_notification(
                 order_code=order_code,
@@ -745,13 +504,9 @@ def submit():
                 status="Chờ xác nhận"
             )
 
-
             response = make_response(
-                redirect(
-                    "/order-status"
-                )
+                redirect("/order-status")
             )
-
 
             response.set_cookie(
                 "order_token",
@@ -762,109 +517,92 @@ def submit():
                 secure=True
             )
 
-
             return response
 
 
         # =================================================
-        # CÓ TIỀN THANH TOÁN
+        # TẠO MÃ GIAO DỊCH PAYOS BAN ĐẦU
         #
-        # CHƯA GỬI TELEGRAM
+        # Mã này được lưu vào payment_order_code.
+        # Webhook sẽ dùng nó để xác định chính xác đây là
+        # giao dịch cọc / thanh toán full ban đầu.
         # =================================================
 
         payos_order_code = int(
-            time.time_ns()
-            // 1_000_000
+            time.time_ns() // 1_000_000
         )
 
+        base_url = request.url_root.rstrip("/")
 
-        base_url = (
-            request.url_root
-            .rstrip("/")
-        )
 
+        # =================================================
+        # DỮ LIỆU PAYOS
+        # =================================================
 
         payment_data = {
-
-            "orderCode":
-                payos_order_code,
-
-            "amount":
-                payment_amount,
-
-            "description":
-                order_code,
-
-            "returnUrl":
-                (
-                    base_url
-                    + "/payment/success"
-                ),
-
-            "cancelUrl":
-                (
-                    base_url
-                    + "/payment/cancel"
-                ),
-
-            "expiredAt":
-                int(
-                    expires_time.timestamp()
-                )
+            "orderCode": payos_order_code,
+            "amount": payment_amount,
+            "description": order_code,
+            "returnUrl": base_url + "/payment/success",
+            "cancelUrl": base_url + "/payment/cancel",
+            "expiredAt": int(expires_time.timestamp())
         }
 
 
         # =================================================
-        # TẠO LINK PAYOS
+        # TẠO LINK THANH TOÁN PAYOS
         # =================================================
 
-        payment_link = (
-            payos.payment_requests.create(
-                payment_data
-            )
+        payment_link = payos.payment_requests.create(
+            payment_data
         )
 
-
-        payment_url = (
-            payment_link.checkout_url
-        )
+        payment_url = payment_link.checkout_url
 
 
         # =================================================
-        # LƯU LINK PAYOS
+        # LƯU THÔNG TIN PAYOS BAN ĐẦU
+        #
+        # payment_url:
+        # → link thanh toán
+        #
+        # payment_order_code:
+        # → mã giao dịch PayOS dùng để webhook nhận diện
         # =================================================
 
         cursor.execute(
             """
             UPDATE orders
-
-            SET payment_url=%s
-
+            SET
+                payment_url=%s,
+                payment_order_code=%s
             WHERE order_code=%s
             """,
             (
                 payment_url,
+                payos_order_code,
                 order_code
             )
         )
-
 
         conn.commit()
 
 
         # =================================================
-        # KHÔNG GỬI TELEGRAM Ở ĐÂY
+        # KHÔNG GỬI TELEGRAM TẠI ĐÂY
         #
-        # Đợi webhook PayOS xác nhận tiền vào.
+        # Với đơn có tiền, Telegram chỉ được gửi sau khi
+        # webhook PayOS xác nhận thanh toán thành công.
         # =================================================
 
 
-        response = make_response(
-            redirect(
-                payment_url
-            )
-        )
+        # =================================================
+        # CHUYỂN KHÁCH SANG PAYOS
+        # =================================================
 
+        response = make_response(
+            redirect(payment_url)
+        )
 
         response.set_cookie(
             "order_token",
@@ -875,14 +613,12 @@ def submit():
             secure=True
         )
 
-
         return response
 
 
     except Exception:
 
         conn.rollback()
-
         raise
 
 
