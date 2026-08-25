@@ -64,7 +64,7 @@ def webhook():
         # TGM001-REM = thanh toán phần còn lại
         # =================================================
 
-        is_remaining_payment = description.endswith("-REM")
+        is_remaining_payment = description.endswith("REM")
 
         if is_remaining_payment:
             order_code = description[:-4]
