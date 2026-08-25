@@ -1,12 +1,4 @@
-from flask import (
-    Blueprint,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    session
-)
-
+from flask import Blueprint, render_template, request, redirect, url_for, session
 from psycopg2.extras import RealDictCursor
 
 from database import get_db
@@ -17,25 +9,36 @@ from services.order_service import (
     mark_order_expired
 )
 
-from services.stock_service import (
-    release_stock
-)
+from services.stock_service import release_stock
 
 
-admin_orders_bp = Blueprint(
-    "admin_orders",
-    __name__
-)
+admin_orders_bp = Blueprint("admin_orders", __name__)
 
 
 # =========================================================
 # TRẠNG THÁI HỢP LỆ
+#
+# Luồng Pre-order có cọc:
+#
+# Đã cọc
+#     ↓
+# Chờ thanh toán phần còn lại
+#     ↓
+# Đã thanh toán đủ
+#     ↓
+# Đang chuẩn bị hàng
+#     ↓
+# Đã gửi hàng
+#     ↓
+# Hoàn thành
 # =========================================================
 
 ALLOWED_STATUSES = (
     "Chờ xác nhận",
     "Chưa thanh toán",
     "Đã cọc",
+    "Chờ thanh toán phần còn lại",
+    "Đã thanh toán đủ",
     "Đã chuyển khoản full",
     "Đang chuẩn bị hàng",
     "Đã gửi hàng",
@@ -48,13 +51,20 @@ ALLOWED_STATUSES = (
 # =========================================================
 # TRẠNG THÁI ĐÃ XÁC NHẬN
 #
-# Khi vào các trạng thái này:
+# Khi đơn đã vào các trạng thái này:
+#
 # - hàng đã được trừ từ lúc tạo đơn
-# - không được hoàn kho khi xóa lịch sử
+# - stock_reserved phải là FALSE
+# - không được hoàn kho khi chỉ xóa lịch sử đơn
+#
+# "Chờ thanh toán phần còn lại" cũng là đơn đã cọc,
+# vì vậy tuyệt đối không coi đây là đơn chưa thanh toán.
 # =========================================================
 
 CONFIRMED_STATUSES = (
     "Đã cọc",
+    "Chờ thanh toán phần còn lại",
+    "Đã thanh toán đủ",
     "Đã chuyển khoản full",
     "Đang chuẩn bị hàng",
     "Đã gửi hàng",
@@ -75,7 +85,9 @@ CANCEL_STATUSES = (
 # =========================================================
 # TRẠNG THÁI ĐANG GIỮ HÀNG
 #
-# stock_reserved có thể vẫn TRUE
+# Chỉ áp dụng cho giai đoạn trước khi đơn được xác nhận.
+#
+# stock_reserved có thể vẫn TRUE.
 # =========================================================
 
 RESERVED_STATUSES = (
@@ -88,72 +100,69 @@ RESERVED_STATUSES = (
 # CHI TIẾT ĐƠN
 # =========================================================
 
-@admin_orders_bp.route(
-    "/admin/order/<int:id>"
-)
+@admin_orders_bp.route("/admin/order/<int:id>")
 def order_detail(id):
 
+    # =====================================================
+    # KIỂM TRA ĐĂNG NHẬP ADMIN
+    # =====================================================
+
     if not session.get("admin"):
+        return redirect(url_for("auth.login"))
 
-        return redirect(
-            url_for(
-                "auth.login"
-            )
-        )
 
+    # =====================================================
+    # DATABASE
+    # =====================================================
 
     conn = get_db()
-
-    cursor = conn.cursor(
-        cursor_factory=RealDictCursor
-    )
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
 
     try:
 
+        # =================================================
+        # LẤY ĐƠN HÀNG
+        # =================================================
+
         cursor.execute(
             """
             SELECT *
-
             FROM orders
-
             WHERE id=%s
-
             LIMIT 1
             """,
-            (
-                id,
-            )
+            (id,)
         )
-
 
         order = cursor.fetchone()
 
 
         if order is None:
-
-            return (
-                "Không tìm thấy đơn hàng",
-                404
-            )
+            return "Không tìm thấy đơn hàng", 404
 
 
         # =================================================
-        # CHỈ "CHƯA THANH TOÁN" MỚI CÓ HẠN 15 PHÚT
+        # KIỂM TRA HẠN THANH TOÁN BAN ĐẦU
         #
-        # "Chờ xác nhận" không tự hết hạn.
+        # Chỉ trạng thái "Chưa thanh toán" mới sử dụng
+        # expires_at của lần thanh toán đầu tiên.
+        #
+        # Không áp dụng cơ chế này cho:
+        #
+        # - Đã cọc
+        # - Chờ thanh toán phần còn lại
+        # - Đã thanh toán đủ
+        #
+        # Link thanh toán phần còn lại hết hạn sẽ được
+        # xử lý riêng và KHÔNG làm đơn bị hủy.
         # =================================================
 
         if order["status"] == "Chưa thanh toán":
 
-            expires_at = normalize_expires_at(
-                order["expires_at"]
-            )
+            expires_at = normalize_expires_at(order["expires_at"])
 
-
-            if is_order_expired(
-                expires_at
-            ):
+            if is_order_expired(expires_at):
 
                 mark_order_expired(
                     cursor,
@@ -161,25 +170,26 @@ def order_detail(id):
                     order["order_code"]
                 )
 
+                # =========================================
+                # ĐỌC LẠI ĐƠN SAU KHI UPDATE
+                # =========================================
 
                 cursor.execute(
                     """
                     SELECT *
-
                     FROM orders
-
                     WHERE id=%s
-
                     LIMIT 1
                     """,
-                    (
-                        id,
-                    )
+                    (id,)
                 )
-
 
                 order = cursor.fetchone()
 
+
+        # =================================================
+        # HIỂN THỊ CHI TIẾT
+        # =================================================
 
         return render_template(
             "order_detail.html",
@@ -188,7 +198,6 @@ def order_detail(id):
 
 
     finally:
-
         cursor.close()
         conn.close()
 
@@ -196,8 +205,21 @@ def order_detail(id):
 # =========================================================
 # CẬP NHẬT ĐƠN
 #
-# - trạng thái
-# - mã vận đơn
+# Admin có thể:
+#
+# - đổi trạng thái
+# - nhập / sửa mã vận đơn
+#
+# Đối với Pre-order:
+#
+# Admin đổi:
+#
+# Đã cọc
+#     ↓
+# Chờ thanh toán phần còn lại
+#
+# thì khách sẽ được phép thanh toán số tiền còn lại
+# ở trang Theo dõi đơn hàng.
 # =========================================================
 
 @admin_orders_bp.route(
@@ -206,51 +228,45 @@ def order_detail(id):
 )
 def update_order(id):
 
+    # =====================================================
+    # KIỂM TRA ĐĂNG NHẬP ADMIN
+    # =====================================================
+
     if not session.get("admin"):
-
-        return redirect(
-            url_for(
-                "auth.login"
-            )
-        )
+        return redirect(url_for("auth.login"))
 
 
-    new_status = request.form.get(
-        "status",
-        ""
-    ).strip()
+    # =====================================================
+    # DỮ LIỆU FORM
+    # =====================================================
 
+    new_status = request.form.get("status", "").strip()
 
     if new_status not in ALLOWED_STATUSES:
-
-        return (
-            "Trạng thái không hợp lệ",
-            400
-        )
+        return "Trạng thái không hợp lệ", 400
 
 
-    tracking_code = request.form.get(
-        "tracking_code",
-        ""
-    ).strip()
-
+    tracking_code = request.form.get("tracking_code", "").strip()
 
     if not tracking_code:
-
         tracking_code = None
 
 
-    conn = get_db()
+    # =====================================================
+    # DATABASE
+    # =====================================================
 
-    cursor = conn.cursor(
-        cursor_factory=RealDictCursor
-    )
+    conn = get_db()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
 
     try:
 
         # =================================================
-        # KHÓA DÒNG
+        # KHÓA ĐƠN TRONG LÚC CẬP NHẬT
+        #
+        # FOR UPDATE tránh hai thao tác đồng thời làm sai
+        # trạng thái hoặc tồn kho.
         # =================================================
 
         cursor.execute(
@@ -269,69 +285,45 @@ def update_order(id):
             WHERE id=%s
 
             LIMIT 1
-
             FOR UPDATE
             """,
-            (
-                id,
-            )
+            (id,)
         )
-
 
         order = cursor.fetchone()
 
 
         if order is None:
-
-            return (
-                "Không tìm thấy đơn hàng",
-                404
-            )
+            return "Không tìm thấy đơn hàng", 404
 
 
-        old_status = (
-            order["status"]
-        )
-
-        product_id = (
-            order["product_id"]
-        )
-
-        quantity = (
-            order["quantity"]
-        )
-
-        stock_reserved = (
-            order["stock_reserved"]
-        )
+        old_status = order["status"]
+        product_id = order["product_id"]
+        quantity = order["quantity"]
+        stock_reserved = order["stock_reserved"]
 
 
         # =================================================
-        # ĐƠN ĐANG GIỮ HÀNG
-        # →
-        # HỦY / HẾT HẠN
-        #
-        # HOÀN KHO
+        # ĐƠN ĐANG GIỮ HÀNG → HỦY / HẾT HẠN
         #
         # Áp dụng cho:
+        #
         # - Chờ xác nhận
         # - Chưa thanh toán
+        #
+        # Hàng đã bị trừ khi tạo đơn nên phải hoàn kho.
         # =================================================
 
         if (
             old_status in RESERVED_STATUSES
-            and
-            new_status in CANCEL_STATUSES
+            and new_status in CANCEL_STATUSES
         ):
 
             if (
                 stock_reserved
-                and
-                product_id is not None
-                and
-                quantity is not None
-                and
-                quantity > 0
+                and product_id is not None
+                and quantity is not None
+                and quantity > 0
             ):
 
                 released = release_stock(
@@ -340,14 +332,10 @@ def update_order(id):
                     quantity
                 )
 
-
                 if not released:
-
                     raise RuntimeError(
                         "Không thể hoàn tồn kho cho đơn "
-                        + str(
-                            order["order_code"]
-                        )
+                        + str(order["order_code"])
                     )
 
 
@@ -371,22 +359,20 @@ def update_order(id):
 
 
         # =================================================
-        # ĐƠN ĐANG GIỮ HÀNG
-        # →
-        # ĐÃ XÁC NHẬN
+        # ĐƠN ĐANG GIỮ HÀNG → ĐÃ XÁC NHẬN
         #
-        # KHÔNG TRỪ THÊM HÀNG
-        # CHỈ BỎ stock_reserved
+        # Hàng đã được trừ khi tạo đơn.
         #
-        # Áp dụng cho cả:
-        # - Chờ xác nhận
-        # - Chưa thanh toán
+        # Vì vậy:
+        #
+        # - KHÔNG trừ kho lần nữa
+        # - KHÔNG hoàn kho
+        # - chỉ bỏ stock_reserved
         # =================================================
 
         elif (
             old_status in RESERVED_STATUSES
-            and
-            new_status in CONFIRMED_STATUSES
+            and new_status in CONFIRMED_STATUSES
         ):
 
             cursor.execute(
@@ -409,8 +395,19 @@ def update_order(id):
 
 
         # =================================================
-        # ĐẢM BẢO ĐƠN ĐÃ XÁC NHẬN
-        # KHÔNG CÒN GIỮ STOCK
+        # ĐƠN ĐÃ XÁC NHẬN
+        #
+        # Bao gồm:
+        #
+        # - Đã cọc
+        # - Chờ thanh toán phần còn lại
+        # - Đã thanh toán đủ
+        # - Đã chuyển khoản full
+        # - Đang chuẩn bị hàng
+        # - Đã gửi hàng
+        # - Hoàn thành
+        #
+        # Luôn đảm bảo stock_reserved = FALSE.
         # =================================================
 
         elif new_status in CONFIRMED_STATUSES:
@@ -438,6 +435,7 @@ def update_order(id):
         # CÁC TRƯỜNG HỢP KHÁC
         #
         # Ví dụ:
+        #
         # - chỉ sửa mã vận đơn
         # - đổi Chờ xác nhận ↔ Chưa thanh toán
         # - đổi giữa các trạng thái hủy
@@ -463,21 +461,27 @@ def update_order(id):
             )
 
 
+        # =================================================
+        # LƯU THAY ĐỔI
+        # =================================================
+
         conn.commit()
 
 
     except Exception:
 
         conn.rollback()
-
         raise
 
 
     finally:
-
         cursor.close()
         conn.close()
 
+
+    # =====================================================
+    # QUAY LẠI CHI TIẾT ĐƠN
+    # =====================================================
 
     return redirect(
         url_for(
@@ -489,6 +493,12 @@ def update_order(id):
 
 # =========================================================
 # XÓA ĐƠN
+#
+# Nếu đơn vẫn đang giữ hàng:
+# → hoàn kho trước khi xóa.
+#
+# Nếu đơn đã được xác nhận:
+# → chỉ xóa lịch sử, KHÔNG hoàn kho.
 # =========================================================
 
 @admin_orders_bp.route(
@@ -497,20 +507,20 @@ def update_order(id):
 )
 def delete_order(id):
 
+    # =====================================================
+    # KIỂM TRA ĐĂNG NHẬP ADMIN
+    # =====================================================
+
     if not session.get("admin"):
+        return redirect(url_for("auth.login"))
 
-        return redirect(
-            url_for(
-                "auth.login"
-            )
-        )
 
+    # =====================================================
+    # DATABASE
+    # =====================================================
 
     conn = get_db()
-
-    cursor = conn.cursor(
-        cursor_factory=RealDictCursor
-    )
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
 
     try:
@@ -531,14 +541,10 @@ def delete_order(id):
             WHERE id=%s
 
             LIMIT 1
-
             FOR UPDATE
             """,
-            (
-                id,
-            )
+            (id,)
         )
-
 
         order = cursor.fetchone()
 
@@ -550,14 +556,10 @@ def delete_order(id):
 
         if (
             order
-            and
-            order["stock_reserved"]
-            and
-            order["product_id"] is not None
-            and
-            order["quantity"] is not None
-            and
-            order["quantity"] > 0
+            and order["stock_reserved"]
+            and order["product_id"] is not None
+            and order["quantity"] is not None
+            and order["quantity"] > 0
         ):
 
             released = release_stock(
@@ -566,9 +568,7 @@ def delete_order(id):
                 order["quantity"]
             )
 
-
             if not released:
-
                 raise RuntimeError(
                     "Không thể hoàn tồn kho trước khi xóa đơn"
                 )
@@ -581,14 +581,10 @@ def delete_order(id):
         cursor.execute(
             """
             DELETE FROM orders
-
             WHERE id=%s
             """,
-            (
-                id,
-            )
+            (id,)
         )
-
 
         conn.commit()
 
@@ -596,18 +592,16 @@ def delete_order(id):
     except Exception:
 
         conn.rollback()
-
         raise
 
 
     finally:
-
         cursor.close()
         conn.close()
 
 
-    return redirect(
-        url_for(
-            "admin.admin"
-        )
-    )
+    # =====================================================
+    # QUAY LẠI DANH SÁCH ĐƠN
+    # =====================================================
+
+    return redirect(url_for("admin.admin"))
