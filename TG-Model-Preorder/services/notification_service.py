@@ -7,43 +7,25 @@ import urllib.request
 # TELEGRAM CONFIG
 # =========================================================
 
-TELEGRAM_BOT_TOKEN = os.environ.get(
-    "TELEGRAM_BOT_TOKEN",
-    ""
-)
-
-TELEGRAM_CHAT_ID = os.environ.get(
-    "TELEGRAM_CHAT_ID",
-    ""
-)
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 
 # =========================================================
 # GỬI TELEGRAM
+#
+# Hàm chung dùng để gửi mọi thông báo Telegram.
+#
+# Nếu chưa cấu hình Telegram hoặc Telegram bị lỗi:
+# - chỉ ghi log
+# - không làm lỗi quá trình đặt / thanh toán đơn hàng
 # =========================================================
 
-def send_telegram_message(
-    message
-):
+def send_telegram_message(message):
 
-    # =====================================================
-    # CHƯA CẤU HÌNH
-    #
-    # Không làm web lỗi nếu thiếu biến môi trường.
-    # =====================================================
-
-    if (
-        not TELEGRAM_BOT_TOKEN
-        or
-        not TELEGRAM_CHAT_ID
-    ):
-
-        print(
-            "Telegram notification chưa được cấu hình"
-        )
-
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("Telegram notification chưa được cấu hình")
         return False
-
 
     try:
 
@@ -53,19 +35,12 @@ def send_telegram_message(
             + "/sendMessage"
         )
 
-
         data = urllib.parse.urlencode(
             {
-                "chat_id":
-                    TELEGRAM_CHAT_ID,
-
-                "text":
-                    message
+                "chat_id": TELEGRAM_CHAT_ID,
+                "text": message
             }
-        ).encode(
-            "utf-8"
-        )
-
+        ).encode("utf-8")
 
         request = urllib.request.Request(
             url,
@@ -73,36 +48,26 @@ def send_telegram_message(
             method="POST"
         )
 
-
-        with urllib.request.urlopen(
-            request,
-            timeout=10
-        ) as response:
-
-            return (
-                response.status
-                == 200
-            )
-
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return response.status == 200
 
     except Exception as error:
 
-        # =================================================
-        # TELEGRAM LỖI
-        #
-        # Không được làm lỗi quá trình đặt hàng.
-        # =================================================
-
-        print(
-            "LỖI GỬI TELEGRAM:",
-            error
-        )
-
+        print("LỖI GỬI TELEGRAM:", error)
         return False
 
 
 # =========================================================
-# THÔNG BÁO ĐƠN MỚI
+# THÔNG BÁO ĐƠN HÀNG / THANH TOÁN
+#
+# payment_type:
+#
+# deposit   = khách thanh toán tiền cọc
+# full      = khách thanh toán toàn bộ ngay từ đầu
+# remaining = khách thanh toán phần còn lại của Pre-order
+#
+# Đơn cọc 0đ vẫn sử dụng deposit và có thể gửi thông báo
+# với payment_amount = 0.
 # =========================================================
 
 def send_new_order_notification(
@@ -116,18 +81,46 @@ def send_new_order_notification(
     status
 ):
 
-    if payment_type == "full":
+    # =====================================================
+    # THANH TOÁN PHẦN CÒN LẠI
+    # =====================================================
 
-        payment_text = (
-            "Chuyển khoản full"
+    if payment_type == "remaining":
+
+        message = (
+            "💰 KHÁCH ĐÃ THANH TOÁN PHẦN CÒN LẠI\n\n"
+            f"Mã đơn: {order_code}\n"
+            f"Khách: {fullname}\n"
+            f"SĐT: {phone}\n\n"
+            f"Sản phẩm: {product_name}\n"
+            f"Số lượng: {quantity}\n\n"
+            f"Số tiền thanh toán thêm: {payment_amount:,} đ\n\n"
+            f"Trạng thái: {status}"
         )
+
+        return send_telegram_message(message)
+
+
+    # =====================================================
+    # ĐƠN THANH TOÁN FULL
+    # =====================================================
+
+    if payment_type == "full":
+        payment_text = "Chuyển khoản full"
+
+    # =====================================================
+    # ĐƠN CỌC
+    #
+    # Bao gồm cả trường hợp tiền cọc = 0đ.
+    # =====================================================
 
     else:
+        payment_text = "Cọc một phần"
 
-        payment_text = (
-            "Cọc một phần"
-        )
 
+    # =====================================================
+    # THÔNG BÁO ĐƠN MỚI
+    # =====================================================
 
     message = (
         "🔔 CÓ ĐƠN HÀNG MỚI\n\n"
@@ -141,7 +134,4 @@ def send_new_order_notification(
         f"Trạng thái: {status}"
     )
 
-
-    return send_telegram_message(
-        message
-    )
+    return send_telegram_message(message)
