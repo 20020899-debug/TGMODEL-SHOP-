@@ -20,7 +20,6 @@ remaining_payment_bp = Blueprint("remaining_payment", __name__)
 
 # =========================================================
 # THANH TOÁN PHẦN CÒN LẠI CỦA PRE-ORDER
-#
 # Chỉ áp dụng khi:
 # - đơn sử dụng hình thức cọc
 # - trạng thái = "Chờ thanh toán phần còn lại"
