@@ -3,15 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        Theo dõi đơn hàng - TG MODEL SHOP
-    </title>
+    <title>Theo dõi đơn hàng - TG MODEL SHOP</title>
 
     <link
         rel="stylesheet"
@@ -19,9 +13,7 @@
     >
 </head>
 
-
 <body>
-
 
 <div class="tracking-container">
 
@@ -31,15 +23,8 @@
          ================================================= -->
 
     <div class="tracking-header">
-
-        <h1>
-            Theo dõi đơn hàng
-        </h1>
-
-        <p>
-            TG MODEL SHOP HẢI PHÒNG
-        </p>
-
+        <h1>Theo dõi đơn hàng</h1>
+        <p>TG MODEL SHOP HẢI PHÒNG</p>
     </div>
 
 
@@ -49,25 +34,16 @@
 
     <div class="lookup-box">
 
-        <h2>
-            Tra cứu đơn hàng
-        </h2>
+        <h2>Tra cứu đơn hàng</h2>
 
         <p class="lookup-description">
             Nhập mã đơn hàng và số điện thoại đã dùng khi đặt hàng.
         </p>
 
-
-        <form
-            method="POST"
-            action="/order-status"
-        >
+        <form method="POST" action="/order-status">
 
             <div class="form-group">
-
-                <label for="order-code">
-                    Mã đơn hàng
-                </label>
+                <label for="order-code">Mã đơn hàng</label>
 
                 <input
                     type="text"
@@ -77,15 +53,10 @@
                     autocomplete="off"
                     required
                 >
-
             </div>
 
-
             <div class="form-group">
-
-                <label for="phone">
-                    Số điện thoại
-                </label>
+                <label for="phone">Số điện thoại</label>
 
                 <input
                     type="tel"
@@ -95,14 +66,9 @@
                     autocomplete="tel"
                     required
                 >
-
             </div>
 
-
-            <button
-                type="submit"
-                class="lookup-button"
-            >
+            <button type="submit" class="lookup-button">
                 TRA CỨU ĐƠN HÀNG
             </button>
 
@@ -140,17 +106,9 @@
             <div class="order-title">
 
                 <div>
-
-                    <span class="order-label">
-                        Mã đơn hàng
-                    </span>
-
-                    <h2>
-                        {{ order["order_code"] }}
-                    </h2>
-
+                    <span class="order-label">Mã đơn hàng</span>
+                    <h2>{{ order["order_code"] }}</h2>
                 </div>
-
 
                 <div class="current-status">
                     {{ order["status"] }}
@@ -165,47 +123,21 @@
 
             <div class="section">
 
-                <h3>
-                    Sản phẩm
-                </h3>
-
+                <h3>Sản phẩm</h3>
 
                 <div class="info-row">
-
-                    <span>
-                        Sản phẩm
-                    </span>
-
-                    <strong>
-                        {{ order["product_name"] }}
-                    </strong>
-
+                    <span>Sản phẩm</span>
+                    <strong>{{ order["product_name"] }}</strong>
                 </div>
 
-
                 <div class="info-row">
-
-                    <span>
-                        Người bán
-                    </span>
-
-                    <strong>
-                        {{ order["product_brand"] or "--" }}
-                    </strong>
-
+                    <span>Người bán</span>
+                    <strong>{{ order["product_brand"] or "--" }}</strong>
                 </div>
 
-
                 <div class="info-row">
-
-                    <span>
-                        Số lượng
-                    </span>
-
-                    <strong>
-                        {{ order["quantity"] or 1 }}
-                    </strong>
-
+                    <span>Số lượng</span>
+                    <strong>{{ order["quantity"] or 1 }}</strong>
                 </div>
 
             </div>
@@ -217,16 +149,14 @@
 
             <div class="section">
 
-                <h3>
-                    Thanh toán
-                </h3>
+                <h3>Thanh toán</h3>
 
+
+                <!-- HÌNH THỨC THANH TOÁN -->
 
                 <div class="info-row">
 
-                    <span>
-                        Hình thức
-                    </span>
+                    <span>Hình thức</span>
 
                     <strong>
 
@@ -249,15 +179,11 @@
                 </div>
 
 
-                <!-- =====================================
-                     TỔNG GIÁ TRỊ ĐƠN
-                     ===================================== -->
+                <!-- TỔNG GIÁ TRỊ ĐƠN -->
 
                 <div class="info-row">
 
-                    <span>
-                        Tổng giá trị đơn
-                    </span>
+                    <span>Tổng giá trị đơn</span>
 
                     <strong class="money">
                         {{ "{:,}".format(total_amount) }} đ
@@ -274,9 +200,7 @@
 
                     <div class="info-row">
 
-                        <span>
-                            Số tiền thanh toán
-                        </span>
+                        <span>Số tiền thanh toán</span>
 
                         <strong class="money">
                             {{ "{:,}".format(total_amount) }} đ
@@ -293,9 +217,7 @@
 
                     <div class="info-row">
 
-                        <span>
-                            Tiền cọc
-                        </span>
+                        <span>Tiền cọc</span>
 
                         <strong class="money">
                             {{ "{:,}".format(
@@ -307,10 +229,9 @@
                     </div>
 
 
-                    <!-- ================================
-                         CHỈ HIỂN THỊ SỐ ĐÃ THANH TOÁN
-                         SAU KHI ĐƠN ĐÃ ĐƯỢC XÁC NHẬN
-                         ================================ -->
+                    <!-- =================================
+                         SỐ TIỀN ĐÃ THANH TOÁN
+                         ================================= -->
 
                     {% if order["status"] in [
                         "Đã cọc",
@@ -323,9 +244,7 @@
 
                         <div class="info-row">
 
-                            <span>
-                                Đã thanh toán
-                            </span>
+                            <span>Đã thanh toán</span>
 
                             <strong class="money">
                                 {{ "{:,}".format(paid_amount) }} đ
@@ -336,9 +255,9 @@
                     {% endif %}
 
 
-                    <!-- ================================
+                    <!-- =================================
                          SỐ TIỀN CÒN LẠI
-                         ================================ -->
+                         ================================= -->
 
                     {% if order["status"] in [
                         "Đã cọc",
@@ -347,9 +266,7 @@
 
                         <div class="info-row">
 
-                            <span>
-                                Còn lại
-                            </span>
+                            <span>Còn lại</span>
 
                             <strong class="money">
                                 {{ "{:,}".format(remaining_amount) }} đ
@@ -366,24 +283,28 @@
 
             <!-- =================================================
                  THANH TOÁN PHẦN CÒN LẠI
-                 
-                 Chỉ xuất hiện khi Admin xác nhận hàng đã về
-                 bằng trạng thái "Chờ thanh toán phần còn lại".
-                 
-                 Route PayOS sẽ được nối ở bước tiếp theo.
+
+                 Chỉ xuất hiện khi:
+                 - đơn là đơn cọc
+                 - Admin chuyển sang:
+                   "Chờ thanh toán phần còn lại"
+                 - vẫn còn tiền cần thanh toán
+
+                 Khi khách bấm nút:
+                 → remaining_payment.py
+                 → tạo / lấy lại link PayOS
+                 → chuyển khách sang PayOS
                  ================================================= -->
 
             {% if (
-                order["status"] == "Chờ thanh toán phần còn lại"
+                order["payment_type"] == "deposit"
+                and order["status"] == "Chờ thanh toán phần còn lại"
                 and remaining_amount > 0
             ) %}
 
                 <div class="section remaining-payment-section">
 
-                    <h3>
-                        📦 Hàng đã về
-                    </h3>
-
+                    <h3>📦 Hàng đã về</h3>
 
                     <p>
                         Sản phẩm Pre-order của quý khách đã về.
@@ -393,9 +314,7 @@
 
                     <div class="info-row">
 
-                        <span>
-                            Tổng giá trị đơn
-                        </span>
+                        <span>Tổng giá trị đơn</span>
 
                         <strong class="money">
                             {{ "{:,}".format(total_amount) }} đ
@@ -406,9 +325,7 @@
 
                     <div class="info-row">
 
-                        <span>
-                            Đã thanh toán
-                        </span>
+                        <span>Đã thanh toán</span>
 
                         <strong class="money">
                             {{ "{:,}".format(paid_amount) }} đ
@@ -419,9 +336,7 @@
 
                     <div class="info-row">
 
-                        <span>
-                            Cần thanh toán
-                        </span>
+                        <span>Cần thanh toán</span>
 
                         <strong class="money remaining-money">
                             {{ "{:,}".format(remaining_amount) }} đ
@@ -431,19 +346,25 @@
 
 
                     <!-- =====================================
-                         NÚT PAYOS
-                         
-                         Hiện chưa có route xử lý nên tạm thời
-                         chưa cho gửi request.
+                         NÚT THANH TOÁN PAYOS
                          ===================================== -->
 
-                    <button
-                        type="button"
-                        class="remaining-payment-button"
-                        disabled
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'remaining_payment.pay_remaining',
+                            order_id=order['id']
+                        ) }}"
                     >
-                        THANH TOÁN PHẦN CÒN LẠI
-                    </button>
+
+                        <button
+                            type="submit"
+                            class="remaining-payment-button"
+                        >
+                            THANH TOÁN PHẦN CÒN LẠI
+                        </button>
+
+                    </form>
 
                 </div>
 
@@ -456,10 +377,7 @@
 
             <div class="section">
 
-                <h3>
-                    Trạng thái đơn hàng
-                </h3>
-
+                <h3>Trạng thái đơn hàng</h3>
 
                 <div class="status-box">
 
@@ -472,9 +390,7 @@
                         </strong>
 
 
-                        <!-- =============================
-                             CHỜ XÁC NHẬN
-                             ============================= -->
+                        <!-- CHỜ XÁC NHẬN -->
 
                         {% if order["status"] == "Chờ xác nhận" %}
 
@@ -483,9 +399,7 @@
                             </p>
 
 
-                        <!-- =============================
-                             CHƯA THANH TOÁN
-                             ============================= -->
+                        <!-- CHƯA THANH TOÁN -->
 
                         {% elif order["status"] == "Chưa thanh toán" %}
 
@@ -494,31 +408,27 @@
                             </p>
 
 
-                        <!-- =============================
-                             ĐÃ CỌC
-                             ============================= -->
+                        <!-- ĐÃ CỌC -->
 
                         {% elif order["status"] == "Đã cọc" %}
 
                             <p>
-                                Shop đã nhận được tiền cọc. Vui lòng chờ thông báo khi hàng về.
+                                Shop đã nhận được tiền cọc.
+                                Vui lòng chờ thông báo khi hàng về.
                             </p>
 
 
-                        <!-- =============================
-                             CHỜ THANH TOÁN PHẦN CÒN LẠI
-                             ============================= -->
+                        <!-- CHỜ THANH TOÁN PHẦN CÒN LẠI -->
 
                         {% elif order["status"] == "Chờ thanh toán phần còn lại" %}
 
                             <p>
-                                Hàng đã về. Vui lòng thanh toán số tiền còn lại để Shop chuẩn bị giao hàng.
+                                Hàng đã về. Vui lòng thanh toán số tiền còn lại
+                                để Shop chuẩn bị giao hàng.
                             </p>
 
 
-                        <!-- =============================
-                             ĐÃ THANH TOÁN ĐỦ
-                             ============================= -->
+                        <!-- ĐÃ THANH TOÁN ĐỦ -->
 
                         {% elif order["status"] == "Đã thanh toán đủ" %}
 
@@ -527,9 +437,7 @@
                             </p>
 
 
-                        <!-- =============================
-                             ĐÃ CHUYỂN KHOẢN FULL
-                             ============================= -->
+                        <!-- ĐÃ CHUYỂN KHOẢN FULL -->
 
                         {% elif order["status"] == "Đã chuyển khoản full" %}
 
@@ -538,9 +446,7 @@
                             </p>
 
 
-                        <!-- =============================
-                             CHUẨN BỊ HÀNG
-                             ============================= -->
+                        <!-- ĐANG CHUẨN BỊ HÀNG -->
 
                         {% elif order["status"] == "Đang chuẩn bị hàng" %}
 
@@ -549,9 +455,7 @@
                             </p>
 
 
-                        <!-- =============================
-                             ĐÃ GỬI HÀNG
-                             ============================= -->
+                        <!-- ĐÃ GỬI HÀNG -->
 
                         {% elif order["status"] == "Đã gửi hàng" %}
 
@@ -560,9 +464,7 @@
                             </p>
 
 
-                        <!-- =============================
-                             HOÀN THÀNH
-                             ============================= -->
+                        <!-- HOÀN THÀNH -->
 
                         {% elif order["status"] == "Hoàn thành" %}
 
@@ -571,9 +473,7 @@
                             </p>
 
 
-                        <!-- =============================
-                             ĐÃ HỦY
-                             ============================= -->
+                        <!-- ĐÃ HỦY -->
 
                         {% elif order["status"] == "Đã hủy" %}
 
@@ -582,9 +482,7 @@
                             </p>
 
 
-                        <!-- =============================
-                             HẾT HẠN
-                             ============================= -->
+                        <!-- HẾT HẠN THANH TOÁN -->
 
                         {% elif order["status"] == "Hết hạn thanh toán" %}
 
@@ -593,9 +491,7 @@
                             </p>
 
 
-                        <!-- =============================
-                             TRẠNG THÁI KHÁC
-                             ============================= -->
+                        <!-- TRẠNG THÁI KHÁC -->
 
                         {% else %}
 
@@ -620,16 +516,11 @@
 
                 <div class="section shipping-section">
 
-                    <h3>
-                        Vận chuyển
-                    </h3>
-
+                    <h3>Vận chuyển</h3>
 
                     <div class="info-row">
 
-                        <span>
-                            Mã vận đơn
-                        </span>
+                        <span>Mã vận đơn</span>
 
                         <strong class="tracking-code">
                             {{ order["tracking_code"] }}
@@ -650,9 +541,7 @@
 
                 <div class="info-row">
 
-                    <span>
-                        Thời gian đặt hàng
-                    </span>
+                    <span>Thời gian đặt hàng</span>
 
                     <strong>
                         {{ order["created_at"] or "--" }}
@@ -672,16 +561,12 @@
          QUAY LẠI
          ================================================= -->
 
-    <a
-        href="/"
-        class="back-link"
-    >
+    <a href="/" class="back-link">
         ← Quay lại trang chủ
     </a>
 
 
 </div>
-
 
 </body>
 
