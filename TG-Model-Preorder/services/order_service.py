@@ -109,6 +109,13 @@ def expires_to_timestamp(
 # CHUYỂN ĐƠN THÀNH HẾT HẠN
 #
 # Đồng thời hoàn tồn kho nếu đơn đang giữ hàng.
+#
+# Hàm này hỗ trợ cả:
+#
+# - cursor thường
+# - RealDictCursor
+#
+# để tránh lỗi khi được gọi từ các route khác nhau.
 # =========================================================
 
 def mark_order_expired(
@@ -153,10 +160,48 @@ def mark_order_expired(
         return False
 
 
-    product_id = order[0]
-    quantity = order[1]
-    stock_reserved = order[2]
-    status = order[3]
+    # =====================================================
+    # HỖ TRỢ REALDICTCURSOR VÀ CURSOR THƯỜNG
+    #
+    # RealDictCursor:
+    #
+    # order["product_id"]
+    #
+    # Cursor thường:
+    #
+    # order[0]
+    # =====================================================
+
+    if isinstance(
+        order,
+        dict
+    ):
+
+        product_id = order[
+            "product_id"
+        ]
+
+        quantity = order[
+            "quantity"
+        ]
+
+        stock_reserved = order[
+            "stock_reserved"
+        ]
+
+        status = order[
+            "status"
+        ]
+
+    else:
+
+        product_id = order[0]
+
+        quantity = order[1]
+
+        stock_reserved = order[2]
+
+        status = order[3]
 
 
     # =====================================================
@@ -169,7 +214,8 @@ def mark_order_expired(
 
 
     # =====================================================
-    # NẾU ĐANG GIỮ HÀNG → TRẢ HÀNG VỀ KHO
+    # NẾU ĐANG GIỮ HÀNG
+    # → TRẢ HÀNG VỀ KHO
     # =====================================================
 
     if (
@@ -198,7 +244,17 @@ def mark_order_expired(
 
 
     # =====================================================
-    # ĐỔI TRẠNG THÁI + BỎ GIỮ HÀNG
+    # ĐỔI TRẠNG THÁI
+    #
+    # Chưa thanh toán
+    #       ↓
+    # Hết hạn thanh toán
+    #
+    # Đồng thời:
+    #
+    # stock_reserved = FALSE
+    #
+    # để đảm bảo lần sau không hoàn kho lần nữa.
     # =====================================================
 
     cursor.execute(
@@ -221,10 +277,19 @@ def mark_order_expired(
 
 
     # =====================================================
+    # KIỂM TRA CÓ UPDATE THẬT KHÔNG
+    # =====================================================
+
+    updated_rows = cursor.rowcount
+
+
+    # =====================================================
     # COMMIT
     # =====================================================
 
     conn.commit()
 
 
-    return True
+    return (
+        updated_rows > 0
+    )
